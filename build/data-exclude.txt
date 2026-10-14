@@ -4,10 +4,11 @@
 # are noticed.
 #
 # Fonts.  Kept: Liberation Sans/Serif/Mono (metric-compatible with Arial, Times
-# New Roman, Courier New), Liberation Sans Narrow (Arial Narrow), Carlito
-# (Calibri), Caladea (Cambria), DejaVu Sans (wide Unicode coverage incl. Greek,
-# Cyrillic, Arabic, Hebrew, Armenian, Georgian, symbols) and OpenSymbol
-# (bullets, math).  Italic/oblique styles of the fallback fonts are synthesized.
+# New Roman, Courier New) and Liberation Sans Narrow (Arial Narrow) in regular
+# and bold, Carlito (Calibri), Caladea (Cambria), DejaVu Sans (wide Unicode
+# coverage incl. Greek, Cyrillic, Arabic, Hebrew, Armenian, Georgian, symbols)
+# and OpenSymbol (bullets, math).  Missing italic/oblique styles are
+# synthesized by slanting the upright face (size over fidelity).
 */share/fonts/truetype/LinLibertine_*
 */share/fonts/truetype/LinBiolinum_*
 */share/fonts/truetype/DejaVuMathTeXGyre.ttf
@@ -17,8 +18,8 @@
 */share/fonts/truetype/DejaVuSansCondensed*
 */share/fonts/truetype/DejaVuSansMono*
 */share/fonts/truetype/DejaVuSerif*
-*/share/fonts/truetype/LiberationMono-Italic.ttf
-*/share/fonts/truetype/LiberationMono-BoldItalic.ttf
+*/share/fonts/truetype/Liberation*-Italic.ttf
+*/share/fonts/truetype/Liberation*-BoldItalic.ttf
 */share/fonts/truetype/Noto*
 */share/fonts/truetype/Alef-*
 */share/fonts/truetype/Amiri*

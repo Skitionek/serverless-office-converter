@@ -1,0 +1,14 @@
+diff --git a/uui/Library_uui.mk b/uui/Library_uui.mk
+index 0e82e131b..5004aeb1d 100644
+--- a/uui/Library_uui.mk
++++ b/uui/Library_uui.mk
+@@ -17,7 +17,9 @@ $(eval $(call gb_Library_set_include,uui,\
+ $(eval $(call gb_Library_set_componentfile,uui,uui/util/uui,services))
+ 
+ $(eval $(call gb_Library_use_external,uui,boost_headers))
++ifneq ($(ENABLE_CURL),)
+ $(eval $(call gb_Library_use_external,uui,curl))
++endif
+ 
+ $(eval $(call gb_Library_use_custom_headers,uui,\
+     officecfg/registry \

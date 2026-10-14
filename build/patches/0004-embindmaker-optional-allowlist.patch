@@ -1,0 +1,324 @@
+diff --git a/static/CustomTarget_unoembind.mk b/static/CustomTarget_unoembind.mk
+index dbc06007d..64a898ad7 100644
+--- a/static/CustomTarget_unoembind.mk
++++ b/static/CustomTarget_unoembind.mk
+@@ -18,7 +18,7 @@ $(gb_CustomTarget_workdir)/static/unoembind/bindings_uno.cxx \
+ $(gb_CustomTarget_workdir)/static/unoembind/bindings_uno.hxx \
+ $(gb_CustomTarget_workdir)/static/unoembind/bindings_uno.js: \
+         $(call gb_Executable_get_target_for_build,embindmaker) $(call gb_UnoApi_get_target,udkapi) \
+-        $(call gb_UnoApi_get_target,offapi)
++        $(call gb_UnoApi_get_target,offapi) $(LO_EMBIND_ALLOWLIST)
+ 	$(call gb_Executable_get_command,embindmaker) uno \
+         $(gb_CustomTarget_workdir)/static/unoembind/bindings_uno.cxx \
+         $(gb_CustomTarget_workdir)/static/unoembind/bindings_uno.hxx \
+diff --git a/static/source/embindmaker/embindmaker.cxx b/static/source/embindmaker/embindmaker.cxx
+index 7a7121d5f..66c6fc047 100644
+--- a/static/source/embindmaker/embindmaker.cxx
++++ b/static/source/embindmaker/embindmaker.cxx
+@@ -123,6 +123,215 @@ struct Module
+     std::vector<std::pair<OUString, OUString>> mappings;
+ };
+ 
++// If the LO_EMBIND_ALLOWLIST environment variable names a file, only the UNO entities listed
++// there (one per line; '#' starts a comment) are bound, together with everything needed to use
++// them from JS: base interfaces, struct and exception members, the service's interface, and the
++// parameter, return and exception types of the listed interfaces' methods and attributes.  This
++// keeps the generated code, and so the WASM binary, small for embedders that need only a few
++// UNO APIs.
++std::set<OUString> const* allowlist = nullptr;
++
++bool allowed(OUString const& name) { return allowlist == nullptr || allowlist->count(name) != 0; }
++
++void addToAllowlist(rtl::Reference<TypeManager> const& manager, OUString const& name, bool deep,
++                    std::set<OUString>& allow, std::set<OUString>& deepened)
++{
++    if (name.startsWith("[]") || name.indexOf('<') != -1)
++    {
++        OUString nucleus;
++        sal_Int32 rank;
++        std::vector<OUString> args;
++        manager->decompose(name, true, &nucleus, &rank, &args, nullptr);
++        addToAllowlist(manager, nucleus, deep, allow, deepened);
++        for (auto const& arg : args)
++        {
++            addToAllowlist(manager, arg, false, allow, deepened);
++        }
++        return;
++    }
++    rtl::Reference<unoidl::Entity> ent;
++    auto const sort = manager->getSort(name, &ent);
++    switch (sort)
++    {
++        case codemaker::UnoType::Sort::Typedef:
++            addToAllowlist(manager, static_cast<unoidl::TypedefEntity*>(ent.get())->getType(),
++                           deep, allow, deepened);
++            return;
++        case codemaker::UnoType::Sort::Enum:
++        case codemaker::UnoType::Sort::PlainStruct:
++        case codemaker::UnoType::Sort::PolymorphicStructTemplate:
++        case codemaker::UnoType::Sort::Exception:
++        case codemaker::UnoType::Sort::Interface:
++        case codemaker::UnoType::Sort::ConstantGroup:
++        case codemaker::UnoType::Sort::SingleInterfaceBasedService:
++        case codemaker::UnoType::Sort::InterfaceBasedSingleton:
++            break;
++        default:
++            return;
++    }
++    bool const added = allow.insert(name).second;
++    bool const deepen = deep && sort == codemaker::UnoType::Sort::Interface
++                        && deepened.insert(name).second;
++    if (!added && !deepen)
++    {
++        return;
++    }
++    auto const add = [&](OUString const& type) {
++        addToAllowlist(manager, type, false, allow, deepened);
++    };
++    switch (sort)
++    {
++        case codemaker::UnoType::Sort::PlainStruct:
++        {
++            auto const ent2 = static_cast<unoidl::PlainStructTypeEntity*>(ent.get());
++            if (!ent2->getDirectBase().isEmpty())
++            {
++                add(ent2->getDirectBase());
++            }
++            for (auto const& mem : ent2->getDirectMembers())
++            {
++                add(mem.type);
++            }
++            break;
++        }
++        case codemaker::UnoType::Sort::PolymorphicStructTemplate:
++            for (auto const& mem :
++                 static_cast<unoidl::PolymorphicStructTypeTemplateEntity*>(ent.get())->getMembers())
++            {
++                if (!mem.parameterized)
++                {
++                    add(mem.type);
++                }
++            }
++            break;
++        case codemaker::UnoType::Sort::Exception:
++        {
++            auto const ent2 = static_cast<unoidl::ExceptionTypeEntity*>(ent.get());
++            if (!ent2->getDirectBase().isEmpty())
++            {
++                add(ent2->getDirectBase());
++            }
++            for (auto const& mem : ent2->getDirectMembers())
++            {
++                add(mem.type);
++            }
++            break;
++        }
++        case codemaker::UnoType::Sort::Interface:
++        {
++            auto const ent2 = static_cast<unoidl::InterfaceTypeEntity*>(ent.get());
++            for (auto const& base : ent2->getDirectMandatoryBases())
++            {
++                add(base.name);
++            }
++            for (auto const& base : ent2->getDirectOptionalBases())
++            {
++                add(base.name);
++            }
++            if (deepen)
++            {
++                for (auto const& att : ent2->getDirectAttributes())
++                {
++                    add(att.type);
++                    for (auto const& exc : att.getExceptions)
++                    {
++                        add(exc);
++                    }
++                    for (auto const& exc : att.setExceptions)
++                    {
++                        add(exc);
++                    }
++                }
++                for (auto const& meth : ent2->getDirectMethods())
++                {
++                    add(meth.returnType);
++                    for (auto const& param : meth.parameters)
++                    {
++                        add(param.type);
++                    }
++                    for (auto const& exc : meth.exceptions)
++                    {
++                        add(exc);
++                    }
++                }
++                // Also deepen the bases, so their methods are usable on the derived interface:
++                for (auto const& base : ent2->getDirectMandatoryBases())
++                {
++                    addToAllowlist(manager, base.name, true, allow, deepened);
++                }
++            }
++            break;
++        }
++        case codemaker::UnoType::Sort::SingleInterfaceBasedService:
++        {
++            auto const ent2 = static_cast<unoidl::SingleInterfaceBasedServiceEntity*>(ent.get());
++            addToAllowlist(manager, ent2->getBase(), true, allow, deepened);
++            for (auto const& ctor : ent2->getConstructors())
++            {
++                for (auto const& param : ctor.parameters)
++                {
++                    add(param.type);
++                }
++                for (auto const& exc : ctor.exceptions)
++                {
++                    add(exc);
++                }
++            }
++            break;
++        }
++        case codemaker::UnoType::Sort::InterfaceBasedSingleton:
++            addToAllowlist(manager,
++                           static_cast<unoidl::InterfaceBasedSingletonEntity*>(ent.get())->getBase(),
++                           true, allow, deepened);
++            break;
++        default:
++            break;
++    }
++}
++
++void readAllowlist(rtl::Reference<TypeManager> const& manager, char const* pathname,
++                   std::set<OUString>& allow)
++{
++    std::ifstream in(pathname);
++    if (!in)
++    {
++        std::cerr << "Cannot read LO_EMBIND_ALLOWLIST file \"" << pathname << "\"\n";
++        std::exit(EXIT_FAILURE);
++    }
++    std::set<OUString> deepened;
++    std::string line;
++    while (std::getline(in, line))
++    {
++        auto const hash = line.find('#');
++        if (hash != std::string::npos)
++        {
++            line.erase(hash);
++        }
++        OUString const name(b2u(line).trim());
++        if (!name.isEmpty())
++        {
++            addToAllowlist(manager, name, true, allow, deepened);
++        }
++    }
++}
++
++// Drop modules that ended up without any (transitively) allowed content:
++bool pruneModule(Module& module)
++{
++    for (auto it = module.modules.begin(); it != module.modules.end();)
++    {
++        if (pruneModule(*it->second))
++        {
++            it = module.modules.erase(it);
++        }
++        else
++        {
++            ++it;
++        }
++    }
++    return module.modules.empty() && module.mappings.empty();
++}
++
+ OUString
+ getServiceConstructorName(unoidl::SingleInterfaceBasedServiceEntity::Constructor const& constructor)
+ {
+@@ -171,23 +380,43 @@ void scan(rtl::Reference<unoidl::MapCursor> const& cursor, std::u16string_view p
+                 break;
+             }
+             case unoidl::Entity::SORT_ENUM_TYPE:
++                if (!allowed(name))
++                {
++                    break;
++                }
+                 module->mappings.emplace_back(id, "instance.uno_Type_" + jsName(name));
+                 enums.emplace_back(name);
+                 break;
+             case unoidl::Entity::SORT_PLAIN_STRUCT_TYPE:
++                if (!allowed(name))
++                {
++                    break;
++                }
+                 module->mappings.emplace_back(id, "instance.uno_Type_" + jsName(name));
+                 structs.emplace_back(name);
+                 break;
+             case unoidl::Entity::SORT_EXCEPTION_TYPE:
++                if (!allowed(name))
++                {
++                    break;
++                }
+                 module->mappings.emplace_back(id, "instance.uno_Type_" + jsName(name));
+                 exceptions.emplace_back(name);
+                 break;
+             case unoidl::Entity::SORT_INTERFACE_TYPE:
++                if (!allowed(name))
++                {
++                    break;
++                }
+                 module->mappings.emplace_back(id, "instance.uno_Type_" + jsName(name));
+                 interfaces.emplace_back(name);
+                 break;
+             case unoidl::Entity::SORT_CONSTANT_GROUP:
+             {
++                if (!allowed(name))
++                {
++                    break;
++                }
+                 auto const& members
+                     = static_cast<unoidl::ConstantGroupEntity*>(ent.get())->getMembers();
+                 if (!members.empty())
+@@ -237,6 +466,10 @@ void scan(rtl::Reference<unoidl::MapCursor> const& cursor, std::u16string_view p
+             }
+             case unoidl::Entity::SORT_SINGLE_INTERFACE_BASED_SERVICE:
+             {
++                if (!allowed(name))
++                {
++                    break;
++                }
+                 auto const& ctors
+                     = static_cast<unoidl::SingleInterfaceBasedServiceEntity*>(ent.get())
+                           ->getConstructors();
+@@ -254,6 +487,10 @@ void scan(rtl::Reference<unoidl::MapCursor> const& cursor, std::u16string_view p
+             }
+             break;
+             case unoidl::Entity::SORT_INTERFACE_BASED_SINGLETON:
++                if (!allowed(name))
++                {
++                    break;
++                }
+                 module->mappings.emplace_back(id, "instance." + jsSingleton(name));
+                 singletons.emplace_back(name);
+                 break;
+@@ -1032,6 +1269,13 @@ SAL_IMPLEMENT_MAIN()
+                 std::exit(EXIT_FAILURE);
+             }
+         }
++        std::set<OUString> allow;
++        if (auto const pathname = std::getenv("LO_EMBIND_ALLOWLIST");
++            pathname != nullptr && *pathname != '\0')
++        {
++            readAllowlist(mgr, pathname, allow);
++            allowlist = &allow;
++        }
+         auto const module = std::make_shared<Module>();
+         std::vector<OUString> enums;
+         std::vector<OUString> structs;
+@@ -1044,6 +1288,10 @@ SAL_IMPLEMENT_MAIN()
+             scan(prov->createRootCursor(), u"", module.get(), enums, structs, exceptions,
+                  interfaces, services, singletons);
+         }
++        if (allowlist != nullptr)
++        {
++            pruneModule(*module);
++        }
+         std::ofstream cppOut(cppPathname, std::ios_base::out | std::ios_base::trunc);
+         if (!cppOut)
+         {

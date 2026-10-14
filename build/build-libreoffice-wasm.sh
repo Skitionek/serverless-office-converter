@@ -48,8 +48,9 @@ for patch in "$HERE"/patches/*.patch; do
 done
 
 # Headless WASM configuration, cf. static/README.wasm.md ("Building headless
-# LibreOffice as WASM for use in another product").  Converting files in the
-# browser needs no networking, so curl (and with it WebDAV) is left out.
+# LibreOffice as WASM for use in another product"), stripped to what file
+# conversion needs: no networking (curl, WebDAV), no slide show canvas.  The
+# patches add further size reductions (see build/patches/).
 cat > "$LO_SRC/autogen.input" <<EOF
 --host=wasm32-local-emscripten
 --disable-gui
@@ -65,10 +66,14 @@ cat > "$LO_SRC/autogen.input" <<EOF
 --disable-report-builder
 --disable-curl
 --without-webdav
+--disable-cairo-canvas
 --with-parallelism=$JOBS
 --with-external-tar=$WORK/tarballs
 EMSCRIPTEN_EXTRA_SOFFICE_PRE_JS=$HERE/soffice-pre.js
 EOF
+
+# Bind only the UNO API the converter uses to JavaScript (patches/0004).
+export LO_EMBIND_ALLOWLIST=$HERE/embind-allowlist.txt
 
 cd "$LO_SRC"
 if [ ! -f config_host.mk ] || [ autogen.input -nt config_host.mk ]; then

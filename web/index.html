@@ -37,68 +37,76 @@
 <header class="site-header">
     <div class="wrap">
         <h1>Office Converter</h1>
-        <p class="tagline">Convert documents, spreadsheets and presentations with
-            <strong>LibreOffice compiled to WebAssembly</strong>. Nothing to install, and
-            everything runs in this tab: your files are never uploaded anywhere.</p>
-        <p class="tagline small">Don't trust it? Verify it: open your browser's developer tools
-            (F12) → <strong>Network</strong> tab, convert a file and see that no request
-            leaves your computer. After the first load it even works offline.</p>
+        <p class="tagline">Convert Word, Excel, PowerPoint and OpenDocument files right in your browser.</p>
+        <ul class="badges">
+            <li>Nothing to install</li>
+            <li>Files never leave your device</li>
+            <li>Works offline after the first load</li>
+        </ul>
     </div>
 </header>
 
 <main class="wrap">
-    <section class="engine" aria-live="polite">
-        <div class="engine-row">
-            <span class="engine-dot" data-state="idle" id="engine-dot" aria-hidden="true"></span>
-            <span id="engine-text">Conversion engine not loaded yet.</span>
-            <button type="button" class="btn btn-quiet" id="engine-load">Load engine now</button>
-        </div>
-        <progress id="engine-progress" max="1" value="0" hidden></progress>
-        <p class="engine-detail" id="engine-detail"></p>
-    </section>
-
     <div class="support-error" id="support-error" hidden role="alert"></div>
+
+    <section class="step">
+        <label class="target-pick">Convert to
+            <select id="all-target"></select>
+        </label>
+    </section>
 
     <section class="drop" id="drop">
         <input type="file" id="file-input" multiple class="visually-hidden">
         <label for="file-input" class="drop-label">
             <svg class="drop-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="drop-title">Drop files here or <u>browse</u></span>
-            <span class="drop-hint">DOCX, DOC, ODT, RTF, TXT, MD, HTML · XLSX, XLS, ODS, CSV · PPTX, PPT, ODP · ODG, SVG, EMF/WMF, images…</span>
+            <span class="drop-title">Drop files here or <u>choose files</u></span>
+            <span class="drop-hint">Word, Excel, PowerPoint, OpenDocument, RTF, TXT, Markdown, CSV, SVG, images</span>
         </label>
     </section>
 
-    <section class="queue" id="queue" hidden>
-        <div class="queue-bar">
-            <label class="all-target">Convert all to
-                <select id="all-target"></select>
-            </label>
-            <div class="queue-actions">
-                <button type="button" class="btn btn-quiet" id="clear">Clear list</button>
-                <button type="button" class="btn btn-primary" id="convert-all">Convert all</button>
-            </div>
+    <section class="engine" aria-live="polite">
+        <div class="engine-row">
+            <span class="engine-dot" data-state="idle" id="engine-dot" aria-hidden="true"></span>
+            <span id="engine-text">The converter loads when you add a file.</span>
+            <button type="button" class="btn btn-quiet" id="engine-load" hidden>Restart</button>
         </div>
+        <progress id="engine-progress" max="1" value="0" hidden></progress>
+        <p class="engine-detail" id="engine-detail"></p>
+    </section>
+
+    <section class="queue" id="queue" hidden>
         <ul class="files" id="files"></ul>
+        <div class="queue-bar">
+            <button type="button" class="btn btn-quiet" id="clear">Clear list</button>
+            <button type="button" class="btn btn-primary" id="convert-all" hidden>Convert</button>
+        </div>
     </section>
 
     <section class="about">
-        <h2>How it works</h2>
-        <p>The LibreOffice core (Writer, Calc, Impress and Draw import/export filters) is
-            cross-compiled with Emscripten into a single WebAssembly module, built headless without
-            any UI toolkit. A small script drives it through the UNO API
-            (<code>loadComponentFromURL</code> → <code>storeToURL</code>) inside a Web Worker.
-            The first visit downloads the engine once and keeps it in your browser cache.</p>
-        <p class="small">Requires a recent Chrome, Edge, Firefox or Safari on a desktop-class device
-            (the engine reserves 1 GB of memory). PDF input and password-protected files are not
-            supported.</p>
+        <details>
+            <summary>Check for yourself that nothing is uploaded</summary>
+            <ol>
+                <li>Open your browser's developer tools (F12) and go to the <strong>Network</strong> tab.</li>
+                <li>Convert a file. Only this page's own files appear, and none carries your document.</li>
+                <li>Switch the Network tab to <strong>Offline</strong> (or disconnect from the internet): conversions keep working.</li>
+            </ol>
+        </details>
+        <details>
+            <summary>How does it work?</summary>
+            <p>The page runs LibreOffice, the open-source office suite, compiled to WebAssembly,
+                so the same engine that powers desktop LibreOffice converts your files inside this
+                tab. The first visit downloads it once (about 30 MB) and your browser keeps it.</p>
+            <p>Not supported: PDF as input, password-protected files, and some rare formats that
+                were left out to keep the download small. It needs a recent desktop browser and
+                about 1 GB of memory.</p>
+        </details>
     </section>
 </main>
 
 <footer class="wrap site-footer">
-    <p id="build-info"></p>
-    <p><a href="https://www.libreoffice.org/">LibreOffice</a> is licensed under the MPL-2.0;
-        this build is compiled from upstream sources plus the size-reduction patches in
-        <code>build/patches/</code>.</p>
+    <p><span id="build-info"></span> LibreOffice is licensed under the
+        <a href="https://www.mozilla.org/MPL/2.0/">MPL-2.0</a>;
+        <a href="https://github.com/Skitionek/serverless-office-converter">source and build patches</a>.</p>
 </footer>
 
 <template id="file-row">

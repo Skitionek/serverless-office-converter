@@ -108,6 +108,7 @@ async function main() {
     }));
     const results = await page.evaluate(async (cases) => {
         const conv = window.officeConverter;
+        conv.autoConvert = false; // choose per-file targets first
         const files = cases.map((c) => {
             const bytes = Uint8Array.from(atob(c.b64), (ch) => ch.charCodeAt(0));
             return new File([bytes], c.fixture);

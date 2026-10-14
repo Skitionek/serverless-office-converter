@@ -78,7 +78,7 @@ class Engine extends EventTarget {
             const secs = ((performance.now() - this.startedAt) / 1000).toFixed(1);
             this.rejectReady = null;
             this.resolveReady();
-            this.setState('ready', 'LibreOffice is ready.', 'Started in ' + secs + ' s.');
+            this.setState('ready', 'Ready. Everything stays on this device.', 'Started in ' + secs + ' s.');
             break;
         }
         case 'result': {
@@ -89,7 +89,7 @@ class Engine extends EventTarget {
             if (msg.ok) job.resolve(msg);
             else job.reject(Object.assign(new Error(msg.error), { family: msg.family }));
             if (this.pending.size === 0 && this.state === 'busy') {
-                this.setState('ready', 'LibreOffice is ready.');
+                this.setState('ready', 'Ready. Everything stays on this device.');
             }
             break;
         }
@@ -142,8 +142,7 @@ function renderEngine(state, text, detail) {
     $('engine-dot').dataset.state = state;
     $('engine-text').textContent = text;
     $('engine-detail').textContent = detail || '';
-    $('engine-load').hidden = state !== 'idle' && state !== 'error';
-    $('engine-load').textContent = state === 'error' ? 'Restart engine' : 'Load engine now';
+    $('engine-load').hidden = state !== 'error';
     if (state !== 'loading') $('engine-progress').hidden = true;
 }
 
@@ -162,12 +161,12 @@ function renderLoading() {
         bar.hidden = false;
         bar.max = total;
         bar.value = loaded;
-        renderEngine('loading', 'Downloading LibreOffice…',
+        renderEngine('loading', 'Downloading the converter…',
                      formatBytes(loaded) + ' of ' + formatBytes(total) +
                      ' (only needed once; cached afterwards)');
     } else {
         bar.hidden = true;
-        renderEngine('loading', 'Starting LibreOffice…',
+        renderEngine('loading', 'Starting the converter…',
                      lastStatus || 'Initialising the office core; this takes a few seconds.');
     }
 }
@@ -203,8 +202,8 @@ fetch('lo/manifest.json', { cache: 'no-cache' })
         if (m.built) parts.push('built ' + m.built.slice(0, 10));
         $('build-info').textContent = parts.join(' · ') + (parts.length ? '.' : '');
         if (m.compressedSize && engine.state === 'idle') {
-            $('engine-text').textContent = 'Conversion engine not loaded yet (' +
-                formatBytes(m.compressedSize) + ' download, cached afterwards).';
+            $('engine-text').textContent = 'The converter (' + formatBytes(m.compressedSize) +
+                ', downloaded once) loads when you add a file.';
         }
     })
     .catch(() => {});
@@ -286,7 +285,8 @@ function addFiles(fileList) {
         select.addEventListener('change', () => {
             if (item.status === 'done' || item.status === 'error') {
                 resetResult(item);
-                setStatus(item, 'queued', '');
+                setStatus(item, 'queued', 'Waiting…');
+                runQueue();
             }
         });
         row.querySelector('.file-remove').addEventListener('click', () => {
@@ -298,15 +298,20 @@ function addFiles(fileList) {
         });
         items.push(item);
         $('files').append(row);
-        setStatus(item, 'queued', '');
+        setStatus(item, 'queued', 'Waiting…');
     }
     updateQueueVisibility();
-    if (supported) engine.start().catch(() => {});
+    if (supported) {
+        engine.start().catch(() => {});
+        if (api.autoConvert) runQueue();
+    }
 }
 
 function updateQueueVisibility() {
     $('queue').hidden = items.length === 0;
-    $('convert-all').disabled = running || !supported;
+    // Conversion starts by itself; the button only offers a retry after errors.
+    $('convert-all').hidden = running || !items.some((i) => i.status === 'error');
+    $('convert-all').textContent = 'Retry failed';
 }
 
 async function convertItem(item) {
@@ -353,10 +358,8 @@ async function runQueue() {
     running = true;
     updateQueueVisibility();
     try {
-        for (const item of items) {
-            if (item.status === 'queued' || item.status === 'error') {
-                await convertItem(item);
-            }
+        for (let item; (item = items.find((i) => i.status === 'queued'));) {
+            await convertItem(item);
         }
     } finally {
         running = false;
@@ -364,7 +367,12 @@ async function runQueue() {
     }
 }
 
-$('convert-all').addEventListener('click', runQueue);
+$('convert-all').addEventListener('click', () => {
+    for (const item of items) {
+        if (item.status === 'error') setStatus(item, 'queued', 'Waiting…');
+    }
+    runQueue();
+});
 
 $('all-target').addEventListener('change', () => {
     const id = $('all-target').value;
@@ -415,4 +423,4 @@ document.addEventListener('drop', (e) => {
 });
 
 // Expose for automated tests and the browser console.
-window.officeConverter = { engine, addFiles, runQueue, items, TARGETS };
+const api = window.officeConverter = { engine, addFiles, runQueue, items, TARGETS, autoConvert: true };

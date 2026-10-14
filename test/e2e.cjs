@@ -108,7 +108,6 @@ async function main() {
     }));
     const results = await page.evaluate(async (cases) => {
         const conv = window.officeConverter;
-        conv.autoConvert = false; // choose per-file targets first
         const files = cases.map((c) => {
             const bytes = Uint8Array.from(atob(c.b64), (ch) => ch.charCodeAt(0));
             return new File([bytes], c.fixture);
@@ -118,6 +117,9 @@ async function main() {
             const select = item.row.querySelector('.file-target');
             select.value = cases[i].target;
         });
+        // Nothing may convert until the user presses Convert (runQueue is what the button calls).
+        await new Promise((r) => setTimeout(r, 1500));
+        if (conv.items.some((i) => i.status !== 'queued')) throw new Error('converted without being asked');
         await conv.runQueue();
         const out = [];
         for (const item of conv.items) {

@@ -173,8 +173,8 @@ function addFiles(fileList) {
         select.addEventListener('change', () => {
             if (item.status === 'done' || item.status === 'error') {
                 resetResult(item);
-                setStatus(item, 'queued', 'Waiting…');
-                runQueue();
+                setStatus(item, 'queued', '');
+                updateQueueVisibility();
             }
         });
         row.querySelector('.file-remove').addEventListener('click', () => {
@@ -186,20 +186,20 @@ function addFiles(fileList) {
         });
         items.push(item);
         $('files').append(row);
-        setStatus(item, 'queued', 'Waiting…');
+        setStatus(item, 'queued', '');
     }
     updateQueueVisibility();
-    if (supported) {
-        engine.start().catch(() => {});
-        if (api.autoConvert) runQueue();
-    }
+    // Load the engine early (for the thumbnails and so that it is ready), but convert
+    // nothing until the user presses Convert.
+    if (supported) engine.start().catch(() => {});
 }
 
 function updateQueueVisibility() {
     $('queue').hidden = items.length === 0;
-    // Conversion starts by itself; the button only offers a retry after errors.
-    $('convert-all').hidden = running || !items.some((i) => i.status === 'error');
-    $('convert-all').textContent = 'Retry failed';
+    const pending = items.filter((i) => i.status === 'queued' || i.status === 'error').length;
+    const button = $('convert-all');
+    button.disabled = running || !supported || pending === 0;
+    button.textContent = pending > 1 ? 'Convert ' + pending + ' files' : 'Convert';
 }
 
 async function convertItem(item) {
@@ -241,12 +241,21 @@ async function convertItem(item) {
     }
 }
 
+// Converts the files that are waiting (or failed earlier), one after another.  Files added
+// while this runs wait for the next press of the button.
 async function runQueue() {
     if (running || !supported) return;
     running = true;
+    const requested = new Set();
+    for (const item of items) {
+        if (item.status === 'queued' || item.status === 'error') {
+            requested.add(item);
+            setStatus(item, 'queued', 'Waiting…');
+        }
+    }
     updateQueueVisibility();
     try {
-        for (let item; (item = items.find((i) => i.status === 'queued'));) {
+        for (let item; (item = items.find((i) => i.status === 'queued' && requested.has(i)));) {
             await convertItem(item);
         }
     } finally {
@@ -255,12 +264,7 @@ async function runQueue() {
     }
 }
 
-$('convert-all').addEventListener('click', () => {
-    for (const item of items) {
-        if (item.status === 'error') setStatus(item, 'queued', 'Waiting…');
-    }
-    runQueue();
-});
+$('convert-all').addEventListener('click', runQueue);
 
 $('all-target').addEventListener('change', () => {
     const id = $('all-target').value;
@@ -311,4 +315,4 @@ document.addEventListener('drop', (e) => {
 });
 
 // Expose for automated tests and the browser console.
-const api = window.officeConverter = { engine, addFiles, runQueue, items, TARGETS, autoConvert: true };
+window.officeConverter = { engine, addFiles, runQueue, items, TARGETS };

@@ -31,7 +31,7 @@ jobs:
       - name: Check that the LibreOffice runtime is present
         run: |
           test -f web/lo/manifest.json || {
-            echo "::warning::web/lo/manifest.json is missing; run the 'Build LibreOffice WASM' workflow first."
+            echo "::warning::web/lo/manifest.json is missing; run build/build-libreoffice-wasm.sh locally and commit web/lo/."
           }
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

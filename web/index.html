@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Office Converter</title>
+<meta name="description" content="Convert Word, Excel, PowerPoint, OpenDocument and other office files entirely in your browser with LibreOffice compiled to WebAssembly. Nothing is uploaded.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='5' y='2' width='22' height='28' rx='3' fill='%2318a303'/%3E%3Cpath d='M10 10h12M10 15h12M10 20h8' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<script>
+    // GitHub Pages cannot send the COOP/COEP headers that SharedArrayBuffer
+    // (and so the multi-threaded LibreOffice build) requires.  sw.js adds
+    // them; on the very first visit the page is not yet controlled by the
+    // worker, so reload once after it takes over.
+    (function () {
+        if (!('serviceWorker' in navigator)) return;
+        const KEY = 'coi-reload';
+        if (window.crossOriginIsolated) sessionStorage.removeItem(KEY);
+        navigator.serviceWorker.register('sw.js').then(function () {
+            if (window.crossOriginIsolated) return;
+            const reloadOnce = function () {
+                if (sessionStorage.getItem(KEY)) return;
+                sessionStorage.setItem(KEY, '1');
+                location.reload();
+            };
+            if (navigator.serviceWorker.controller) reloadOnce();
+            else navigator.serviceWorker.addEventListener('controllerchange', reloadOnce);
+        }).catch(function (e) {
+            console.error('Service worker registration failed', e);
+        });
+    })();
+</script>
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<header class="site-header">
+    <div class="wrap">
+        <h1>Office Converter</h1>
+        <p class="tagline">Convert documents, spreadsheets and presentations with
+            <strong>LibreOffice compiled to WebAssembly</strong>. Everything runs in this tab;
+            your files are never uploaded anywhere.</p>
+    </div>
+</header>
+
+<main class="wrap">
+    <section class="engine" aria-live="polite">
+        <div class="engine-row">
+            <span class="engine-dot" data-state="idle" id="engine-dot" aria-hidden="true"></span>
+            <span id="engine-text">Conversion engine not loaded yet.</span>
+            <button type="button" class="btn btn-quiet" id="engine-load">Load engine now</button>
+        </div>
+        <progress id="engine-progress" max="1" value="0" hidden></progress>
+        <p class="engine-detail" id="engine-detail"></p>
+    </section>
+
+    <div class="support-error" id="support-error" hidden role="alert"></div>
+
+    <section class="drop" id="drop">
+        <input type="file" id="file-input" multiple class="visually-hidden">
+        <label for="file-input" class="drop-label">
+            <svg class="drop-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="drop-title">Drop files here or <u>browse</u></span>
+            <span class="drop-hint">DOCX, DOC, ODT, RTF, TXT, MD, HTML · XLSX, XLS, ODS, CSV · PPTX, PPT, ODP · VSDX, ODG, SVG, images…</span>
+        </label>
+    </section>
+
+    <section class="queue" id="queue" hidden>
+        <div class="queue-bar">
+            <label class="all-target">Convert all to
+                <select id="all-target"></select>
+            </label>
+            <div class="queue-actions">
+                <button type="button" class="btn btn-quiet" id="clear">Clear list</button>
+                <button type="button" class="btn btn-primary" id="convert-all">Convert all</button>
+            </div>
+        </div>
+        <ul class="files" id="files"></ul>
+    </section>
+
+    <section class="about">
+        <h2>How it works</h2>
+        <p>The LibreOffice core (Writer, Calc, Impress and Draw import/export filters) is
+            cross-compiled with Emscripten into a single WebAssembly module, built headless without
+            any UI toolkit. A small script drives it through the UNO API
+            (<code>loadComponentFromURL</code> → <code>storeToURL</code>) inside a Web Worker.
+            The first visit downloads the engine once and keeps it in your browser cache.</p>
+        <p class="small">Requires a recent Chrome, Edge, Firefox or Safari on a desktop-class device
+            (the engine reserves 1 GB of memory). PDF input and password-protected files are not
+            supported.</p>
+    </section>
+</main>
+
+<footer class="wrap site-footer">
+    <p id="build-info"></p>
+    <p><a href="https://www.libreoffice.org/">LibreOffice</a> is licensed under the MPL-2.0;
+        this build is compiled from unmodified upstream sources.</p>
+</footer>
+
+<template id="file-row">
+    <li class="file">
+        <div class="file-main">
+            <span class="file-name"></span>
+            <span class="file-meta"></span>
+        </div>
+        <select class="file-target" aria-label="Target format"></select>
+        <div class="file-status" aria-live="polite"></div>
+        <div class="file-actions">
+            <a class="btn btn-primary file-download" hidden download>Download</a>
+            <button type="button" class="btn btn-quiet file-remove" aria-label="Remove">✕</button>
+        </div>
+    </li>
+</template>
+</body>
+</html>

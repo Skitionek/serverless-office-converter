@@ -1,0 +1,6 @@
+# LibreOffice sources and build tree used by build/build-libreoffice-wasm.sh
+/work/
+# End-to-end test output
+/test/out/
+node_modules/
+__pycache__/

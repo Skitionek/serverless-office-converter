@@ -1,0 +1,80 @@
+# Cross-compiles LibreOffice core to WebAssembly (build/build-libreoffice-wasm.sh)
+# and packages it into web/lo/.
+#
+# A from-scratch build is long: several hours on 4 cores, and the final link
+# wants >10 GB of RAM.  The default `ubuntu-latest` runner (4 vCPU / 16 GB,
+# 6 h job limit) is borderline; pick a larger runner with the `runner` input
+# if your account has one.
+name: Build LibreOffice WASM
+
+on:
+  workflow_dispatch:
+    inputs:
+      lo_branch:
+        description: LibreOffice branch or tag (git.libreoffice.org/core)
+        default: libreoffice-26-8
+      runner:
+        description: Runner label
+        default: ubuntu-latest
+      commit:
+        description: Commit the packaged runtime (web/lo) back to this branch
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL \
+                      /usr/local/share/boost /usr/share/swift || true
+          df -h /
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            autoconf automake bison ccache flex gettext gperf libtool make nasm patch \
+            pkg-config python3 unzip wget xsltproc libxml2-utils zip
+
+      - name: Install Emscripten SDK
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk"
+          "$HOME/emsdk/emsdk" install 4.0.10
+          "$HOME/emsdk/emsdk" activate 4.0.10
+
+      - name: Cache external tarballs
+        uses: actions/cache@v4
+        with:
+          path: work/tarballs
+          key: lo-tarballs-${{ inputs.lo_branch }}
+
+      - name: Build
+        timeout-minutes: 340
+        env:
+          LO_BRANCH: ${{ inputs.lo_branch }}
+        run: |
+          source "$HOME/emsdk/emsdk_env.sh"
+          build/build-libreoffice-wasm.sh
+
+      - name: Upload packaged runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: libreoffice-wasm
+          path: web/lo
+
+      - name: Commit packaged runtime
+        if: inputs.commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A web/lo
+          git commit -m "Update LibreOffice WASM runtime (${{ inputs.lo_branch }})" || exit 0
+          git push

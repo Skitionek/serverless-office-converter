@@ -74,7 +74,6 @@ sw.js (service worker)
 | `build/embind-allowlist.txt` | The only UNO types exposed to JavaScript |
 | `build/Dockerfile` | Build environment (`emscripten/emsdk:4.0.10` + LibreOffice build deps) |
 | `test/e2e.cjs` | End-to-end test: serves `web/` like Pages does and converts fixtures in Chromium |
-| `.github/workflows/build-wasm.yml` | Manually triggered LibreOffice → WebAssembly build |
 | `.github/workflows/pages.yml` | Deploys `web/` to GitHub Pages |
 
 ## Building LibreOffice for WebAssembly
@@ -94,6 +93,25 @@ Sources and the build tree go to `work/` (ignored by git); the packaged runtime 
 LibreOffice itself, the final link + Binaryen pass about 10 minutes and ~4 GB of RAM) and
 needs ~25 GB of disk. Set `LO_BRANCH` to build another LibreOffice branch (the patches are
 made against `libreoffice-26-8`), and `WASM_MODULES` (e.g. `"writer"`) for a smaller engine.
+
+## Size reductions
+
+On top of LibreOffice's own `--enable-wasm-strip` (on by default for Emscripten):
+
+| Change | Where |
+| --- | --- |
+| No curl/WebDAV, no Cairo canvas | `--disable-curl --without-webdav --disable-cairo-canvas` |
+| No librevenge-based import filters (Visio, Publisher, iWork, CorelDRAW, WordPerfect, Works, old Mac formats, StarOffice 5, QuarkXPress, FreeHand, PageMaker, AbiWord, e-books) | new `--disable-writerperfect` switch, `patches/0006` |
+| Compile with `-Oz` instead of `-O3` | `patches/0003` |
+| Embind UNO bindings only for the types in `embind-allowlist.txt` and their dependencies (48 instead of 1728 types) | `patches/0004`, with `patches/0007` keeping the exception RTTI the bridge exports |
+| ICU data without per-locale display names of languages, regions, currencies, units and time zones (33 → 20 MB) | `patches/0005` |
+| No spell checking, hyphenation or thesaurus code (no dictionaries ship anyway) | `patches/0002` |
+| Fonts: only Liberation Sans/Serif/Mono/Sans Narrow and DejaVu Sans (regular + bold), Carlito, Caladea, OpenSymbol; italics of these are synthesized | `data-exclude.txt`, applied by `package-wasm.py` |
+| xz instead of gzip for the download (35–40% smaller) | `package-wasm.py`, `web/sw.js` |
+
+`patches/0001` fixes `--disable-curl` (uui linked curl unconditionally).
+
+The built runtime is committed in `web/lo/`; GitHub only deploys it and never rebuilds LibreOffice.
 
 ## Size reductions
 

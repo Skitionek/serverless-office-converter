@@ -1,8 +1,9 @@
 /* <office-thumbnail>: preview image of an office document, rendered in the
  * browser by LibreOffice (WebAssembly) through an OfficeEngine.
  *
- *   import { OfficeEngine, OfficeThumbnail } from 'serverless-office-thumbnail';
- *   OfficeThumbnail.engine = new OfficeEngine({ base: '/converter/' });
+ *   import { OfficeEngine } from 'serverless-office-converter';
+ *   import { OfficeThumbnail } from 'serverless-office-thumbnail';
+ *   OfficeThumbnail.engine = new OfficeEngine({ base: '/office-converter/' });
  *
  *   <office-thumbnail src="report.docx"></office-thumbnail>
  *   el.file = fileFromInput;               // or set a File/Blob directly
@@ -11,7 +12,11 @@
  * engine.  Everything else is converted asynchronously, at low priority, so it
  * never delays conversions the page itself requests.
  */
-import { INPUT_FILTERS, TARGET_BY_ID, extensionOf } from './formats.js';
+
+const extensionOf = (name) => {
+    const dot = name.lastIndexOf('.');
+    return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
+};
 
 const NATIVE_IMAGE_TYPES = {
     png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
@@ -76,7 +81,7 @@ template.innerHTML = `
 </div>`;
 
 export class OfficeThumbnail extends HTMLElement {
-    /** The OfficeEngine used for documents that are not plain images. */
+    /** The OfficeEngine (from serverless-office-converter) used for documents that are not plain images. */
     static engine = null;
 
     static observedAttributes = ['src', 'name', 'max-size'];
@@ -221,19 +226,18 @@ export class OfficeThumbnail extends HTMLElement {
         // Share one conversion between elements showing the same File/Blob.
         let promise = renderings.get(source);
         if (!promise) {
-            promise = this.#convert(engine, source, ext);
+            promise = this.#convert(engine, source);
             renderings.set(source, promise);
             promise.catch(() => renderings.delete(source));
         }
         return promise;
     }
 
-    async #convert(engine, source, ext) {
-        const target = TARGET_BY_ID.get('png');
-        const result = await engine.convert(
-            await source.arrayBuffer(), this.#name || 'document', target, INPUT_FILTERS[ext],
-            { priority: BACKGROUND_PRIORITY, quiet: true });
-        return new Blob([result.data], { type: 'image/png' });
+    async #convert(engine, source) {
+        const { blob } = await engine.convertFile(source, 'png', {
+            name: this.#name || 'document', priority: BACKGROUND_PRIORITY, quiet: true,
+        });
+        return blob;
     }
 }
 

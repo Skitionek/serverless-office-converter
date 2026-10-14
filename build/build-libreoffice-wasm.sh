@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Cross-compile LibreOffice core (headless, no UI toolkit) to WebAssembly and
-# package the result into web/lo/ for the static site.
+# package the result into web/office-converter/lo/ for the static site.
 #
 # Requirements: an activated Emscripten SDK (see EMSDK_VERSION below), plus the
 # usual LibreOffice build tools for the build platform (gcc/g++, make,
@@ -12,7 +12,7 @@
 #   LO_BRANCH   LibreOffice git branch/tag to build      (libreoffice-26-8)
 #   WORK        scratch directory for sources and build  (./work)
 #   JOBS        build parallelism                        (nproc)
-#   SITE_LO_DIR where to put the packaged runtime        (<repo>/web/lo)
+#   SITE_LO_DIR where to put the packaged runtime        (<repo>/web/office-converter/lo)
 #   WASM_MODULES LibreOffice modules to include          ("writer calc impress")
 set -euo pipefail
 
@@ -22,7 +22,7 @@ REPO=$(cd "$HERE/.." && pwd)
 LO_BRANCH=${LO_BRANCH:-libreoffice-26-8}
 WORK=${WORK:-$REPO/work}
 JOBS=${JOBS:-$(nproc)}
-SITE_LO_DIR=${SITE_LO_DIR:-$REPO/web/lo}
+SITE_LO_DIR=${SITE_LO_DIR:-$REPO/web/office-converter/lo}
 WASM_MODULES=${WASM_MODULES:-writer calc impress}
 LO_SRC=$WORK/lo-core
 

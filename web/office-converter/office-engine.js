@@ -1,33 +1,37 @@
 /* Client for the in-browser LibreOffice engine.
  *
- * LibreOffice (WebAssembly) runs in a hidden same-origin iframe, `engine.html`
- * under `base`, which has to be cross-origin isolated (see README).  Jobs are
- * run one at a time, most important first, so background work such as
- * thumbnails never delays a conversion the user asked for.
+ * LibreOffice (WebAssembly) runs in a dedicated Web Worker (`engine-worker.js`
+ * under `base`), so conversions never block the page.  The page has to be
+ * cross-origin isolated (see README).  Jobs are run one at a time, most
+ * important first, so background work such as thumbnails never delays a
+ * conversion the user asked for.
  */
+
+import { INPUT_FILTERS, TARGET_BY_ID, extensionOf } from './formats.js';
 
 const READY_TEXT = 'Ready. Everything stays on this device.';
 
 export class OfficeEngine extends EventTarget {
     /**
      * @param {object} [options]
-     * @param {string|URL} [options.base] Directory that serves engine.html (default: the page's base URL).
+     * @param {string|URL} [options.base] Directory that serves engine-worker.js and lo/
+     *   (default: the directory this module is loaded from).
+     * @param {string|URL} [options.workerUrl] URL of engine-worker.js if it is not directly under `base`.
      * @param {number} [options.timeoutMs] Abort and restart the engine when one job takes longer.
      */
-    constructor({ base = document.baseURI, timeoutMs = 5 * 60 * 1000 } = {}) {
+    constructor({ base = new URL('./', import.meta.url), workerUrl, timeoutMs = 5 * 60 * 1000 } = {}) {
         super();
-        this.engineUrl = new URL('engine.html', base).href;
-        this.origin = new URL(this.engineUrl).origin;
+        this.base = new URL(base, document.baseURI).href;
+        this.workerUrl = new URL(workerUrl || 'engine-worker.js', this.base).href;
         this.timeoutMs = timeoutMs;
         this.state = 'idle';
-        this.frame = null;
+        this.worker = null;
         this.ready = null;
         this.pending = new Map(); // running jobs by id
         this.queue = [];
         this.running = false;
         this.nextId = 1;
         this.seq = 0;
-        window.addEventListener('message', (e) => this.onMessage(e));
     }
 
     setState(state, text, detail) {
@@ -45,21 +49,19 @@ export class OfficeEngine extends EventTarget {
         });
         // Avoid an unhandled rejection when nobody awaits a failed start.
         this.ready.catch(() => {});
-        const frame = document.createElement('iframe');
-        frame.className = 'engine-frame';
-        frame.title = 'LibreOffice engine';
-        frame.tabIndex = -1;
-        frame.setAttribute('aria-hidden', 'true');
-        frame.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
-        frame.src = this.engineUrl;
-        this.frame = frame;
-        document.body.append(frame);
+        const worker = new Worker(this.workerUrl);
+        worker.onmessage = (event) => this.onMessage(worker, event.data || {});
+        worker.onerror = (event) => {
+            event.preventDefault();
+            this.fail(worker, event.message || 'The engine worker could not be started.');
+        };
+        this.worker = worker;
         return this.ready;
     }
 
     stop(reason) {
-        if (this.frame) this.frame.remove();
-        this.frame = null;
+        if (this.worker) this.worker.terminate();
+        this.worker = null;
         if (this.ready && this.rejectReady) this.rejectReady(new Error(reason));
         this.ready = null;
         for (const { reject, timer } of this.pending.values()) {
@@ -69,11 +71,14 @@ export class OfficeEngine extends EventTarget {
         this.pending.clear();
     }
 
-    onMessage(event) {
-        if (event.origin !== this.origin || !this.frame || event.source !== this.frame.contentWindow) {
-            return;
-        }
-        const msg = event.data || {};
+    fail(worker, message) {
+        if (worker !== this.worker) return;
+        this.stop(message);
+        this.setState('error', 'The engine stopped.', message);
+    }
+
+    onMessage(worker, msg) {
+        if (worker !== this.worker) return; // a worker that has been discarded
         switch (msg.type) {
         case 'status':
             if (this.state === 'loading') this.setState('loading', '', msg.text);
@@ -95,8 +100,7 @@ export class OfficeEngine extends EventTarget {
             break;
         }
         case 'fatal':
-            this.stop(msg.message);
-            this.setState('error', 'The engine stopped.', msg.message);
+            this.fail(worker, msg.message);
             break;
         }
     }
@@ -116,6 +120,29 @@ export class OfficeEngine extends EventTarget {
             this.queue.push({ data, name, target, input, quiet, priority, seq: this.seq++, resolve, reject });
             this.pump();
         });
+    }
+
+    /**
+     * Converts a File/Blob to one of the targets in formats.js (e.g. 'pdf', 'docx', 'png').
+     * Picks the import filter from the file name's extension.
+     * @param {Blob} file
+     * @param {string} targetId Key of TARGET_BY_ID, e.g. 'pdf'.
+     * @param {{name?: string, priority?: number, quiet?: boolean}} [opts]
+     * @returns {Promise<{blob: Blob, filename: string, family: string, filter: string, ms: number}>}
+     */
+    async convertFile(file, targetId, { name = file.name || 'document', ...opts } = {}) {
+        const target = TARGET_BY_ID.get(targetId);
+        if (!target) throw new Error('Unknown target format: ' + targetId);
+        const result = await this.convert(
+            await file.arrayBuffer(), name, target, INPUT_FILTERS[extensionOf(name)], opts);
+        const dot = name.lastIndexOf('.');
+        return {
+            blob: new Blob([result.data], { type: target.mime || 'application/octet-stream' }),
+            filename: (dot > 0 ? name.slice(0, dot) : name) + '.' + target.ext,
+            family: result.family,
+            filter: result.filter,
+            ms: result.ms,
+        };
     }
 
     async pump() {
@@ -147,7 +174,7 @@ export class OfficeEngine extends EventTarget {
                 this.setState('error', 'The engine was restarted after a timeout.');
             }, this.timeoutMs);
             this.pending.set(id, { resolve, reject, timer });
-            this.frame.contentWindow.postMessage({
+            this.worker.postMessage({
                 type: 'convert',
                 id,
                 name,
@@ -161,7 +188,7 @@ export class OfficeEngine extends EventTarget {
                 },
                 inputFilter: input && input.filter,
                 inputFilterOptions: input && input.options,
-            }, this.origin, [data]);
+            }, [data]);
         });
     }
 }

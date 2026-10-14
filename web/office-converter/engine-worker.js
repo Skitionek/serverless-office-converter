@@ -1,17 +1,19 @@
-/* Hosts the LibreOffice WebAssembly runtime inside engine.html.
+/* Dedicated Web Worker that hosts the LibreOffice WebAssembly runtime.
  *
- * The parent page (app.js) sends `convert` requests via postMessage.  This
- * file puts the input into the Emscripten file system, asks the LibreOffice
- * thread (lo-thread.js) to convert it, and sends the result back.
+ * The page (OfficeEngine) sends `convert` requests via postMessage.  This worker
+ * puts the input into the Emscripten file system, asks the LibreOffice thread
+ * (lo-thread.js, itself a nested worker) to convert it, and sends the result
+ * back.  Nothing here runs on the page's main thread.
+ *
+ * Files next to this script: lo-thread.js and the lo/ runtime directory.
  */
 'use strict';
 
 (function () {
-    const ORIGIN = location.origin;
-    const LO_BASE = new URL('lo/', location.href).href;
+    const LO_BASE = new URL('lo/', self.location.href).href;
 
     function post(message, transfer) {
-        parent.postMessage(message, ORIGIN, transfer || []);
+        self.postMessage(message, transfer || []);
     }
 
     if (!self.crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
@@ -26,8 +28,12 @@
     let threadPort = null;
     const jobs = new Map();
 
-    window.Module = {
-        uno_scripts: [new URL('lo-thread.js', location.href).href],
+    self.Module = {
+        uno_scripts: [new URL('lo-thread.js', self.location.href).href],
+        // LibreOffice starts its own threads as workers running soffice.js; without this
+        // they would load this script instead of the one that is importScripts()ed below.
+        mainScriptUrlOrBlob: new Blob(["importScripts('" + new URL('soffice.js', LO_BASE) + "');"],
+                                      { type: 'text/javascript' }),
         // soffice command line: no UI, no start center, no restore/lock files.
         arguments: ['--headless', '--norestore', '--nologo', '--nodefault'],
         locateFile: (path) => LO_BASE + path,
@@ -160,8 +166,7 @@
         }, [bytes.buffer]);
     }
 
-    window.addEventListener('message', (event) => {
-        if (event.origin !== ORIGIN || event.source !== parent) return;
+    self.addEventListener('message', (event) => {
         const message = event.data;
         if (message && message.type === 'convert') {
             if (!threadPort) {
@@ -172,14 +177,14 @@
         }
     });
 
-    const script = document.createElement('script');
-    script.src = LO_BASE + 'soffice.js';
-    script.onerror = () => fail('Could not load ' + script.src);
-    script.onload = () => {
-        Module.uno_main.then((port) => {
-            threadPort = port;
-            threadPort.onmessage = onThreadMessage;
-        });
-    };
-    document.body.appendChild(script);
+    try {
+        importScripts(LO_BASE + 'soffice.js');
+    } catch (e) {
+        fail('Could not load ' + LO_BASE + 'soffice.js: ' + e);
+        return;
+    }
+    Module.uno_main.then((port) => {
+        threadPort = port;
+        threadPort.onmessage = onThreadMessage;
+    });
 })();

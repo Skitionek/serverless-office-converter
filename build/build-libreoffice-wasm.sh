@@ -48,7 +48,8 @@ for patch in "$HERE"/patches/*.patch; do
 done
 
 # Headless WASM configuration, cf. static/README.wasm.md ("Building headless
-# LibreOffice as WASM for use in another product").
+# LibreOffice as WASM for use in another product").  Converting files in the
+# browser needs no networking, so curl (and with it WebDAV) is left out.
 cat > "$LO_SRC/autogen.input" <<EOF
 --host=wasm32-local-emscripten
 --disable-gui
@@ -62,6 +63,8 @@ cat > "$LO_SRC/autogen.input" <<EOF
 --disable-online-update
 --disable-extension-integration
 --disable-report-builder
+--disable-curl
+--without-webdav
 --with-parallelism=$JOBS
 --with-external-tar=$WORK/tarballs
 EMSCRIPTEN_EXTRA_SOFFICE_PRE_JS=$HERE/soffice-pre.js

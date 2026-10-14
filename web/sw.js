@@ -5,14 +5,16 @@
  *    with COOP/COEP headers.  GitHub Pages cannot set custom headers, so this
  *    worker adds them to every same-origin response.
  *
- * 2. LibreOffice binaries.  The build is stored as gzip-compressed parts
- *    (each below GitHub's file size limits) described by lo/manifest.json.
+ * 2. LibreOffice binaries.  The build is stored as xz-compressed parts (each
+ *    below GitHub's file size limits) described by lo/manifest.json.
  *    Requests for e.g. lo/soffice.wasm are answered by streaming the parts
- *    through a DecompressionStream, so the Emscripten loader sees plain files.
- *    Downloaded parts are kept in Cache Storage per build version, so the
- *    ~100 MB download happens only once per release.
+ *    through an xz decoder, so the Emscripten loader sees plain files.  The
+ *    decompressed files are kept in Cache Storage per build version, so the
+ *    download (and decompression) happens only once per release.
  */
 'use strict';
+
+importScripts('vendor/xz-decompress.min.js');
 
 const LO_DIR = new URL('lo/', self.registration.scope).href;
 const MANIFEST_URL = LO_DIR + 'manifest.json';
@@ -34,7 +36,7 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(request.url);
     if (url.origin !== self.location.origin) return;
     if (request.method === 'GET' && url.href.startsWith(LO_DIR) && url.href !== MANIFEST_URL) {
-        event.respondWith(serveLibreOfficeAsset(request, url));
+        event.respondWith(serveLibreOfficeAsset(event, url));
     } else {
         event.respondWith(fetchIsolated(request));
     }
@@ -82,67 +84,57 @@ async function clearCaches(keep) {
     }
 }
 
-async function serveLibreOfficeAsset(request, url) {
+async function serveLibreOfficeAsset(event, url) {
     const manifest = await loadManifest();
     const name = url.href.slice(LO_DIR.length).split(/[?#]/)[0];
     const entry = manifest && manifest.files && manifest.files[name];
     if (!entry) {
         // Uncompressed development build (or file not in the manifest).
-        return fetchIsolated(request);
+        return fetchIsolated(event.request);
     }
-    const cache = await caches.open(CACHE_PREFIX + manifest.version);
-    const partUrls = entry.parts.map((p) => new URL(p, LO_DIR).href);
     const total = entry.compressedSize;
-    let loaded = 0;
-    let lastReport = 0;
-    const report = (force) => {
-        const now = Date.now();
-        if (force || now - lastReport > 150) {
-            lastReport = now;
-            progress.postMessage({ file: name, loaded, total, version: manifest.version });
-        }
+    const report = (loaded) => {
+        progress.postMessage({ file: name, loaded, total, version: manifest.version });
     };
+    const cache = await caches.open(CACHE_PREFIX + manifest.version);
+    const cacheKey = LO_DIR + name;
+    const cached = await cache.match(cacheKey);
+    if (cached) {
+        report(total);
+        return cached;
+    }
 
+    const partUrls = entry.parts.map((p) => new URL(p, LO_DIR).href);
     let index = 0;
     let reader = null;
-    let chunks = null;
-    let currentUrl = null;
-
+    let loaded = 0;
+    let lastReport = 0;
     const compressed = new ReadableStream({
         async pull(controller) {
             for (;;) {
                 if (!reader) {
                     if (index >= partUrls.length) {
-                        report(true);
+                        report(loaded);
                         controller.close();
                         return;
                     }
-                    currentUrl = partUrls[index++];
-                    let response = await cache.match(currentUrl);
-                    chunks = null;
-                    if (!response) {
-                        response = await fetch(currentUrl, { cache: 'no-cache' });
-                        if (!response.ok) {
-                            throw new Error('Fetching ' + currentUrl + ' failed: ' + response.status);
-                        }
-                        chunks = []; // collect to store in the cache once complete
+                    const partUrl = partUrls[index++];
+                    const response = await fetch(partUrl, { cache: 'no-cache' });
+                    if (!response.ok) {
+                        throw new Error('Fetching ' + partUrl + ' failed: ' + response.status);
                     }
                     reader = response.body.getReader();
                 }
                 const { done, value } = await reader.read();
                 if (done) {
                     reader = null;
-                    if (chunks) {
-                        await cache.put(currentUrl, new Response(new Blob(chunks), {
-                            headers: { 'Content-Type': 'application/octet-stream' },
-                        }));
-                        chunks = null;
-                    }
                     continue;
                 }
-                if (chunks) chunks.push(value);
                 loaded += value.byteLength;
-                report(false);
+                if (Date.now() - lastReport > 150) {
+                    lastReport = Date.now();
+                    report(loaded);
+                }
                 controller.enqueue(value);
                 return;
             }
@@ -152,13 +144,22 @@ async function serveLibreOfficeAsset(request, url) {
         },
     });
 
-    const body = entry.encoding === 'gzip'
-        ? compressed.pipeThrough(new DecompressionStream('gzip'))
-        : compressed;
+    let body;
+    if (entry.encoding === 'xz') {
+        body = new self['xz-decompress'].XzReadableStream(compressed);
+    } else if (entry.encoding === 'gzip') {
+        body = compressed.pipeThrough(new DecompressionStream('gzip'));
+    } else {
+        body = compressed;
+    }
     const headers = isolationHeaders(new Headers({
         'Content-Type': entry.type || 'application/octet-stream',
         'Content-Length': String(entry.size),
-        'Cache-Control': 'no-store',
     }));
-    return new Response(body, { status: 200, headers });
+    // One copy goes to the page, the other into the cache for the next visit.
+    const [forPage, forCache] = body.tee();
+    event.waitUntil(
+        cache.put(cacheKey, new Response(forCache, { headers }))
+            .catch((e) => console.warn('sw: caching ' + name + ' failed', e)));
+    return new Response(forPage, { status: 200, headers });
 }

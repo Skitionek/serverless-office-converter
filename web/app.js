@@ -143,6 +143,19 @@ function setStatus(item, state, text) {
     const el = item.row.querySelector('.file-status');
     el.dataset.state = state;
     el.textContent = text;
+    syncRowButton(item);
+}
+
+// Files whose conversion has been asked for (by either kind of Convert button).
+const requested = new Set();
+
+// The row's own Convert button: offered for files that are not converted yet (or failed).
+function syncRowButton(item) {
+    const button = item.row.querySelector('.file-convert');
+    const waiting = (item.status === 'queued' && !requested.has(item)) || item.status === 'error';
+    button.hidden = !waiting || requested.has(item);
+    button.textContent = item.status === 'error' ? 'Retry' : 'Convert';
+    button.disabled = !supported;
 }
 
 function resetResult(item) {
@@ -177,8 +190,10 @@ function addFiles(fileList) {
                 updateQueueVisibility();
             }
         });
+        row.querySelector('.file-convert').addEventListener('click', () => runQueue([item]));
         row.querySelector('.file-remove').addEventListener('click', () => {
             if (item.status === 'working') return;
+            requested.delete(item);
             resetResult(item);
             items.splice(items.indexOf(item), 1);
             row.remove();
@@ -196,9 +211,10 @@ function addFiles(fileList) {
 
 function updateQueueVisibility() {
     $('queue').hidden = items.length === 0;
-    const pending = items.filter((i) => i.status === 'queued' || i.status === 'error').length;
+    const pending = items.filter((i) => (i.status === 'queued' || i.status === 'error') &&
+                                        !requested.has(i)).length;
     const button = $('convert-all');
-    button.disabled = running || !supported || pending === 0;
+    button.disabled = !supported || pending === 0;
     button.textContent = pending > 1 ? 'Convert ' + pending + ' files' : 'Convert';
 }
 
@@ -241,22 +257,24 @@ async function convertItem(item) {
     }
 }
 
-// Converts the files that are waiting (or failed earlier), one after another.  Files added
-// while this runs wait for the next press of the button.
-async function runQueue() {
-    if (running || !supported) return;
-    running = true;
-    const requested = new Set();
-    for (const item of items) {
-        if (item.status === 'queued' || item.status === 'error') {
+// Converts the given files (default: all that are waiting or failed earlier), one after
+// another.  Can be called while a run is going: the files join the run.  Files that were not
+// asked for (e.g. added meanwhile) wait for their own press.
+async function runQueue(list = items) {
+    for (const item of list) {
+        if (items.includes(item) && (item.status === 'queued' || item.status === 'error')) {
             requested.add(item);
             setStatus(item, 'queued', 'Waiting…');
         }
     }
     updateQueueVisibility();
+    if (running || !supported) return;
+    running = true;
     try {
         for (let item; (item = items.find((i) => i.status === 'queued' && requested.has(i)));) {
             await convertItem(item);
+            requested.delete(item);
+            syncRowButton(item);
         }
     } finally {
         running = false;
@@ -264,7 +282,7 @@ async function runQueue() {
     }
 }
 
-$('convert-all').addEventListener('click', runQueue);
+$('convert-all').addEventListener('click', () => runQueue());
 
 $('all-target').addEventListener('change', () => {
     const id = $('all-target').value;

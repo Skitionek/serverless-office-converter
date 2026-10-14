@@ -1,8 +1,7 @@
 import {
-    ACCEPT, FAMILY_LABELS, INPUT_FILTERS, TARGETS, TARGET_BY_ID,
+    ACCEPT, FAMILY_LABELS, INPUT_FILTERS, OfficeEngine, TARGETS, TARGET_BY_ID,
     extensionOf, guessFamily, targetsForFamily,
-} from './office-thumbnail/formats.js';
-import { OfficeEngine } from './office-thumbnail/office-engine.js';
+} from './office-converter/index.js';
 import { OfficeThumbnail } from './office-thumbnail/office-thumbnail.js';
 
 const $ = (id) => document.getElementById(id);
@@ -14,7 +13,7 @@ function formatBytes(n) {
 }
 
 // ---------------------------------------------------------------------------
-// Engine: LibreOffice running in a hidden same-origin iframe (engine.html).
+// Engine: LibreOffice running in a Web Worker (see office-converter/).
 
 const engine = new OfficeEngine();
 OfficeThumbnail.engine = engine;
@@ -79,7 +78,7 @@ $('engine-load').addEventListener('click', () => {
     engine.start().catch(() => {});
 });
 
-fetch('lo/manifest.json', { cache: 'no-cache' })
+fetch(new URL('lo/manifest.json', engine.base), { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : null))
     .then((m) => {
         if (!m) return;

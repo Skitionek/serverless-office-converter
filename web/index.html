@@ -7,28 +7,11 @@
 <title>Office Converter</title>
 <meta name="description" content="Convert Word, Excel, PowerPoint, OpenDocument and other office files entirely in your browser with LibreOffice compiled to WebAssembly. Nothing is uploaded.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='5' y='2' width='22' height='28' rx='3' fill='%2318a303'/%3E%3Cpath d='M10 10h12M10 15h12M10 20h8' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
-<script>
-    // GitHub Pages cannot send the COOP/COEP headers that SharedArrayBuffer
-    // (and so the multi-threaded LibreOffice build) requires.  sw.js adds
-    // them; on the very first visit the page is not yet controlled by the
-    // worker, so reload once after it takes over.
-    (function () {
-        if (!('serviceWorker' in navigator)) return;
-        const KEY = 'coi-reload';
-        if (window.crossOriginIsolated) sessionStorage.removeItem(KEY);
-        navigator.serviceWorker.register('sw.js').then(function () {
-            if (window.crossOriginIsolated) return;
-            const reloadOnce = function () {
-                if (sessionStorage.getItem(KEY)) return;
-                sessionStorage.setItem(KEY, '1');
-                location.reload();
-            };
-            if (navigator.serviceWorker.controller) reloadOnce();
-            else navigator.serviceWorker.addEventListener('controllerchange', reloadOnce);
-        }).catch(function (e) {
-            console.error('Service worker registration failed', e);
-        });
-    })();
+<script type="module">
+    // GitHub Pages cannot send the COOP/COEP headers that SharedArrayBuffer (and so the
+    // multi-threaded LibreOffice build) requires: sw.js adds them, reloading once on the first visit.
+    import { ensureCrossOriginIsolation } from './office-converter/isolation.js';
+    ensureCrossOriginIsolation('sw.js');
 </script>
 <link rel="stylesheet" href="style.css">
 <script type="module" src="app.js"></script>

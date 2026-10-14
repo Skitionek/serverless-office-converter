@@ -1,21 +1,17 @@
 {
   "name": "serverless-office-thumbnail",
   "version": "0.1.0",
-  "description": "<office-thumbnail> web component: previews Word, Excel, PowerPoint and OpenDocument files in the browser with LibreOffice compiled to WebAssembly. No server, nothing uploaded.",
+  "description": "<office-thumbnail> web component: previews Word, Excel, PowerPoint and OpenDocument files in the browser. Rendered by serverless-office-converter (LibreOffice compiled to WebAssembly); nothing is uploaded.",
   "type": "module",
   "main": "index.js",
   "module": "index.js",
   "exports": {
     ".": "./index.js",
-    "./office-thumbnail.js": "./office-thumbnail.js",
-    "./office-engine.js": "./office-engine.js",
-    "./formats.js": "./formats.js"
+    "./office-thumbnail.js": "./office-thumbnail.js"
   },
   "files": [
     "index.js",
     "office-thumbnail.js",
-    "office-engine.js",
-    "formats.js",
     "README.md"
   ],
   "sideEffects": [
@@ -38,5 +34,8 @@
     "type": "git",
     "url": "git+https://github.com/Skitionek/serverless-office-converter.git",
     "directory": "web/office-thumbnail"
+  },
+  "peerDependencies": {
+    "serverless-office-converter": "^0.1.0"
   }
 }

@@ -1,5 +1,5 @@
 # Publishes web/ (the converter UI plus the packaged LibreOffice WebAssembly
-# runtime in web/lo/) to GitHub Pages.
+# runtime in web/office-converter/lo/) to GitHub Pages.
 #
 # One-time setup: Settings -> Pages -> Build and deployment -> Source:
 # "GitHub Actions".
@@ -30,8 +30,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check that the LibreOffice runtime is present
         run: |
-          test -f web/lo/manifest.json || {
-            echo "::warning::web/lo/manifest.json is missing; run build/build-libreoffice-wasm.sh locally and commit web/lo/."
+          test -f web/office-converter/lo/manifest.json || {
+            echo "::warning::web/office-converter/lo/manifest.json is missing; run build/build-libreoffice-wasm.sh locally and commit web/office-converter/lo/."
           }
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

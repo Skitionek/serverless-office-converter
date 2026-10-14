@@ -5,14 +5,18 @@ PowerPoint or OpenDocument file. The preview is rendered **in the visitor's brow
 LibreOffice compiled to WebAssembly, so documents are never uploaded anywhere.
 
 ```sh
-npm install serverless-office-thumbnail
+npm install serverless-office-thumbnail serverless-office-converter
 ```
+
+The thumbnails are rendered by [`serverless-office-converter`](../office-converter/README.md)
+(its peer dependency), which also has to be set up: serving the engine and making the page
+cross-origin isolated.
 
 ```html
 <script type="module">
-  import { OfficeEngine, OfficeThumbnail } from 'serverless-office-thumbnail';
-  // Directory on YOUR origin that serves the engine (see "Hosting the engine"):
-  OfficeThumbnail.engine = new OfficeEngine({ base: '/office-engine/' });
+  import { OfficeEngine } from 'serverless-office-converter';
+  import { OfficeThumbnail } from 'serverless-office-thumbnail';
+  OfficeThumbnail.engine = new OfficeEngine({ base: '/node_modules/serverless-office-converter/' });
 </script>
 
 <office-thumbnail src="/files/report.docx"></office-thumbnail>
@@ -56,38 +60,10 @@ Styling: CSS custom properties `--office-thumbnail-width` (64px), `--office-thum
 `--office-thumbnail-background`, `--office-thumbnail-placeholder`, `--office-thumbnail-color`;
 shadow parts `frame`, `image`, `placeholder`.
 
-### `OfficeEngine`
-
-```js
-const engine = new OfficeEngine({ base: '/office-engine/', timeoutMs: 300000 });
-engine.addEventListener('state', (e) => console.log(e.detail.state)); // idle|loading|ready|busy|error
-const { data } = await engine.convert(await file.arrayBuffer(), file.name, TARGET_BY_ID.get('pdf'));
-```
-
-`convert(data, name, target, input?, {priority?, quiet?})` resolves to
-`{data: ArrayBuffer, family, filter, ms}`. `formats.js` exports the format tables
-(`TARGETS`, `TARGET_BY_ID`, `INPUT_FILTERS`, `extensionOf`, `guessFamily`, ...). A crashed or
-hung engine is discarded and restarted for the next job.
-
-## Hosting the engine
-
-The component is small (a few KB); the engine is the LibreOffice WebAssembly build (about 30 MB,
-downloaded once and then cached). It must be served from **your own origin**, in a page that is
-cross-origin isolated (`Cross-Origin-Opener-Policy: same-origin` and
-`Cross-Origin-Embedder-Policy: require-corp`), because LibreOffice uses threads
-(`SharedArrayBuffer`). On hosts that can't set headers (e.g. GitHub Pages), the service worker
-from the repository does it for you.
-
-Take these from the [repository](https://github.com/Skitionek/serverless-office-converter)'s
-`web/` directory and serve them from `base`:
-
-`engine.html`, `engine.js`, `lo-thread.js`, `sw.js`, `vendor/`, `lo/`
-
-and register `sw.js` on your page (see `index.html` there) unless you send the headers yourself.
-`lo/` holds the prebuilt runtime; `build/build-libreoffice-wasm.sh` rebuilds it.
-
 ## Notes
 
+* Previews go through `engine.convertFile(file, 'png', { priority: -10, quiet: true })`, i.e. they
+  share the converter's queue and never delay conversions your page requests.
 * Needs a current desktop browser (WebAssembly exceptions, SharedArrayBuffer) and about 1 GB of
   memory. On other browsers thumbnails end in the `error` state and show the placeholder.
 * Not supported: PDF input, password-protected files, formats whose import filters were left out

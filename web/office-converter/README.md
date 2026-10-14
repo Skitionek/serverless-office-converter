@@ -1,0 +1,83 @@
+# serverless-office-converter
+
+Convert Word, Excel, PowerPoint and OpenDocument files to PDF, DOCX, ODT, XLSX, PNG, ... **in the
+browser**. It is LibreOffice compiled to WebAssembly, running in a **Web Worker**: your page stays
+responsive and no file is ever uploaded. The package includes the engine (about 30 MB, downloaded
+once by your visitors and then cached).
+
+```sh
+npm install serverless-office-converter
+```
+
+```js
+import { OfficeEngine } from 'serverless-office-converter';
+
+const engine = new OfficeEngine({ base: '/node_modules/serverless-office-converter/' });
+const { blob, filename } = await engine.convertFile(fileFromInput, 'pdf');
+// blob: Blob, filename: 'report.pdf'
+```
+
+Preview thumbnails for your file lists: [`serverless-office-thumbnail`](../office-thumbnail/README.md).
+
+## Setup
+
+1. **Serve the package directory** (or copy it) from your own origin, so that `engine-worker.js`,
+   `lo-thread.js`, `vendor/` and `lo/` are reachable under `base`. With a bundler, copy
+   `node_modules/serverless-office-converter/{engine-worker.js,lo-thread.js,vendor,lo}` to your
+   public/static folder; they are plain files the worker loads at run time. `OfficeEngine`'s
+   `base` defaults to the directory it is loaded from, which is right when you serve the package as is.
+2. **Make the page cross-origin isolated.** LibreOffice uses threads, so it needs
+   `SharedArrayBuffer`, which browsers only give to pages sent with
+   `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`.
+   * If you control the headers: send them (and `Cross-Origin-Resource-Policy: same-origin` on the engine files).
+   * If you can't (e.g. GitHub Pages): use the included service worker. Create `sw.js` at the
+     root of your site:
+     ```js
+     self.OFFICE_ENGINE_DIR = 'node_modules/serverless-office-converter/'; // where the package is served, relative to sw.js
+     importScripts('node_modules/serverless-office-converter/service-worker.js');
+     ```
+     and call, before using the engine:
+     ```js
+     import { ensureCrossOriginIsolation } from 'serverless-office-converter';
+     await ensureCrossOriginIsolation('sw.js'); // reloads once on the first visit
+     ```
+     The service worker also adds the headers, and serves the engine from its compressed form
+     (xz, with a small wasm decoder) and caches it decompressed: one 30 MB download per release.
+
+## API
+
+### `new OfficeEngine({ base?, workerUrl?, timeoutMs? })`
+
+Starts lazily on the first conversion (or `engine.start()`): a dedicated worker that loads
+LibreOffice (about 7-10 s the first time; the download is cached afterwards).
+
+* `convertFile(file, targetId, { name?, priority?, quiet? })` → `{ blob, filename, family, filter, ms }`
+  converts a `File`/`Blob`. `targetId` is a key of `TARGET_BY_ID`: `pdf`, `pdfa`, `docx`, `doc`,
+  `odt`, `rtf`, `txt`, `md`, `xlsx`, `xls`, `ods`, `csv`, `html` (spreadsheets), `pptx`, `ppt`, `odp`,
+  `odg`, `svg`, `png`, `jpg`, `fodt`, `fods`, `fodp`. The input format is detected from the file
+  name's extension and content; `family` tells what it turned out to be (`writer`, `calc`,
+  `impress`, `draw`).
+* `convert(arrayBuffer, name, target, input?, opts?)` is the lower-level variant (the buffer is transferred).
+* Jobs run **one at a time, highest `priority` first** (default 0); `quiet` jobs don't flip the
+  engine's state to `busy`. Rejections carry `error.message` from LibreOffice.
+* `engine.state` and the `state` event (`detail: {state, text, detail}`): `idle`, `loading`, `ready`,
+  `busy`, `error`. A crashed, hung (`timeoutMs`, default 5 min) or unsupported-browser engine
+  goes to `error`; the next call starts a fresh worker.
+* Download progress: the service worker posts `{file, loaded, total, version}` on a
+  `BroadcastChannel('lo-assets')`.
+
+### Format tables (`formats.js`)
+
+`TARGETS`, `TARGET_BY_ID`, `INPUT_FILTERS`, `INPUT_FAMILIES`, `ACCEPT` (for `<input accept>`),
+`extensionOf(name)`, `guessFamily(name)`, `targetsForFamily(family)`, `FAMILY_LABELS`.
+
+## What's inside, and what isn't
+
+LibreOffice 26.8 core (Writer, Calc, Impress, Draw filters), headless, trimmed for size. See the
+[repository](https://github.com/Skitionek/serverless-office-converter) for the build and the
+patches. Not supported: PDF input, password-protected files, formats whose import filters were
+left out (Visio, Publisher, Keynote, WordPerfect, ...), HTML export of text documents. Needs a
+current desktop browser and about 1 GB of memory.
+
+`lo/manifest.json` records the LibreOffice version and commit; LibreOffice is MPL-2.0,
+`vendor/xz-decompress.min.js` is MIT (see `vendor/README.md`).

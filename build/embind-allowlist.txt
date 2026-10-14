@@ -1,0 +1,33 @@
+# UNO API made available to JavaScript through LibreOffice's Embind bindings
+# (passed to embindmaker as LO_EMBIND_ALLOWLIST, see patches/0004).  Only these
+# entities and what they depend on are bound; binding the whole UNO API would
+# add many megabytes of generated code to soffice.wasm.
+
+# Used by web/lo-thread.js
+com.sun.star.uno.XComponentContext
+com.sun.star.frame.Desktop
+com.sun.star.frame.XComponentLoader
+com.sun.star.frame.XStorable
+com.sun.star.util.XCloseable
+com.sun.star.lang.XComponent
+com.sun.star.lang.XServiceInfo
+com.sun.star.beans.PropertyValue
+com.sun.star.beans.PropertyState
+
+# Exceptions that conversions can raise, so their messages can be reported
+com.sun.star.uno.Exception
+com.sun.star.uno.RuntimeException
+com.sun.star.lang.DisposedException
+com.sun.star.lang.IllegalArgumentException
+com.sun.star.io.IOException
+com.sun.star.task.ErrorCodeIOException
+com.sun.star.util.CloseVetoException
+
+# Used by LibreOffice's own glue (static/emscripten/uno.js, PrimaryBindings.cxx)
+com.sun.star.uno.XInterface
+com.sun.star.uno.TypeClass
+com.sun.star.lang.XTypeProvider
+com.sun.star.frame.XModel
+com.sun.star.container.XHierarchicalNameAccess
+com.sun.star.reflection.XTypeDescription
+com.sun.star.reflection.XInterfaceTypeDescription2

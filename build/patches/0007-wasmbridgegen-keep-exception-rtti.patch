@@ -1,0 +1,90 @@
+diff --git a/bridges/Library_cpp_uno.mk b/bridges/Library_cpp_uno.mk
+index 94f17f014..97531cce2 100644
+--- a/bridges/Library_cpp_uno.mk
++++ b/bridges/Library_cpp_uno.mk
+@@ -200,6 +200,13 @@ $(eval $(call gb_Library_use_internal_comprehensive_api,$(CPPU_ENV)_uno,\
+ 	udkapi \
+ ))
+ 
++ifeq ($(OS),EMSCRIPTEN)
++# generated-cxx references the RTTI of all UNO exception types, including offapi ones:
++$(eval $(call gb_Library_use_internal_comprehensive_api,$(CPPU_ENV)_uno,\
++	offapi \
++))
++endif
++
+ ifeq ($(OS),MACOSX)
+ ifeq ($(CPUNAME),AARCH64)
+ $(eval $(call gb_Library_use_internal_comprehensive_api,$(CPPU_ENV)_uno,\
+diff --git a/static/source/wasmbridgegen/wasmbridgegen.cxx b/static/source/wasmbridgegen/wasmbridgegen.cxx
+index 2fd3d5d29..51da36c94 100644
+--- a/static/source/wasmbridgegen/wasmbridgegen.cxx
++++ b/static/source/wasmbridgegen/wasmbridgegen.cxx
+@@ -614,7 +614,7 @@ OString computeRttiSymbol(std::vector<OUString> const& path, OUString const& id)
+ void scan(rtl::Reference<TypeManager> const& manager,
+           rtl::Reference<unoidl::MapCursor> const& cursor, std::vector<OUString>& path,
+           std::set<OString>& callSignatures, std::set<OString>& slotSignatures,
+-          std::set<OString>& rttis)
++          std::set<OString>& rttis, std::set<OUString>& exceptions)
+ {
+     assert(cursor.is());
+     for (;;)
+@@ -630,12 +630,20 @@ void scan(rtl::Reference<TypeManager> const& manager,
+             case unoidl::Entity::SORT_MODULE:
+                 path.push_back(id);
+                 scan(manager, static_cast<unoidl::ModuleEntity*>(ent.get())->createCursor(), path,
+-                     callSignatures, slotSignatures, rttis);
++                     callSignatures, slotSignatures, rttis, exceptions);
+                 path.pop_back();
+                 break;
+             case unoidl::Entity::SORT_EXCEPTION_TYPE:
++            {
+                 rttis.insert(computeRttiSymbol(path, id));
++                OUStringBuffer name;
++                for (auto const& i : path)
++                {
++                    name.append(i + ".");
++                }
++                exceptions.insert(name + id);
+                 break;
++            }
+             case unoidl::Entity::SORT_INTERFACE_TYPE:
+             {
+                 auto const ite = static_cast<unoidl::InterfaceTypeEntity const*>(ent.get());
+@@ -692,9 +700,11 @@ SAL_IMPLEMENT_MAIN()
+         std::set<OString> callSignatures;
+         std::set<OString> slotSignatures;
+         std::set<OString> rttis;
++        std::set<OUString> exceptions;
+         for (auto const& prov : mgr->getPrimaryProviders())
+         {
+-            scan(mgr, prov->createRootCursor(), path, callSignatures, slotSignatures, rttis);
++            scan(mgr, prov->createRootCursor(), path, callSignatures, slotSignatures, rttis,
++                 exceptions);
+         }
+         std::ofstream cppOut(cppPathname, std::ios_base::out | std::ios_base::trunc);
+         if (!cppOut)
+@@ -708,7 +718,22 @@ SAL_IMPLEMENT_MAIN()
+                   "#include <com/sun/star/uno/RuntimeException.hpp>\n"
+                   "#include <rtl/ustring.hxx>\n"
+                   "#include <sal/types.h>\n"
+-                  "#include <wasm/generated.hxx>\n";
++                  "#include <wasm/generated.hxx>\n"
++                  "#include <typeinfo>\n";
++        for (auto const& exc : exceptions)
++        {
++            cppOut << "#include <" << exc.replace('.', '/') << ".hpp>\n";
++        }
++        // The RTTI symbols of all UNO exception types are exported (see <exp-output>), so that
++        // the bridge finds the ones that C++ code catches; make sure each of them is actually
++        // present in the binary, even if no other code happens to use it:
++        cppOut << "extern \"C\" SAL_DLLPUBLIC_EXPORT std::type_info const * const "
++                  "wasmbridge_exception_rttis[] = {\n";
++        for (auto const& exc : exceptions)
++        {
++            cppOut << "    &typeid(::" << exc.replaceAll(".", "::") << "),\n";
++        }
++        cppOut << "};\n";
+         for (auto const& sig : callSignatures)
+         {
+             cppOut << "extern \"C\" void callVirtualFunction_" << sig

@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """Package the LibreOffice WebAssembly build for static hosting.
 
-Every runtime file (soffice.js, soffice.wasm, soffice.data, ...) is gzip
-compressed and split into parts small enough for a git repository / GitHub
-Pages (GitHub rejects files over 100 MB and warns above 50 MB).  A
-manifest.json describes how to reassemble them; web/sw.js does that
-transparently in the browser with a DecompressionStream.
+Every runtime file (soffice.js, soffice.wasm, soffice.data, ...) is xz
+compressed (about 35-40% smaller than gzip) and split into parts small enough
+for a git repository / GitHub Pages (GitHub rejects files over 100 MB and warns
+above 50 MB).  A manifest.json describes how to reassemble them; web/sw.js does
+that transparently in the browser (xz via web/vendor/xz-decompress.min.js,
+gzip via DecompressionStream).
 
 Optionally, files can be dropped from LibreOffice's in-memory file system
 image (soffice.data) at this stage: its file list lives in the separately
 loaded soffice.data.js.metadata, so it can be rewritten without relinking.
 
 Usage: package-wasm.py <emscripten-output-dir> <site-lo-dir> [--lo-version X]
-           [--emscripten X] [--data-exclude patterns.txt]
+           [--emscripten X] [--data-exclude patterns.txt] [--compression xz|gzip]
 """
 
 import argparse
@@ -21,6 +22,7 @@ import fnmatch
 import gzip
 import hashlib
 import json
+import lzma
 import os
 import shutil
 import sys
@@ -99,6 +101,7 @@ def main():
     parser.add_argument('--lo-version', default='')
     parser.add_argument('--emscripten', default='')
     parser.add_argument('--part-size', type=int, default=PART_SIZE)
+    parser.add_argument('--compression', choices=('xz', 'gzip'), default='xz')
     parser.add_argument('--data-exclude', help='file with fnmatch patterns of soffice.data '
                         'paths to leave out')
     args = parser.parse_args()
@@ -129,19 +132,25 @@ def main():
         else:
             with open(os.path.join(args.src, name), 'rb') as f:
                 raw = f.read()
-        # mtime=0 keeps the output reproducible for identical inputs.
-        packed = gzip.compress(raw, compresslevel=9, mtime=0)
+        if args.compression == 'xz':
+            # CRC32 is the cheapest integrity check xz-embedded supports.
+            packed = lzma.compress(raw, format=lzma.FORMAT_XZ, check=lzma.CHECK_CRC32,
+                                   preset=9 | lzma.PRESET_EXTREME)
+        else:
+            # mtime=0 keeps the output reproducible for identical inputs.
+            packed = gzip.compress(raw, compresslevel=9, mtime=0)
+        suffix = 'xz' if args.compression == 'xz' else 'gz'
         digest.update(name.encode() + b'\0' + hashlib.sha256(packed).digest())
         parts = []
         for i in range(0, max(len(packed), 1), args.part_size):
-            part_name = '%s.gz.%03d' % (name, len(parts))
+            part_name = '%s.%s.%03d' % (name, suffix, len(parts))
             with open(os.path.join(args.dest, part_name), 'wb') as out:
                 out.write(packed[i:i + args.part_size])
             parts.append(part_name)
         files[name] = {
             'type': mime_for(name),
             'size': len(raw),
-            'encoding': 'gzip',
+            'encoding': args.compression,
             'compressedSize': len(packed),
             'parts': parts,
         }

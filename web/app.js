@@ -216,7 +216,6 @@ function checkSupport() {
     const missing = [];
     if (typeof WebAssembly !== 'object') missing.push('WebAssembly');
     else if (typeof WebAssembly.Exception !== 'function') missing.push('WebAssembly exception handling');
-    if (typeof DecompressionStream !== 'function') missing.push('DecompressionStream');
     if (!('serviceWorker' in navigator) && !window.crossOriginIsolated) {
         missing.push('service workers (needed for cross-origin isolation)');
     }

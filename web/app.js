@@ -1,10 +1,11 @@
 import {
     ACCEPT, FAMILY_LABELS, INPUT_FILTERS, TARGETS, TARGET_BY_ID,
     extensionOf, guessFamily, targetsForFamily,
-} from './formats.js';
+} from './office-thumbnail/formats.js';
+import { OfficeEngine } from './office-thumbnail/office-engine.js';
+import { OfficeThumbnail } from './office-thumbnail/office-thumbnail.js';
 
 const $ = (id) => document.getElementById(id);
-const CONVERSION_TIMEOUT_MS = 5 * 60 * 1000;
 
 function formatBytes(n) {
     if (n < 1024) return n + ' B';
@@ -15,121 +16,8 @@ function formatBytes(n) {
 // ---------------------------------------------------------------------------
 // Engine: LibreOffice running in a hidden same-origin iframe (engine.html).
 
-class Engine extends EventTarget {
-    constructor() {
-        super();
-        this.state = 'idle';
-        this.frame = null;
-        this.ready = null;
-        this.pending = new Map();
-        this.nextId = 1;
-        window.addEventListener('message', (e) => this.onMessage(e));
-    }
-
-    setState(state, text, detail) {
-        this.state = state;
-        this.dispatchEvent(new CustomEvent('state', { detail: { state, text, detail } }));
-    }
-
-    start() {
-        if (this.ready) return this.ready;
-        this.startedAt = performance.now();
-        this.setState('loading', '');
-        this.ready = new Promise((resolve, reject) => {
-            this.resolveReady = resolve;
-            this.rejectReady = reject;
-        });
-        // Avoid an unhandled rejection when nobody awaits a failed start.
-        this.ready.catch(() => {});
-        const frame = document.createElement('iframe');
-        frame.className = 'engine-frame';
-        frame.title = 'LibreOffice engine';
-        frame.tabIndex = -1;
-        frame.setAttribute('aria-hidden', 'true');
-        frame.src = 'engine.html';
-        this.frame = frame;
-        document.body.append(frame);
-        return this.ready;
-    }
-
-    stop(reason) {
-        if (this.frame) this.frame.remove();
-        this.frame = null;
-        if (this.ready && this.rejectReady) this.rejectReady(new Error(reason));
-        this.ready = null;
-        for (const { reject, timer } of this.pending.values()) {
-            clearTimeout(timer);
-            reject(new Error(reason));
-        }
-        this.pending.clear();
-    }
-
-    onMessage(event) {
-        if (event.origin !== location.origin || !this.frame ||
-            event.source !== this.frame.contentWindow) {
-            return;
-        }
-        const msg = event.data || {};
-        switch (msg.type) {
-        case 'status':
-            if (this.state === 'loading') this.setState('loading', '', msg.text);
-            break;
-        case 'ready': {
-            const secs = ((performance.now() - this.startedAt) / 1000).toFixed(1);
-            this.rejectReady = null;
-            this.resolveReady();
-            this.setState('ready', 'Ready. Everything stays on this device.', 'Started in ' + secs + ' s.');
-            break;
-        }
-        case 'result': {
-            const job = this.pending.get(msg.id);
-            if (!job) break;
-            this.pending.delete(msg.id);
-            clearTimeout(job.timer);
-            if (msg.ok) job.resolve(msg);
-            else job.reject(Object.assign(new Error(msg.error), { family: msg.family }));
-            if (this.pending.size === 0 && this.state === 'busy') {
-                this.setState('ready', 'Ready. Everything stays on this device.');
-            }
-            break;
-        }
-        case 'fatal':
-            this.stop(msg.message);
-            this.setState('error', 'The engine stopped.', msg.message);
-            break;
-        }
-    }
-
-    async convert(data, name, target, input) {
-        await this.start();
-        const id = this.nextId++;
-        this.setState('busy', 'Converting…');
-        return new Promise((resolve, reject) => {
-            const timer = setTimeout(() => {
-                this.stop('Conversion timed out.');
-                this.setState('error', 'The engine was restarted after a timeout.');
-            }, CONVERSION_TIMEOUT_MS);
-            this.pending.set(id, { resolve, reject, timer });
-            this.frame.contentWindow.postMessage({
-                type: 'convert',
-                id,
-                name,
-                data,
-                target: {
-                    ext: target.ext,
-                    label: target.label,
-                    filters: target.filters,
-                    filterOptions: target.filterOptions,
-                    filterData: target.filterData,
-                },
-                inputFilter: input && input.filter,
-                inputFilterOptions: input && input.options,
-            }, location.origin, [data]);
-        });
-    }
-}
-
-const engine = new Engine();
+const engine = new OfficeEngine();
+OfficeThumbnail.engine = engine;
 
 // ---------------------------------------------------------------------------
 // Engine status UI, including download progress reported by sw.js.
@@ -274,6 +162,7 @@ function addFiles(fileList) {
         const family = guessFamily(file.name);
         const row = $('file-row').content.firstElementChild.cloneNode(true);
         const item = { file, family, row, status: 'queued', url: null, doneTarget: null };
+        row.querySelector('.file-thumb').file = file;
         row.querySelector('.file-name').textContent = file.name;
         row.querySelector('.file-name').title = file.name;
         row.querySelector('.file-meta').textContent =

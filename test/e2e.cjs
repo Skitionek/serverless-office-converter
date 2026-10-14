@@ -155,6 +155,26 @@ async function main() {
     });
     console.log(`${results.length - failed}/${results.length} conversions passed; engine startup ${startup} ms`);
 
+    // Thumbnails are rendered in the background, behind the conversions above.
+    const thumbs = await page.evaluate(async () => {
+        const els = [...document.querySelectorAll('office-thumbnail')];
+        const deadline = Date.now() + 240000;
+        // Thumbnails render lazily: scroll each one into view in turn.
+        for (const el of els) {
+            el.scrollIntoView({ block: 'center' });
+            while (Date.now() < deadline && !['ready', 'error'].includes(el.getAttribute('state'))) {
+                await new Promise((r) => setTimeout(r, 100));
+            }
+        }
+        return els.map((e) => ({
+            name: e.file && e.file.name, state: e.getAttribute('state'), title: e.title,
+            width: e.shadowRoot.querySelector('img').naturalWidth,
+        }));
+    });
+    const badThumbs = thumbs.filter((th) => th.state !== 'ready' || !th.width);
+    thumbs.forEach((th) => console.log(`${th.state === 'ready' && th.width ? 'PASS' : 'FAIL'}  thumbnail ${th.name} ${th.state} ${th.width}px ${th.title}`));
+    failed += badThumbs.length;
+
     if (!process.argv.includes('--keep-open')) {
         await browser.close();
         server.close();

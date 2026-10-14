@@ -7,6 +7,24 @@ component: files are converted inside the visitor's browser tab and are never up
 **Live:** https://skitionek.github.io/serverless-office-converter/ (once Pages is enabled, see
 [Deploying](#deploying-to-github-pages)).
 
+## Why it's nice
+
+* **Nothing to install.** Open the page and convert: no Word, no LibreOffice, no admin
+  rights, no account. It works the same on Windows, macOS, Linux and Chromebooks.
+* **Your files never leave your computer.** There is no server to send them to, and you
+  don't have to take our word for it, you can check it yourself:
+  1. Open the page, then open DevTools (F12 or Ctrl/Cmd+Shift+I) → **Network** tab.
+  2. Tick *Preserve log* and click the clear button (🚫) once the engine has loaded.
+  3. Convert a file. The only things that appear are local ones (the page's own scripts and
+     the engine files, served from the cache). No request carries your document anywhere,
+     and no request goes to any other domain.
+  4. For the ultimate proof, load the page once and then switch the Network tab's throttling
+     to **Offline** (or just turn off your Wi-Fi). Conversions keep working.
+* **Open and auditable.** The page is plain static files from this repository, and the
+  converter is unmodified LibreOffice, not a black-box web service.
+* **Fast and private for batches.** Drop many files and convert them one after another
+  without any upload time, size limit or queue at someone else's server.
+
 | From | To |
 | --- | --- |
 | DOCX, DOC, ODT, RTF, TXT, Markdown, HTML, … | PDF, PDF/A, DOCX, DOC, ODT, RTF, TXT, Markdown, PNG/JPEG/SVG (first page), FODT |

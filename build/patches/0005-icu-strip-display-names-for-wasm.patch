@@ -1,8 +1,8 @@
 diff --git a/external/icu/ExternalProject_icu.mk b/external/icu/ExternalProject_icu.mk
-index d7b45f4c0..7c26c52f1 100644
+index d7b45f4c0..467530ab2 100644
 --- a/external/icu/ExternalProject_icu.mk
 +++ b/external/icu/ExternalProject_icu.mk
-@@ -66,9 +66,24 @@ icu_LDFLAGS:=" \
+@@ -66,9 +66,25 @@ icu_LDFLAGS:=" \
  # DATASUBDIR=data in cross-compiling case, because --disable-tools completely skips the
  # data directory/doesn't build the requested library in that case (icu/source/Makefile.in)
  # so we need to add it back to the list of subdirectories to build
@@ -14,9 +14,10 @@ index d7b45f4c0..7c26c52f1 100644
 +icu_WASM_STRIP_DATA = \
 +	( export LD_LIBRARY_PATH=$(WORKDIR_FOR_BUILD)/UnpackedTarball/icu/source/lib && \
 +	icupkg=$(WORKDIR_FOR_BUILD)/UnpackedTarball/icu/source/bin/icupkg && \
-+	$$icupkg -l data/in/icudt$(ICU_MAJOR)l.dat \
-+		| grep -E '^(curr|lang|region|unit|zone)/' \
-+		| grep -v -E '/(pool|root|supplementalData|tzdbNames)\.res$$' > wasm-strip-data.lst && \
++	$$icupkg -l data/in/icudt$(ICU_MAJOR)l.dat > wasm-all-data.lst && \
++	{ grep -E '^(curr|lang|region|unit|zone)/' wasm-all-data.lst \
++		| grep -v -E '/(pool|root|supplementalData|tzdbNames)\.res$$' > wasm-strip-data.lst \
++		|| true; } && \
 +	if test -s wasm-strip-data.lst; then \
 +		$$icupkg -r wasm-strip-data.lst data/in/icudt$(ICU_MAJOR)l.dat; fi ) &&
 +

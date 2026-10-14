@@ -49,8 +49,10 @@ done
 
 # Headless WASM configuration, cf. static/README.wasm.md ("Building headless
 # LibreOffice as WASM for use in another product"), stripped to what file
-# conversion needs: no networking (curl, WebDAV), no slide show canvas.  The
-# patches add further size reductions (see build/patches/).
+# conversion needs: no networking (curl, WebDAV), no slide show canvas, and
+# none of the rarely needed librevenge-based import filters (Visio, Publisher,
+# iWork, WordPerfect, ...).  The patches add further size reductions (see
+# build/patches/).
 cat > "$LO_SRC/autogen.input" <<EOF
 --host=wasm32-local-emscripten
 --disable-gui
@@ -67,6 +69,7 @@ cat > "$LO_SRC/autogen.input" <<EOF
 --disable-curl
 --without-webdav
 --disable-cairo-canvas
+--disable-writerperfect
 --with-parallelism=$JOBS
 --with-external-tar=$WORK/tarballs
 EMSCRIPTEN_EXTRA_SOFFICE_PRE_JS=$HERE/soffice-pre.js

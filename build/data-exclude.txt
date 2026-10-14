@@ -1,0 +1,31 @@
+# Files left out of LibreOffice's in-memory file system image (soffice.data) by
+# build/package-wasm.py --data-exclude.  fnmatch patterns against the image
+# paths; a pattern that matches nothing fails the packaging, so stale entries
+# are noticed.
+#
+# Fonts.  Kept: Liberation Sans/Serif/Mono (metric-compatible with Arial, Times
+# New Roman, Courier New), Liberation Sans Narrow (Arial Narrow), Carlito
+# (Calibri), Caladea (Cambria), DejaVu Sans (wide Unicode coverage incl. Greek,
+# Cyrillic, Arabic, Hebrew, Armenian, Georgian, symbols) and OpenSymbol
+# (bullets, math).  Italic/oblique styles of the fallback fonts are synthesized.
+*/share/fonts/truetype/LinLibertine_*
+*/share/fonts/truetype/LinBiolinum_*
+*/share/fonts/truetype/DejaVuMathTeXGyre.ttf
+*/share/fonts/truetype/DejaVuSans-ExtraLight.ttf
+*/share/fonts/truetype/DejaVuSans-Oblique.ttf
+*/share/fonts/truetype/DejaVuSans-BoldOblique.ttf
+*/share/fonts/truetype/DejaVuSansCondensed*
+*/share/fonts/truetype/DejaVuSansMono*
+*/share/fonts/truetype/DejaVuSerif*
+*/share/fonts/truetype/LiberationMono-Italic.ttf
+*/share/fonts/truetype/LiberationMono-BoldItalic.ttf
+*/share/fonts/truetype/Noto*
+*/share/fonts/truetype/Alef-*
+*/share/fonts/truetype/Amiri*
+*/share/fonts/truetype/*CLM-*
+*/share/fonts/truetype/DavidLibre-*
+*/share/fonts/truetype/FrankRuhlHofshi-*
+*/share/fonts/truetype/MiriamLibre-*
+*/share/fonts/truetype/Rubik-*
+*/share/fonts/truetype/ReemKufi.ttf
+*/share/fonts/truetype/Scheherazade-*

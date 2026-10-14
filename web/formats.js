@@ -11,23 +11,20 @@
 export const INPUT_FAMILIES = {
     writer: [
         'odt', 'ott', 'fodt', 'sxw', 'stw', 'doc', 'dot', 'docx', 'docm', 'dotx', 'dotm',
-        'rtf', 'txt', 'html', 'htm', 'xhtml', 'md', 'markdown', 'wpd', 'wps', 'abw', 'zabw',
-        'pages', 'hwp', 'lrf', 'pdb', 'xml', 'fb2', 'cwk', 'mw', 'mcw',
+        'rtf', 'txt', 'html', 'htm', 'xhtml', 'md', 'markdown', 'hwp', 'xml',
     ],
     calc: [
         'ods', 'ots', 'fods', 'sxc', 'stc', 'xls', 'xlt', 'xlsx', 'xlsm', 'xltx', 'xltm', 'xlsb',
-        'csv', 'tsv', 'tab', 'numbers', 'dbf', 'wk1', 'wks', '123', 'dif', 'slk', 'sylk', 'et', 'ett',
-        'wb2', 'uos',
+        'csv', 'tsv', 'tab', 'wk1', 'wks', '123', 'dif', 'slk', 'sylk', 'wb2', 'uos',
     ],
     impress: [
         'odp', 'otp', 'fodp', 'sxi', 'sti', 'ppt', 'pps', 'pot', 'pptx', 'pptm', 'ppsx', 'ppsm',
-        'potx', 'potm', 'key', 'dps', 'dpt',
+        'potx', 'potm',
     ],
     draw: [
-        'odg', 'otg', 'fodg', 'sxd', 'std', 'vsd', 'vsdx', 'vsdm', 'vdx', 'vss', 'vst', 'vssx',
-        'vstx', 'cdr', 'cmx', 'pub', 'fh', 'pmd', 'p65', 'qxp', 'zmf', 'svg', 'svgz', 'wmf', 'emf',
-        'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tif', 'tiff', 'webp', 'eps', 'pct', 'pict', 'pcx',
-        'ppm', 'pgm', 'pbm', 'ras', 'tga', 'xbm', 'xpm', 'met', 'cgm',
+        'odg', 'otg', 'fodg', 'sxd', 'std', 'svg', 'svgz', 'wmf', 'emf', 'png', 'jpg', 'jpeg',
+        'gif', 'bmp', 'tif', 'tiff', 'webp', 'eps', 'pct', 'pict', 'pcx', 'ppm', 'pgm', 'pbm',
+        'ras', 'tga', 'xbm', 'xpm', 'met', 'cgm',
     ],
 };
 
@@ -110,10 +107,10 @@ export const TARGETS = [
         filters: { writer: 'Markdown' },
     },
     {
+        // Writer's HTML export needs the forms component, which the WASM build
+        // leaves out (it comes with database connectivity), so spreadsheets only.
         id: 'html', label: 'HTML', ext: 'html', mime: 'text/html',
-        filters: { writer: 'HTML (StarWriter)', calc: 'HTML (StarCalc)' },
-        // Inline images as data: URLs so the result is a single file.
-        filterOptions: { writer: 'EmbedImages' },
+        filters: { calc: 'HTML (StarCalc)' },
     },
     {
         id: 'xlsx', label: 'Excel (XLSX)', ext: 'xlsx',

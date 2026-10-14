@@ -87,9 +87,11 @@ fi
 # cross-toolset phase on the first run; a second invocation continues fine.
 make || make
 
-LO_VERSION=$(sed -n 's/^export LIBO_VERSION_MAJOR=//p;s/^export LIBO_VERSION_MINOR=//p;s/^export LIBO_VERSION_MICRO=//p' config_host.mk | paste -sd.)
+lo_version_part() { sed -n "s/^export LIBO_VERSION_$1=//p" config_host.mk; }
+LO_VERSION="$(lo_version_part MAJOR).$(lo_version_part MINOR).$(lo_version_part MICRO)"
 LO_VERSION="$LO_VERSION ($(git rev-parse --short=10 HEAD))"
 
 python3 -I "$HERE/package-wasm.py" \
     "$LO_SRC/workdir/installation/LibreOffice/emscripten" "$SITE_LO_DIR" \
-    --lo-version "$LO_VERSION" --emscripten "$EM_VERSION"
+    --lo-version "$LO_VERSION" --emscripten "$EM_VERSION" \
+    --data-exclude "$HERE/data-exclude.txt"

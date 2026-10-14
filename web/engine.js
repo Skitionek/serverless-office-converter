@@ -29,7 +29,7 @@
     window.Module = {
         uno_scripts: [new URL('lo-thread.js', location.href).href],
         // soffice command line: no UI, no start center, no restore/lock files.
-        arguments: ['--headless', '--norestore', '--nologo', '--nodefault', '--nolockcheck'],
+        arguments: ['--headless', '--norestore', '--nologo', '--nodefault'],
         locateFile: (path) => LO_BASE + path,
         print: (text) => console.log('[soffice]', text),
         printErr: (text) => console.warn('[soffice]', text),
@@ -50,8 +50,11 @@
         if (!threadPort) fail(String(event.message || event.error));
     });
 
+    // The Emscripten file system object.  soffice.js is a classic (non-modular)
+    // script, so FS is a global; don't look at Module.FS: with ASSERTIONS that
+    // is a trap that aborts the runtime.
     function fs() {
-        return Module.FS || self.FS;
+        return self.FS;
     }
 
     function safeName(name) {

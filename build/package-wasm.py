@@ -7,11 +7,17 @@ Pages (GitHub rejects files over 100 MB and warns above 50 MB).  A
 manifest.json describes how to reassemble them; web/sw.js does that
 transparently in the browser with a DecompressionStream.
 
-Usage: package-wasm.py <emscripten-output-dir> <site-lo-dir> [--lo-version X] [--emscripten X]
+Optionally, files can be dropped from LibreOffice's in-memory file system
+image (soffice.data) at this stage: its file list lives in the separately
+loaded soffice.data.js.metadata, so it can be rewritten without relinking.
+
+Usage: package-wasm.py <emscripten-output-dir> <site-lo-dir> [--lo-version X]
+           [--emscripten X] [--data-exclude patterns.txt]
 """
 
 import argparse
 import datetime
+import fnmatch
 import gzip
 import hashlib
 import json
@@ -41,6 +47,51 @@ def mime_for(name):
     return 'application/octet-stream'
 
 
+def read_patterns(path):
+    patterns = []
+    with open(path, encoding='utf-8') as f:
+        for line in f:
+            line = line.split('#', 1)[0].strip()
+            if line:
+                patterns.append(line)
+    return patterns
+
+
+def trim_data_image(src, patterns):
+    """Return (data, metadata) for soffice.data without the files matching patterns."""
+    with open(os.path.join(src, 'soffice.data'), 'rb') as f:
+        data = f.read()
+    with open(os.path.join(src, 'soffice.data.js.metadata'), encoding='utf-8') as f:
+        metadata = json.load(f)
+    kept = []
+    out = bytearray()
+    removed = {}
+    for entry in metadata['files']:
+        name = entry['filename']
+        match = next((p for p in patterns if fnmatch.fnmatchcase(name, p)), None)
+        size = entry['end'] - entry['start']
+        if match:
+            removed.setdefault(match, [0, 0])
+            removed[match][0] += 1
+            removed[match][1] += size
+            continue
+        chunk = data[entry['start']:entry['end']]
+        new_entry = dict(entry, start=len(out), end=len(out) + len(chunk))
+        out += chunk
+        kept.append(new_entry)
+    unused = [p for p in patterns if p not in removed]
+    for pattern, (count, size) in sorted(removed.items(), key=lambda kv: -kv[1][1]):
+        print('  data-exclude %-60s %4d files %7.1f MB' % (pattern, count, size / 1e6))
+    if unused:
+        sys.exit('error: data-exclude patterns matched nothing: ' + ', '.join(unused))
+    metadata['files'] = kept
+    metadata['remote_package_size'] = len(out)
+    if 'package_uuid' in metadata:
+        metadata['package_uuid'] = 'sha256-' + hashlib.sha256(out).hexdigest()
+    print('  soffice.data: %.1f MB -> %.1f MB' % (len(data) / 1e6, len(out) / 1e6))
+    return bytes(out), json.dumps(metadata, separators=(',', ':')).encode()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('src')
@@ -48,7 +99,14 @@ def main():
     parser.add_argument('--lo-version', default='')
     parser.add_argument('--emscripten', default='')
     parser.add_argument('--part-size', type=int, default=PART_SIZE)
+    parser.add_argument('--data-exclude', help='file with fnmatch patterns of soffice.data '
+                        'paths to leave out')
     args = parser.parse_args()
+
+    overrides = {}
+    if args.data_exclude:
+        data, metadata = trim_data_image(args.src, read_patterns(args.data_exclude))
+        overrides = {'soffice.data': data, 'soffice.data.js.metadata': metadata}
 
     names = sorted(
         n for n in os.listdir(args.src)
@@ -66,9 +124,11 @@ def main():
     files = {}
     compressed_total = 0
     for name in names:
-        path = os.path.join(args.src, name)
-        with open(path, 'rb') as f:
-            raw = f.read()
+        if name in overrides:
+            raw = overrides[name]
+        else:
+            with open(os.path.join(args.src, name), 'rb') as f:
+                raw = f.read()
         # mtime=0 keeps the output reproducible for identical inputs.
         packed = gzip.compress(raw, compresslevel=9, mtime=0)
         digest.update(name.encode() + b'\0' + hashlib.sha256(packed).digest())

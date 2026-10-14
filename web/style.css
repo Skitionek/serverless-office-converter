@@ -154,7 +154,7 @@ select {
 .files { list-style: none; margin: 0; padding: 0; }
 .file {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(10rem, 15rem) auto auto;
+    grid-template-columns: auto minmax(0, 1fr) minmax(10rem, 15rem) auto auto;
     align-items: center;
     gap: 8px 12px;
     padding: 12px 16px;
@@ -162,6 +162,7 @@ select {
 }
 .file:last-child { border-bottom: none; }
 .file-target { width: 100%; }
+.file-thumb { --office-thumbnail-width: 48px; }
 .file-main { display: flex; flex-direction: column; min-width: 0; }
 .file-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-meta { color: var(--muted); font-size: 0.82rem; }
@@ -172,11 +173,20 @@ select {
 .file-actions { display: flex; gap: 6px; justify-content: flex-end; }
 
 @media (max-width: 640px) {
-    .file { grid-template-columns: minmax(0, 1fr) auto; }
-    .file-target { width: auto; }
-    .file-target { grid-column: 1; }
-    .file-status { grid-column: 1 / -1; text-align: left; min-width: 0; }
-    .file-actions { grid-column: 2; grid-row: 1; }
+    .file {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+            "thumb main    actions"
+            "thumb target  target"
+            "thumb status  status";
+        align-items: start;
+    }
+    .file-thumb { grid-area: thumb; }
+    .file-main { grid-area: main; }
+    .file-actions { grid-area: actions; }
+    .file-target { grid-area: target; width: auto; justify-self: start; }
+    .file-status { grid-area: status; text-align: left; min-width: 0; }
+}
 }
 
 .about { margin-block: 32px; color: var(--muted); font-size: 0.93rem; }

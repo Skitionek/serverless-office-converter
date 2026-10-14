@@ -54,10 +54,12 @@ LibreOffice (about 7-10 s the first time; the download is cached afterwards).
 * `convertFile(file, targetId, { name?, priority?, quiet? })` → `{ blob, filename, family, filter, ms }`
   converts a `File`/`Blob`. `targetId` is a key of `TARGET_BY_ID`: `pdf`, `pdfa`, `docx`, `doc`,
   `odt`, `rtf`, `txt`, `md`, `xlsx`, `xls`, `ods`, `csv`, `html` (spreadsheets), `pptx`, `ppt`, `odp`,
-  `odg`, `svg`, `png`, `jpg`, `fodt`, `fods`, `fodp`. The input format is detected from the file
+  `odg`, `svg` (slides and drawings only), `png`, `jpg`, `fodt`, `fods`, `fodp`. The input format is detected from the file
   name's extension and content; `family` tells what it turned out to be (`writer`, `calc`,
   `impress`, `draw`).
-* `convert(arrayBuffer, name, target, input?, opts?)` is the lower-level variant (the buffer is transferred).
+* `convert(arrayBuffer, name, target, input?, opts?)` is the lower-level variant.
+* If the WebAssembly runtime hits a fault (an engine trap rather than a problem with the
+  document), the worker is discarded and the job is retried once on a fresh one.
 * Jobs run **one at a time, highest `priority` first** (default 0); `quiet` jobs don't flip the
   engine's state to `busy`. Rejections carry `error.message` from LibreOffice.
 * `engine.state` and the `state` event (`detail: {state, text, detail}`): `idle`, `loading`, `ready`,

@@ -163,6 +163,25 @@ async function main() {
     });
     console.log(`${results.length - failed}/${results.length} conversions passed; engine startup ${startup} ms`);
 
+    // A WebAssembly fault in the engine must not break the converter: the worker is replaced
+    // and the job retried.
+    const recovery = await page.evaluate(async () => {
+        const engine = window.officeConverter.engine;
+        const before = engine.worker;
+        const real = engine.runJob.bind(engine);
+        let calls = 0;
+        engine.runJob = async (job) => {
+            if (calls++ === 0) throw new Error('Could not open the document (table index is out of bounds)');
+            return real(job);
+        };
+        const file = window.officeConverter.items[0].file;
+        const r = await engine.convertFile(file, 'pdf', { priority: 5 });
+        engine.runJob = real;
+        return { ok: r.blob.size > 1000, calls, restarted: engine.worker !== before };
+    });
+    console.log(`${recovery.ok && recovery.calls === 2 && recovery.restarted ? 'PASS' : 'FAIL'}  engine fault recovery ${JSON.stringify(recovery)}`);
+    if (!(recovery.ok && recovery.calls === 2 && recovery.restarted)) failed++;
+
     // Thumbnails are rendered in the background, behind the conversions above.
     const thumbs = await page.evaluate(async () => {
         const els = [...document.querySelectorAll('office-thumbnail')];

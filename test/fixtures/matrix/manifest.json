@@ -1,0 +1,112 @@
+[
+  {
+    "ext": "docx",
+    "marker": "Serverless Office Converter",
+    "source": "python-docx/openpyxl/python-pptx or hand-written"
+  },
+  {
+    "ext": "doc",
+    "marker": "Serverless Office Converter",
+    "source": "converted from sample.docx by this converter"
+  },
+  {
+    "ext": "odt",
+    "marker": "Serverless Office Converter",
+    "source": "converted from sample.docx by this converter"
+  },
+  {
+    "ext": "fodt",
+    "marker": "Serverless Office Converter",
+    "source": "converted from sample.docx by this converter"
+  },
+  {
+    "ext": "rtf",
+    "marker": "Serverless Office Converter",
+    "source": "converted from sample.docx by this converter"
+  },
+  {
+    "ext": "txt",
+    "marker": "Serverless Office Converter",
+    "source": "hand-written"
+  },
+  {
+    "ext": "md",
+    "marker": "Serverless Office Converter",
+    "source": "hand-written"
+  },
+  {
+    "ext": "html",
+    "marker": "Serverless Office Converter",
+    "source": "hand-written"
+  },
+  {
+    "ext": "xlsx",
+    "marker": "North",
+    "source": "python-docx/openpyxl/python-pptx or hand-written"
+  },
+  {
+    "ext": "xls",
+    "marker": "North",
+    "source": "converted from sample.xlsx by this converter"
+  },
+  {
+    "ext": "ods",
+    "marker": "North",
+    "source": "converted from sample.xlsx by this converter"
+  },
+  {
+    "ext": "fods",
+    "marker": "North",
+    "source": "converted from sample.xlsx by this converter"
+  },
+  {
+    "ext": "csv",
+    "marker": "North",
+    "source": "hand-written"
+  },
+  {
+    "ext": "tsv",
+    "marker": "North",
+    "source": "hand-written"
+  },
+  {
+    "ext": "pptx",
+    "marker": "Serverless Office Converter",
+    "source": "python-docx/openpyxl/python-pptx or hand-written"
+  },
+  {
+    "ext": "ppt",
+    "marker": "Serverless Office Converter",
+    "source": "converted from sample.pptx by this converter"
+  },
+  {
+    "ext": "odp",
+    "marker": "Serverless Office Converter",
+    "source": "converted from sample.pptx by this converter"
+  },
+  {
+    "ext": "fodp",
+    "marker": "Serverless Office Converter",
+    "source": "converted from sample.pptx by this converter"
+  },
+  {
+    "ext": "svg",
+    "marker": null,
+    "source": "python-docx/openpyxl/python-pptx or hand-written"
+  },
+  {
+    "ext": "odg",
+    "marker": null,
+    "source": "converted from sample.svg by this converter"
+  },
+  {
+    "ext": "png",
+    "marker": null,
+    "source": "converted from sample.docx by this converter"
+  },
+  {
+    "ext": "jpg",
+    "marker": null,
+    "source": "converted from sample.docx by this converter"
+  }
+]

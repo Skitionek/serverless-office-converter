@@ -9,6 +9,10 @@
 
 import { INPUT_FILTERS, TARGET_BY_ID, extensionOf } from './formats.js';
 
+// Errors that mean the WebAssembly runtime itself is corrupted (not that the document is bad):
+// once one has happened, every later job on that worker tends to fail too.
+const ENGINE_FAULT = /table index is out of bounds|memory access out of bounds|unreachable|RuntimeError|Aborted|stack overflow/i;
+
 const READY_TEXT = 'Ready. Everything stays on this device.';
 
 export class OfficeEngine extends EventTarget {
@@ -59,21 +63,21 @@ export class OfficeEngine extends EventTarget {
         return this.ready;
     }
 
-    stop(reason) {
+    stop(reason, { fault = false } = {}) {
         if (this.worker) this.worker.terminate();
         this.worker = null;
         if (this.ready && this.rejectReady) this.rejectReady(new Error(reason));
         this.ready = null;
         for (const { reject, timer } of this.pending.values()) {
             clearTimeout(timer);
-            reject(new Error(reason));
+            reject(Object.assign(new Error(reason), { engineFault: fault }));
         }
         this.pending.clear();
     }
 
     fail(worker, message) {
         if (worker !== this.worker) return;
-        this.stop(message);
+        this.stop(message, { fault: true });
         this.setState('error', 'The engine stopped.', message);
     }
 
@@ -107,7 +111,7 @@ export class OfficeEngine extends EventTarget {
 
     /**
      * Converts a document.
-     * @param {ArrayBuffer} data Input bytes (transferred, so pass a copy you don't need).
+     * @param {ArrayBuffer} data Input bytes.
      * @param {string} name Input file name (its extension helps format detection).
      * @param {object} target `{ ext, label, filters, filterOptions?, filterData? }`, see formats.js.
      * @param {{filter?: string, options?: string}} [input] Forced import filter.
@@ -155,7 +159,16 @@ export class OfficeEngine extends EventTarget {
                 try {
                     job.resolve(await this.runJob(job));
                 } catch (e) {
-                    job.reject(e);
+                    if ((e.engineFault || ENGINE_FAULT.test(e.message)) && !job.retried) {
+                        // The runtime is in a bad state: start a fresh worker and try once more.
+                        console.warn('OfficeEngine: restarting after engine fault:', e.message);
+                        this.stop('Engine restarted after a fault.', { fault: true });
+                        job.retried = true;
+                        this.queue.push(job);
+                    } else {
+                        if (ENGINE_FAULT.test(e.message)) this.stop(e.message, { fault: true });
+                        job.reject(e);
+                    }
                 }
             }
         } finally {
@@ -188,7 +201,7 @@ export class OfficeEngine extends EventTarget {
                 },
                 inputFilter: input && input.filter,
                 inputFilterOptions: input && input.options,
-            }, [data]);
+            }); // the buffer is copied, not transferred, so the job can be retried
         });
     }
 }

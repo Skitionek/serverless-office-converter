@@ -152,11 +152,9 @@ export const TARGETS = [
         filters: { draw: 'draw8' },
     },
     {
-        id: 'svg', label: 'SVG (first page/slide)', ext: 'svg', mime: 'image/svg+xml',
-        filters: {
-            writer: 'writer_svg_Export', calc: 'calc_svg_Export',
-            impress: 'impress_svg_Export', draw: 'draw_svg_Export',
-        },
+        // Writer's and Calc's SVG "filters" are internal only and fail to export.
+        id: 'svg', label: 'SVG (first slide)', ext: 'svg', mime: 'image/svg+xml',
+        filters: { impress: 'impress_svg_Export', draw: 'draw_svg_Export' },
     },
     {
         id: 'png', label: 'PNG image (first page/slide)', ext: 'png', mime: 'image/png',

@@ -27,10 +27,68 @@ component: files are converted inside the visitor's browser tab and are never up
 
 | From | To |
 | --- | --- |
-| DOCX, DOC, ODT, RTF, TXT, Markdown, HTML, … | PDF, PDF/A, DOCX, DOC, ODT, RTF, TXT, Markdown, PNG/JPEG/SVG (first page), FODT |
-| XLSX, XLS, XLSB, ODS, CSV/TSV, Lotus, … | PDF, PDF/A, XLSX, XLS, ODS, CSV, HTML, PNG/JPEG/SVG, FODS |
+| DOCX, DOC, ODT, RTF, TXT, Markdown, HTML, … | PDF, PDF/A, DOCX, DOC, ODT, RTF, TXT, Markdown, PNG/JPEG (first page), FODT |
+| XLSX, XLS, XLSB, ODS, CSV/TSV, Lotus, … | PDF, PDF/A, XLSX, XLS, ODS, CSV, HTML, PNG/JPEG, FODS |
 | PPTX, PPT, ODP | PDF, PDF/A, PPTX, PPT, ODP, PNG/JPEG/SVG (first slide), FODP |
 | ODG, SVG, WMF/EMF, PNG/JPEG/… | PDF, PDF/A, ODG, PNG/JPEG/SVG |
+
+## Compatibility
+
+Every input format against every output format the converter offers for it. Each cell was
+**actually converted** in headless Chromium with the shipped engine, and the output was
+validated: it must be a real file of the target type (PDF, a DOCX/XLSX/PPTX package, an ODF
+package of the right type, an OLE file for DOC/XLS/PPT, a decodable PNG/JPEG, ...) **and still
+contain the text of the input**. Drawings and images are checked for validity only.
+
+✅ works · ❌ fails · **·** not offered (the format doesn't apply, e.g. a spreadsheet to DOCX)
+
+<!-- compat:start -->
+208 of 208 offered conversions produce a valid file with the content intact (298 combinations are not offered).
+
+| Input \ Output | PDF | PDF/A | DOCX | DOC | ODT | RTF | TXT | MD | HTML | XLSX | XLS | ODS | CSV | PPTX | PPT | ODP | ODG | SVG | PNG | JPG | FODT | FODS | FODP |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Text documents** | | | | | | | | | | | | | | | | | | | | | | | |
+| DOCX | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
+| DOC | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
+| ODT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
+| FODT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
+| RTF | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
+| TXT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
+| MD | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
+| HTML | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
+| **Spreadsheets** | | | | | | | | | | | | | | | | | | | | | | | |
+| XLSX | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
+| XLS | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
+| ODS | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
+| FODS | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
+| CSV | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
+| TSV | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
+| **Presentations** | | | | | | | | | | | | | | | | | | | | | | | |
+| PPTX | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | ✅ | ✅ | ✅ | · | · | ✅ |
+| PPT | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | ✅ | ✅ | ✅ | · | · | ✅ |
+| ODP | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | ✅ | ✅ | ✅ | · | · | ✅ |
+| FODP | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | ✅ | ✅ | ✅ | · | · | ✅ |
+| **Drawings and images** | | | | | | | | | | | | | | | | | | | | | | | |
+| SVG | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | · | · | · |
+| ODG | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | · | · | · |
+| PNG | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | · | · | · |
+| JPG | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | · | · | · |
+<!-- compat:end -->
+
+Notes:
+
+* The XLS/DOC/PPT/ODG/FODT/... inputs, and the PNG/JPG inputs, were produced from the DOCX, XLSX,
+  PPTX and SVG samples by this converter itself (round trip); the others are hand-written or
+  generated with python-docx/openpyxl/python-pptx. All fixtures are in `test/fixtures/matrix/`.
+* "Works" means the content survives, not pixel-perfect layout. Tables, formulas (recalculated),
+  Unicode text and bullets are in the samples; complex documents will expose differences like any
+  other LibreOffice conversion.
+* CSV and TSV open with UTF-8 and `,` / tab separators; CSV export writes the first sheet.
+* SVG export exists for slides and drawings only: LibreOffice's Writer and Calc SVG filters are
+  internal and fail to export, so they're not offered.
+* PNG/JPEG/SVG exports contain the first page or slide.
+* Regenerate: `node test/matrix.cjs && python3 test/matrix-report.py` (needs Playwright,
+  poppler's `pdftotext` and Pillow). `node test/matrix.cjs --make-fixtures` rebuilds the fixtures.
 
 The engine is a **29.7 MB** download (xz-compressed; 94.5 MB `soffice.wasm` + 51 MB file
 system image uncompressed), fetched once and then served from the browser cache. It starts in
@@ -174,7 +232,7 @@ cd test && npm install && npm test
 * No PDF import, no password-protected documents, no macros (they are never executed).
 * Text documents cannot be exported to HTML (Writer's HTML export needs the forms component,
   which comes with database connectivity and is left out of the WASM build).
-* Image exports (PNG/JPEG/SVG) contain the first page/slide only; CSV export contains the
+* Image exports (PNG/JPEG, and SVG for slides and drawings) contain the first page/slide only; CSV export contains the
   first sheet only.
 
 ## License

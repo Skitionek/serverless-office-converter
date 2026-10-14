@@ -120,6 +120,12 @@ async function main() {
         // Nothing may convert until the user presses Convert (runQueue is what the button calls).
         await new Promise((r) => setTimeout(r, 1500));
         if (conv.items.some((i) => i.status !== 'queued')) throw new Error('converted without being asked');
+        // The Convert button of a single row converts just that file.
+        const first = conv.items[0];
+        first.row.querySelector('.file-convert').click();
+        while (first.status !== 'done' && first.status !== 'error') await new Promise((r) => setTimeout(r, 100));
+        if (conv.items[1].status !== 'queued') throw new Error('row button converted other files');
+        if (!first.row.querySelector('.file-convert').hidden) throw new Error('row button still shown after converting');
         await conv.runQueue();
         const out = [];
         for (const item of conv.items) {

@@ -1,0 +1,87 @@
+diff --git a/RepositoryModule_host.mk b/RepositoryModule_host.mk
+index 8070c7612..6e7b3b20d 100644
+--- a/RepositoryModule_host.mk
++++ b/RepositoryModule_host.mk
+@@ -188,7 +188,7 @@ $(eval $(call gb_Module_add_moduledirs,libreoffice,\
+ 	vbahelper \
+ 	vcl \
+ 	wizards \
+-	writerperfect \
++	$(if $(ENABLE_WRITERPERFECT),writerperfect) \
+     $(call gb_Helper_optional,XMLHELP,xmlhelp) \
+ 	xmloff \
+ 	xmlreader \
+diff --git a/config_host.mk.in b/config_host.mk.in
+index 63cb460c5..25f233e7c 100644
+--- a/config_host.mk.in
++++ b/config_host.mk.in
+@@ -273,6 +273,7 @@ export ENABLE_WASM_STRIP_RECOVERYUI=@ENABLE_WASM_STRIP@
+ export ENABLE_WASM_STRIP_SPLASH=@ENABLE_WASM_STRIP@
+ export ENABLE_WASM_STRIP_SWEXPORTS=@ENABLE_WASM_STRIP@
+ export ENABLE_WASM_STRIP_SCEXPORTS=@ENABLE_WASM_STRIP@
++export ENABLE_WRITERPERFECT=@ENABLE_WRITERPERFECT@
+ export ENABLE_WERROR=@ENABLE_WERROR@
+ export ENABLE_WIN=@ENABLE_WIN@
+ ENABLE_WIX=@ENABLE_WIX@
+diff --git a/configure.ac b/configure.ac
+index 0add5fbd3..e1f01e86b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -2309,6 +2309,13 @@ AC_ARG_ENABLE(opengl,
+         [Disable OpenGL support.]),
+ ,enable_opengl=yes)
+ 
++libo_FUZZ_ARG_ENABLE(writerperfect,
++    AS_HELP_STRING([--disable-writerperfect],
++        [Do not build the librevenge-based import filters (writerperfect: Visio, Publisher,
++         Keynote/Pages/Numbers, CorelDRAW, WordPerfect, Works, old Mac formats, StarOffice 5,
++         QuarkXPress, FreeHand, PageMaker, AbiWord, e-books) nor the EPUB export.]),
++,enable_writerperfect=yes)
++
+ libo_FUZZ_ARG_ENABLE(librelogo,
+     AS_HELP_STRING([--disable-librelogo],
+         [Do not build LibreLogo.]),
+@@ -10374,6 +10381,16 @@ AC_SUBST([ENABLE_EOT])
+ dnl ===================================================================
+ dnl Check for DLP libs
+ dnl ===================================================================
++ENABLE_WRITERPERFECT=TRUE
++if test "$enable_writerperfect" = no; then
++    ENABLE_WRITERPERFECT=
++    for lib in libabw libcdr libebook libepubgen libetonyek libfreehand libmspub libmwaw libodfgen \
++               libpagemaker libqxp librevenge libstaroffice libvisio libwpd libwpg libwps libzmf; do
++        eval test_$lib=no
++    done
++fi
++AC_SUBST(ENABLE_WRITERPERFECT)
++
+ REVENGE_CFLAGS_internal="-I${WORKDIR}/UnpackedTarball/librevenge/inc"
+ AS_IF([test "$COM" = "MSC"],
+       [librevenge_libdir='$(gb_Library_DLLDIR)'],
+diff --git a/static/CustomTarget_emscripten_fs_image.mk b/static/CustomTarget_emscripten_fs_image.mk
+index 7e4057ec9..e4b16bb3a 100644
+--- a/static/CustomTarget_emscripten_fs_image.mk
++++ b/static/CustomTarget_emscripten_fs_image.mk
+@@ -1653,8 +1653,6 @@ gb_emscripten_fs_image_files += \
+     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/vcl/ui/querydialog.ui \
+     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/vcl/ui/screenshotparent.ui \
+     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/vcl/ui/wizard.ui \
+-    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/writerperfect/ui/exportepub.ui \
+-    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/writerperfect/ui/wpftencodingdialog.ui \
+     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/xmlsec/ui/certdetails.ui \
+     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/xmlsec/ui/certgeneral.ui \
+     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/xmlsec/ui/certpage.ui \
+@@ -1770,6 +1768,13 @@ gb_emscripten_fs_image_files += \
+ 
+ endif # !ENABLE_WASM_STRIP_CHART
+ 
++ifneq ($(ENABLE_WRITERPERFECT),)
++gb_emscripten_fs_image_files += \
++    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/writerperfect/ui/exportepub.ui \
++    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/writerperfect/ui/wpftencodingdialog.ui \
++
++endif
++
+ $(foreach theme,$(WITH_THEMES), \
+     $(eval gb_emscripten_fs_image_files += $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/images_$(theme).zip))
+ 

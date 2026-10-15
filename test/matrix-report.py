@@ -282,8 +282,7 @@ def main():
         shown.update(tids)
     missing = [t for t in targets if t not in shown]
     assert not missing, 'targets not in any table: %s' % missing
-    overview_block = ('#### Which outputs each kind of document supports\n\n' + overview()) if forced else ''
-    table = '\n\n'.join(tables + ([overview_block] if overview_block else []))
+    table = '\n\n'.join(tables)
     summary = (f'{ok} of {ok + failed} offered conversions produce a valid file with the content intact '
                f'({na} combinations are not offered).')
     block = f'{START}\n{summary}\n\n{table}\n{END}'

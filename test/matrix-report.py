@@ -4,8 +4,9 @@
     python3 test/matrix-report.py [--out test/out/matrix] [--readme README.md] [--no-readme]
 
 A conversion only counts as working when the output is a valid file of the target
-type AND, for fixtures with a marker text, still contains that text (images and
-drawings: valid and non-trivial).  Needs pdftotext (poppler) and Pillow.
+type AND still has the content: the marker text for fixtures that have one; otherwise
+(images, drawings) that it is not empty: a PDF page with content, a slide, drawing
+shapes, a PNG/JPEG that is not blank.  Needs pdftotext (poppler) and Pillow.
 Writes <out>/validated.json and the table between the compat markers in the README.
 """
 import argparse
@@ -52,6 +53,19 @@ def rtf_text(data):
     return re.sub(r'[{}]', '', s)
 
 
+SHAPES = re.compile(r'<(draw:(frame|custom-shape|rect|ellipse|line|polygon|path|g)|svg:|[a-z]+:pic\b)')
+
+
+def pdf_has_content(data):
+    from pypdf import PdfReader
+    reader = PdfReader(io.BytesIO(data))
+    if len(reader.pages) < 1:
+        return False
+    page = reader.pages[0]
+    contents = page.get_contents()
+    return bool(len(page.images) or (contents is not None and len(contents.get_data()) > 120))
+
+
 def check(target, ext, data, marker):
     """Returns None when the output is fine, else a short reason."""
     if len(data) == 0:
@@ -63,14 +77,20 @@ def check(target, ext, data, marker):
         if target == 'pdfa' and b'pdfaid:part' not in data:
             return 'no PDF/A marker'
         text = subprocess.run(['pdftotext', '-', '-'], input=data, capture_output=True).stdout.decode('utf-8', 'replace')
-        if subprocess.run(['pdftotext', '-v'], capture_output=True).returncode > 1:
-            return 'pdftotext unavailable'
-        return None if has(text) else 'text lost'
+        if not has(text):
+            return 'text lost'
+        try:
+            return None if pdf_has_content(data) else 'empty PDF page'
+        except Exception:
+            return 'unreadable PDF'
     if target in OOXML_PART:
         try:
             with zipfile.ZipFile(io.BytesIO(data)) as z:
-                if OOXML_PART[target] not in z.namelist():
+                names = z.namelist()
+                if OOXML_PART[target] not in names:
                     return 'not a ' + target
+                if target == 'pptx' and not any(re.match(r'ppt/slides/slide\d+\.xml$', n) for n in names):
+                    return 'no slides'
         except zipfile.BadZipFile:
             return 'not a zip'
         return None if has(zip_text(data)) else 'text lost'
@@ -81,6 +101,10 @@ def check(target, ext, data, marker):
                     return 'wrong ODF type'
         except (zipfile.BadZipFile, KeyError):
             return 'not an ODF file'
+        if marker is None and target in ('odg', 'odp'):
+            with zipfile.ZipFile(io.BytesIO(data)) as z:
+                if not SHAPES.search(z.read('content.xml').decode('utf-8', 'replace')):
+                    return 'no shapes'
         return None if has(zip_text(data)) else 'text lost'
     if target in ('doc', 'xls', 'ppt'):
         if not data.startswith(OLE_MAGIC):
@@ -105,7 +129,9 @@ def check(target, ext, data, marker):
         return None if has(xml_text(data)) else 'text lost'
     if target == 'svg':
         text = data.decode('utf-8', 'replace')
-        return None if '<svg' in text and len(data) > 500 else 'not SVG'
+        if '<svg' not in text or len(data) <= 500:
+            return 'not SVG'
+        return None if re.search(r'<(path|rect|image|polygon|polyline|ellipse|circle|text|use)\b', text) else 'empty SVG'
     if target in ('png', 'jpg'):
         from PIL import Image
         try:
@@ -118,8 +144,40 @@ def check(target, ext, data, marker):
             return 'image too small'
         if im.format != ('PNG' if target == 'png' else 'JPEG'):
             return 'wrong image format'
-        return None
+        low, high = im.convert('L').getextrema()
+        return None if high - low > 20 else 'blank image'
     return 'no validator for ' + target
+
+
+def save_forced(validated, path):
+    """Summarise a --cross run: what happens when an export filter is forced onto a kind of
+    document it is not offered for.  Verdicts: error, crash, invalid (a file that is not what
+    was asked for), ok.  Expects the verdict to be the same for every input of a kind."""
+    seen = {}
+    for row in validated['inputs']:
+        for tid, cell in row['cells'].items():
+            if cell['status'] != 'n/a' or 'cross' not in cell:
+                continue
+            if cell['cross'] == 'crash':
+                v = 'crash'
+            elif cell.get('cross_verdict') == 'ok':
+                v = 'ok'
+            elif cell['cross'] == 'converted':
+                v = 'invalid'
+            else:
+                v = 'error'
+            seen.setdefault(row['family'], {}).setdefault(tid, set()).add(v)
+    out, mixed = {}, []
+    for family, targets in seen.items():
+        out[family] = {}
+        for tid, verdicts in targets.items():
+            if len(verdicts) > 1:
+                mixed.append((family, tid, sorted(verdicts)))
+            # the worst outcome wins when inputs of a kind differ
+            out[family][tid] = next(v for v in ('crash', 'invalid', 'error', 'ok') if v in verdicts)
+    json.dump(out, open(path, 'w'), indent=2, sort_keys=True)
+    open(path, 'a').write('\n')
+    print('forced results saved;', 'mixed verdicts:', mixed or 'none')
 
 
 def main():
@@ -127,6 +185,8 @@ def main():
     ap.add_argument('--out', default=os.path.join(os.path.dirname(__file__), 'out', 'matrix'))
     ap.add_argument('--readme', default=os.path.join(os.path.dirname(__file__), '..', 'README.md'))
     ap.add_argument('--no-readme', action='store_true')
+    ap.add_argument('--forced-from', help='validated.json of a `node test/matrix.cjs --cross` run: '
+                    'summarise it into test/forced-results.json')
     args = ap.parse_args()
 
     results = json.load(open(os.path.join(args.out, 'results.json')))
@@ -162,6 +222,10 @@ def main():
                 failed += 1
                 problems.append((row['ext'], tid, cell['reason']))
     json.dump(results, open(os.path.join(args.out, 'validated.json'), 'w'), indent=2)
+    forced_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'forced-results.json')
+    if args.forced_from:
+        save_forced(json.load(open(args.forced_from)), forced_path)
+    forced = json.load(open(forced_path)) if os.path.exists(forced_path) else None
     print(f'{ok} ok, {failed} failed, {na} not offered')
     for ext, tid, reason in problems:
         print(f'  FAIL {ext} -> {tid}: {reason}')
@@ -186,6 +250,25 @@ def main():
                 lines.append('| ' + row['ext'].upper() + ' | ' + ' | '.join(cells) + ' |')
         return '\n'.join(lines)
 
+    def overview():
+        fams = list(groups)
+        head = '| Output | ' + ' | '.join(groups[f] for f in fams) + ' |'
+        lines = [head, '| --- |' + ' :---: |' * len(fams)]
+        symbol = {'error': '❌', 'crash': '💥', 'invalid': '⚠️', 'ok': '✅'}
+        for tid in targets:
+            cells = []
+            for f in fams:
+                rows = [r for r in results['inputs'] if r['family'] == f]
+                offered = any(r['cells'][tid]['status'] != 'n/a' for r in rows)
+                if offered:
+                    cells.append('✅' if all(r['cells'][tid].get('verdict') == 'ok' for r in rows) else '❌')
+                elif forced and tid in forced.get(f, {}):
+                    cells.append(symbol[forced[f][tid]])
+                else:
+                    cells.append('?')
+            lines.append('| ' + names.get(tid, tid.upper()) + ' | ' + ' | '.join(cells) + ' |')
+        return '\n'.join(lines)
+
     common = ['pdf', 'pdfa', 'png', 'jpg']  # offered for every input
     shown = set(common)
     tables = [render('Common outputs (every input)', list(groups), common)]
@@ -199,7 +282,8 @@ def main():
         shown.update(tids)
     missing = [t for t in targets if t not in shown]
     assert not missing, 'targets not in any table: %s' % missing
-    table = '\n\n'.join(tables)
+    overview_block = ('#### Which outputs each kind of document supports\n\n' + overview()) if forced else ''
+    table = '\n\n'.join(([overview_block] if overview_block else []) + tables)
     summary = (f'{ok} of {ok + failed} offered conversions produce a valid file with the content intact '
                f'({na} combinations are not offered).')
     block = f'{START}\n{summary}\n\n{table}\n{END}'

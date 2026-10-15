@@ -74,6 +74,8 @@
         <p class="out-dir" id="out-dir" hidden>Results are saved as new files in
             <strong id="out-dir-name"></strong>; nothing there is replaced.
             <button type="button" class="link" id="out-dir-stop">Stop saving there</button></p>
+        <p class="out-dir out-dir-resume-bar"><button type="button" class="link" id="out-dir-resume" hidden></button></p>
+        <ul class="watches" id="watches" hidden></ul>
     </section>
 
     <section class="about">
@@ -91,7 +93,8 @@
                 name is already taken, for example when converting DOCX to DOCX in the same folder,
                 the result is called <code>report (converted).docx</code> or <code>report (1).pdf</code>
                 instead. In Chrome and Edge you can save straight into a folder (next to the originals,
-                if you pick their folder); the browser asks for permission first.</p>
+                if you pick their folder); the browser asks for permission first. A watched
+                folder converts files that appear in it or change, again as new files.</p>
         </details>
         <details>
             <summary>How does it work?</summary>
@@ -125,6 +128,13 @@
             <a class="btn btn-primary file-download" hidden download>Download</a>
             <button type="button" class="btn btn-quiet file-remove" aria-label="Remove">✕</button>
         </div>
+    </li>
+</template>
+<template id="watch-row">
+    <li class="watch">
+        <span>Folder <strong class="watch-name"></strong></span>
+        <span class="watch-state"></span>
+        <button type="button" class="btn btn-quiet watch-toggle"></button>
     </li>
 </template>
 </body>

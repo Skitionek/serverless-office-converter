@@ -28,8 +28,11 @@ component: files are converted inside the visitor's browser tab and are never up
   its subfolders are converted too. In Chrome and Edge (File System Access API) results can be
   saved directly into a folder of your choice, keeping the folder structure, or next to the
   originals. Inputs are only ever read: results are always **new files**, and a name that is
-  taken gets ` (1)`, ` (2)`, ... (DOCX to DOCX gives `report (converted).docx`). Installed as an
-  app, the converter also appears in the operating system's *Open with* menu.
+  taken gets ` (1)`, ` (2)`, ... (DOCX to DOCX gives `report (converted).docx`). The output
+  folder is remembered across visits. A folder can be **watched**: files that appear in it or
+  change are converted automatically (with `FileSystemObserver`, or by polling where it's
+  missing). Installed as an app, the converter also appears in the operating system's
+  *Open with* menu.
 
 | From | To |
 | --- | --- |

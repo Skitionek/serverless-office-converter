@@ -87,11 +87,18 @@ written over an existing file.
   Browsers empty a file as soon as it is picked there, so pass the originals as
   `protect: [{ handle, data }]` (`data`: their bytes, or a promise of them started before the
   call): picking one puts its content back and rejects with a `SourceFileError`.
+* `watchDirectory(dirHandle, onChange, { ignore?, debounceMs?, pollMs?, observe? })` →
+  `{ stop(), observed }` calls `onChange(entries)` with the files that appeared or changed
+  (new `lastModified`), using `FileSystemObserver` where available and polling otherwise.
+  `ignore(path)` leaves out e.g. results you wrote into the watched folder yourself.
+* `rememberHandle(key, handle)` / `recallHandle(key)` keep handles in IndexedDB across visits
+  (call `ensureWritable()` on a recalled one from a click: the browser may ask again).
+* `relativePath(dirHandle, handle)`: where a handle is inside a folder (`resolve()`), or `null`.
 * `pickOutputDirectory()`, `ensureWritable(handle)`, `availableName(dirHandle, name)`.
 * `outputName('report.docx', 'pdf')` → `report.pdf`; for the same format
   `report (converted).docx`, so a result never has its input's name. `outputPath()` keeps the
   folders. `convertFile()` uses the same naming and also accepts a `FileSystemFileHandle`.
-* `canPickFiles`, `canPickDirectory`, `canPickSaveFile`, `PICKER_TYPES`.
+* `canPickFiles`, `canPickDirectory`, `canPickSaveFile`, `canObserve`, `PICKER_TYPES`.
 
 ### Format tables (`formats.js`)
 

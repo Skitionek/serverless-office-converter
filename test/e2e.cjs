@@ -267,7 +267,63 @@ async function main() {
         }
         window.showSaveFilePicker = realPicker;
         document.getElementById('clear').click();
-        return { refused, paths, first, second, third, names, tree: await tree(opfs), size: docx.length };
+
+        // Handles survive in IndexedDB; resolve() finds files inside a folder.
+        await fsm.rememberHandle('test', sub);
+        const recalled = await (await fsm.recallHandle('test')).isSameEntry(sub);
+        await fsm.rememberHandle('test', null);
+        const resolved = await fsm.relativePath(docs, await sub.getFileHandle('report.docx'));
+
+        // Watching a folder that is also the output folder: new and changed files are converted
+        // and saved next to them, and the results themselves are not picked up again.
+        const until = async (fn, ms = 60000) => {
+            const end = Date.now() + ms;
+            while (!fn()) {
+                if (Date.now() > end) throw new Error('timed out: ' + fn);
+                await new Promise((r) => setTimeout(r, 100));
+            }
+        };
+        const target = document.getElementById('all-target');
+        target.value = 'docx';
+        target.dispatchEvent(new Event('change'));
+        await conv.addEntries(fsm.listDirectory(docs));
+        const listedBefore = conv.items.map((i) => i.path);
+        await conv.setOutputDirectory(docs);
+        const watch = conv.watches.find((w) => w.dir === docs);
+        watch.row.querySelector('.watch-toggle').click();
+        await until(() => watch.watcher);
+        const observed = watch.watcher.observed;
+        const writeFile = async (dir, name) => {
+            const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
+            await w.write(docx);
+            await w.close();
+        };
+        await writeFile(sub, 'new.docx');
+        const isNew = (i) => i.path === 'Docs/sub/new.docx';
+        await until(() => conv.items.some((i) => isNew(i) && i.savedTo));
+        const newSaved = conv.items.find(isNew).savedTo;
+        await writeFile(docs, 'report.docx'); // same content, new modification time
+        const report = conv.items.find((i) => i.path === 'Docs/report.docx');
+        await until(() => report.savedTo && report.savedTo !== null && report.status === 'done' && report.savedTo.includes('(1)'));
+        const changedSaved = report.savedTo;
+        await new Promise((r) => setTimeout(r, 4000)); // the results' own events
+        const watchedPaths = conv.items.map((i) => i.path).filter((p) => !listedBefore.includes(p));
+        watch.row.querySelector('.watch-toggle').click();
+        await conv.setOutputDirectory(null);
+        document.getElementById('clear').click();
+        target.value = 'pdf';
+        target.dispatchEvent(new Event('change'));
+
+        // Without FileSystemObserver, watching polls.
+        let polled = null;
+        const poller = await fsm.watchDirectory(sub, (e) => { polled = e.map((x) => x.path); },
+            { observe: false, pollMs: 200, debounceMs: 50 });
+        await writeFile(sub, 'polled.docx');
+        await until(() => polled, 10000);
+        poller.stop();
+
+        return { refused, recalled, resolved, observed, newSaved, changedSaved, watchedPaths, polled,
+                 pollerObserved: poller.observed, paths, first, second, third, names, tree: await tree(opfs), size: docx.length };
     }, fs.readFileSync(path.join(FIXTURES, 'sample.docx')).toString('base64'));
     const t = fsResult.tree;
     const fsChecks = [
@@ -278,12 +334,19 @@ async function main() {
         ['taken name is not replaced', fsResult.second[0] === 'Docs/sub/report (1).pdf' && t['Docs/sub/report (1).pdf'] > 1000],
         ['other folder keeps structure', fsResult.third[0] === 'Out/Docs/sub/report.pdf' && t['Out/Docs/sub/report.pdf'] > 1000],
         ['save dialog never replaces an original', fsResult.refused === 'SourceFileError restored'],
+        ['handles remembered in IndexedDB', fsResult.recalled === true],
+        ['resolve() inside a folder', fsResult.resolved === 'sub/report.docx'],
+        ['watched folder: new file converted and saved', fsResult.newSaved === 'Docs/sub/new (converted).docx'],
+        ['watched folder: changed file converted again', fsResult.changedSaved === 'Docs/report (converted) (1).docx'],
+        ['watched folder: own results not picked up', JSON.stringify(fsResult.watchedPaths) === '["Docs/sub/new.docx"]'],
+        ['watching without FileSystemObserver polls', !fsResult.pollerObserved && JSON.stringify(fsResult.polled) === '["sub/polled.docx"]'],
         ['concurrent writes', JSON.stringify(fsResult.names) === '["a/x.txt","a/x (1).txt","a/x (2).txt"]'],
     ];
     for (const [name, ok] of fsChecks) {
         console.log(`${ok ? 'PASS' : 'FAIL'}  file system: ${name}`);
         if (!ok) failed++;
     }
+    console.log(`      (folder watching used ${fsResult.observed ? 'FileSystemObserver' : 'polling'})`);
     if (fsChecks.some(([, ok]) => !ok)) console.log(JSON.stringify(fsResult, null, 1));
 
     if (!process.argv.includes('--keep-open')) {

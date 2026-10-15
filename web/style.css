@@ -135,6 +135,12 @@ select {
 .link { font: inherit; color: var(--brand); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
 .link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .fs-error { color: var(--err); font-size: 0.9rem; margin-top: 8px; text-align: center; overflow-wrap: anywhere; }
+.out-dir-resume-bar:has(> [hidden]) { display: none; }
+.watches { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+.watch { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; padding: 8px 16px; font-size: 0.88rem; }
+.watch + .watch { border-top: 1px solid var(--border); }
+.watch-state { color: var(--muted); flex: 1; }
+.watch[data-watching="yes"] .watch-state { color: var(--ok); }
 .out-dir { margin: 0; padding: 8px 16px 10px; background: var(--surface-2); color: var(--muted); font-size: 0.85rem; overflow-wrap: anywhere; }
 
 .queue {

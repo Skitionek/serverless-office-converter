@@ -24,6 +24,8 @@ export const canPickFiles = typeof g.showOpenFilePicker === 'function';
 export const canPickDirectory = typeof g.showDirectoryPicker === 'function';
 /** `showSaveFilePicker()` is available. */
 export const canPickSaveFile = typeof g.showSaveFilePicker === 'function';
+/** `FileSystemObserver` is available (watchDirectory() polls without it). */
+export const canObserve = typeof g.FileSystemObserver === 'function';
 
 // One picker type per family, with a real MIME type each (the browser rejects made-up ones);
 // the extensions are what actually filters the dialog.
@@ -346,4 +348,110 @@ export function outputName(inputName, ext) {
 export function outputPath(inputPath, ext) {
     const slash = inputPath.lastIndexOf('/');
     return inputPath.slice(0, slash + 1) + outputName(inputPath.slice(slash + 1), ext);
+}
+
+/**
+ * Where `handle` is inside `dir`, as a relative path ("sub/report.docx"), or null when it is
+ * not inside it.
+ * @param {FileSystemDirectoryHandle} dir
+ * @param {FileSystemHandle} handle
+ * @returns {Promise<string|null>}
+ */
+export async function relativePath(dir, handle) {
+    const parts = await dir.resolve(handle).catch(() => null);
+    return parts && parts.length ? parts.join('/') : null;
+}
+
+/**
+ * Watches a folder (and its subfolders) for files that appear or change, with
+ * FileSystemObserver where available and by polling otherwise.  Changes are collected for
+ * `debounceMs`, then the folder is listed again and `onChange` receives the entries (as from
+ * listDirectory()) that are new or have a new `lastModified`.  Files for which `ignore(path)`
+ * is true (e.g. results written there by the app itself) are left out.
+ * @param {FileSystemDirectoryHandle} dir
+ * @param {(entries: FileEntry[]) => void} onChange
+ * @param {{filter?: (name: string) => boolean, ignore?: (path: string) => boolean,
+ *          debounceMs?: number, pollMs?: number, observe?: boolean, onError?: (e: Error) => void}} [opts]
+ * @returns {Promise<{stop: () => void, observed: boolean}>} `observed`: false when polling.
+ */
+export async function watchDirectory(dir, onChange, {
+    filter = isConvertible, ignore = () => false, debounceMs = 800, pollMs = 3000,
+    observe = canObserve, onError = (e) => console.warn('watchDirectory:', e),
+} = {}) {
+    const seen = new Map();
+    for (const e of await listDirectory(dir, { filter })) seen.set(e.path, e.file.lastModified);
+    let stopped = false;
+    let timer = null;
+    let scanning = null;
+
+    async function scan() {
+        const changed = [];
+        for (const e of await listDirectory(dir, { filter })) {
+            if (seen.get(e.path) === e.file.lastModified) continue;
+            seen.set(e.path, e.file.lastModified);
+            if (!ignore(e.path)) changed.push(e);
+        }
+        if (changed.length && !stopped) onChange(changed);
+    }
+    function schedule() {
+        if (stopped) return;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            // One scan at a time; changes during a scan schedule another one.
+            scanning = (scanning || Promise.resolve()).then(scan).catch(onError);
+        }, debounceMs);
+    }
+
+    let observer = null;
+    let poller = null;
+    if (observe) {
+        try {
+            observer = new g.FileSystemObserver((records) => {
+                if (records.some((r) => r.type !== 'disappeared')) schedule();
+            });
+            await observer.observe(dir, { recursive: true });
+        } catch (e) {
+            onError(e);
+            observer = null;
+        }
+    }
+    if (!observer) poller = setInterval(schedule, pollMs);
+    return {
+        observed: !!observer,
+        stop() {
+            stopped = true;
+            clearTimeout(timer);
+            clearInterval(poller);
+            if (observer) observer.disconnect();
+        },
+    };
+}
+
+// Handles can be stored in IndexedDB (and nowhere else): they keep working after a reload,
+// although the browser may ask for permission again (ensureWritable()).
+const DB_NAME = 'office-converter-handles';
+
+function withStore(mode, fn) {
+    return new Promise((resolve, reject) => {
+        const open = indexedDB.open(DB_NAME, 1);
+        open.onupgradeneeded = () => open.result.createObjectStore('handles');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+            const db = open.result;
+            const tx = db.transaction('handles', mode);
+            const request = fn(tx.objectStore('handles'));
+            tx.oncomplete = () => { db.close(); resolve(request.result); };
+            tx.onerror = tx.onabort = () => { db.close(); reject(tx.error); };
+        };
+    });
+}
+
+/** Stores a handle under `key` (in IndexedDB), or removes it when `handle` is null. */
+export function rememberHandle(key, handle) {
+    return withStore('readwrite', (store) => (handle ? store.put(handle, key) : store.delete(key)));
+}
+
+/** The handle stored under `key`, or null. */
+export async function recallHandle(key) {
+    return (await withStore('readonly', (store) => store.get(key)).catch(() => null)) || null;
 }

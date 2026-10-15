@@ -158,23 +158,40 @@ def main():
     for ext, tid, reason in problems:
         print(f'  FAIL {ext} -> {tid}: {reason}')
 
-    # --- table ---
+    # --- tables ---
     names = {'pdfa': 'PDF/A'}
-    head = '| Input \\ Output | ' + ' | '.join(names.get(t, t.upper()) for t in targets) + ' |'
-    lines = [head, '| --- |' + ' :---: |' * len(targets)]
-    groups = {'writer': 'Text documents', 'calc': 'Spreadsheets', 'impress': 'Presentations', 'draw': 'Drawings and images'}
-    for family, title in groups.items():
-        rows = [r for r in results['inputs'] if r['family'] == family]
-        if not rows:
-            continue
-        lines.append('| **' + title + '** |' + ' |' * len(targets))
-        for row in rows:
-            cells = []
-            for tid in targets:
-                c = row['cells'][tid]
-                cells.append('·' if c['status'] == 'n/a' else '✅' if c['verdict'] == 'ok' else '❌')
-            lines.append('| ' + row['ext'].upper() + ' | ' + ' | '.join(cells) + ' |')
-    table = '\n'.join(lines)
+    groups = {'writer': 'Text documents', 'calc': 'Spreadsheets', 'impress': 'Presentations',
+              'draw': 'Drawings and images'}
+
+    def render(title, families, tids):
+        rows = [r for r in results['inputs'] if r['family'] in families]
+        head = '| From \\ To | ' + ' | '.join(names.get(t, t.upper()) for t in tids) + ' |'
+        lines = [f'#### {title}', '', head, '| --- |' + ' :---: |' * len(tids)]
+        for family in families:
+            if len(families) > 1:
+                lines.append('| **' + groups[family] + '** |' + ' |' * len(tids))
+            for row in (r for r in rows if r['family'] == family):
+                cells = []
+                for tid in tids:
+                    c = row['cells'][tid]
+                    cells.append('·' if c['status'] == 'n/a' else '✅' if c['verdict'] == 'ok' else '❌')
+                lines.append('| ' + row['ext'].upper() + ' | ' + ' | '.join(cells) + ' |')
+        return '\n'.join(lines)
+
+    common = ['pdf', 'pdfa', 'png', 'jpg']  # offered for every input
+    shown = set(common)
+    tables = [render('Common outputs (every input)', list(groups), common)]
+    for family, title, tids in (
+        ('writer', 'Text documents', ['docx', 'doc', 'odt', 'rtf', 'txt', 'md', 'fodt']),
+        ('calc', 'Spreadsheets', ['xlsx', 'xls', 'ods', 'csv', 'html', 'fods']),
+        ('impress', 'Presentations', ['pptx', 'ppt', 'odp', 'fodp', 'svg']),
+        ('draw', 'Drawings and images', ['odg', 'svg']),
+    ):
+        tables.append(render(title + ': format-specific outputs', [family], tids))
+        shown.update(tids)
+    missing = [t for t in targets if t not in shown]
+    assert not missing, 'targets not in any table: %s' % missing
+    table = '\n\n'.join(tables)
     summary = (f'{ok} of {ok + failed} offered conversions produce a valid file with the content intact '
                f'({na} combinations are not offered).')
     block = f'{START}\n{summary}\n\n{table}\n{END}'

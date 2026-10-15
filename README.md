@@ -40,39 +40,85 @@ validated: it must be a real file of the target type (PDF, a DOCX/XLSX/PPTX pack
 package of the right type, an OLE file for DOC/XLS/PPT, a decodable PNG/JPEG, ...) **and still
 contain the text of the input**. Drawings and images are checked for validity only.
 
-✅ works · ❌ fails · **·** not offered (the format doesn't apply, e.g. a spreadsheet to DOCX)
+✅ works · ❌ fails. Combinations across document kinds, such as a spreadsheet to DOCX, are not
+offered and are not listed. Every input can be turned into the **common outputs** (PDF, PDF/A,
+PNG, JPG); the other tables show the outputs that depend on the kind of document.
 
 <!-- compat:start -->
 208 of 208 offered conversions produce a valid file with the content intact (298 combinations are not offered).
 
-| Input \ Output | PDF | PDF/A | DOCX | DOC | ODT | RTF | TXT | MD | HTML | XLSX | XLS | ODS | CSV | PPTX | PPT | ODP | ODG | SVG | PNG | JPG | FODT | FODS | FODP |
-| --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Text documents** | | | | | | | | | | | | | | | | | | | | | | | |
-| DOCX | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
-| DOC | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
-| ODT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
-| FODT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
-| RTF | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
-| TXT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
-| MD | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
-| HTML | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | · |
-| **Spreadsheets** | | | | | | | | | | | | | | | | | | | | | | | |
-| XLSX | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
-| XLS | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
-| ODS | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
-| FODS | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
-| CSV | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
-| TSV | ✅ | ✅ | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | ✅ | · | · | · | · | · | ✅ | ✅ | · | ✅ | · |
-| **Presentations** | | | | | | | | | | | | | | | | | | | | | | | |
-| PPTX | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | ✅ | ✅ | ✅ | · | · | ✅ |
-| PPT | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | ✅ | ✅ | ✅ | · | · | ✅ |
-| ODP | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | ✅ | ✅ | ✅ | · | · | ✅ |
-| FODP | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | · | ✅ | ✅ | ✅ | · | · | ✅ |
-| **Drawings and images** | | | | | | | | | | | | | | | | | | | | | | | |
-| SVG | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | · | · | · |
-| ODG | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | · | · | · |
-| PNG | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | · | · | · |
-| JPG | ✅ | ✅ | · | · | · | · | · | · | · | · | · | · | · | · | · | · | ✅ | ✅ | ✅ | ✅ | · | · | · |
+#### Common outputs (every input)
+
+| From \ To | PDF | PDF/A | PNG | JPG |
+| --- | :---: | :---: | :---: | :---: |
+| **Text documents** | | | | |
+| DOCX | ✅ | ✅ | ✅ | ✅ |
+| DOC | ✅ | ✅ | ✅ | ✅ |
+| ODT | ✅ | ✅ | ✅ | ✅ |
+| FODT | ✅ | ✅ | ✅ | ✅ |
+| RTF | ✅ | ✅ | ✅ | ✅ |
+| TXT | ✅ | ✅ | ✅ | ✅ |
+| MD | ✅ | ✅ | ✅ | ✅ |
+| HTML | ✅ | ✅ | ✅ | ✅ |
+| **Spreadsheets** | | | | |
+| XLSX | ✅ | ✅ | ✅ | ✅ |
+| XLS | ✅ | ✅ | ✅ | ✅ |
+| ODS | ✅ | ✅ | ✅ | ✅ |
+| FODS | ✅ | ✅ | ✅ | ✅ |
+| CSV | ✅ | ✅ | ✅ | ✅ |
+| TSV | ✅ | ✅ | ✅ | ✅ |
+| **Presentations** | | | | |
+| PPTX | ✅ | ✅ | ✅ | ✅ |
+| PPT | ✅ | ✅ | ✅ | ✅ |
+| ODP | ✅ | ✅ | ✅ | ✅ |
+| FODP | ✅ | ✅ | ✅ | ✅ |
+| **Drawings and images** | | | | |
+| SVG | ✅ | ✅ | ✅ | ✅ |
+| ODG | ✅ | ✅ | ✅ | ✅ |
+| PNG | ✅ | ✅ | ✅ | ✅ |
+| JPG | ✅ | ✅ | ✅ | ✅ |
+
+#### Text documents: format-specific outputs
+
+| From \ To | DOCX | DOC | ODT | RTF | TXT | MD | FODT |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| DOCX | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| DOC | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ODT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FODT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| RTF | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| TXT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| MD | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| HTML | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+#### Spreadsheets: format-specific outputs
+
+| From \ To | XLSX | XLS | ODS | CSV | HTML | FODS |
+| --- | :---: | :---: | :---: | :---: | :---: | :---: |
+| XLSX | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| XLS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ODS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FODS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| CSV | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| TSV | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+#### Presentations: format-specific outputs
+
+| From \ To | PPTX | PPT | ODP | FODP | SVG |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| PPTX | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PPT | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ODP | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FODP | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+#### Drawings and images: format-specific outputs
+
+| From \ To | ODG | SVG |
+| --- | :---: | :---: |
+| SVG | ✅ | ✅ |
+| ODG | ✅ | ✅ |
+| PNG | ✅ | ✅ |
+| JPG | ✅ | ✅ |
 <!-- compat:end -->
 
 Notes:

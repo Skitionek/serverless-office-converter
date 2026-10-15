@@ -42,7 +42,7 @@ have its content**: the text of the input, or for images and drawings a PDF page
 slide, drawing shapes, a non-blank picture.
 
 ✅ works · ❌ fails. Every input can be turned into the **common outputs** (PDF, PDF/A, PNG,
-JPG); the other tables show the outputs that depend on the kind of document. The first table
+JPG); the other tables show the outputs that depend on the kind of document. The last table
 also lists the outputs that are *not* offered, and what happens when they are forced anyway:
 ❌ the export fails, 💥 it crashes the browser tab (the export runs out of memory), ⚠️ it
 "succeeds" but the file is not what was asked for (for example a text document exported with
@@ -50,34 +50,6 @@ the spreadsheet filter comes back as an ODT, or the file is empty).
 
 <!-- compat:start -->
 460 of 460 offered conversions produce a valid file with the content intact (690 combinations are not offered).
-
-#### Which outputs each kind of document supports
-
-| Output | Text documents | Spreadsheets | Presentations | Drawings and images |
-| --- | :---: | :---: | :---: | :---: |
-| PDF | ✅ | ✅ | ✅ | ✅ |
-| PDF/A | ✅ | ✅ | ✅ | ✅ |
-| DOCX | ✅ | ❌ | ❌ | ❌ |
-| DOC | ✅ | ❌ | ❌ | ❌ |
-| ODT | ✅ | ⚠️ | ⚠️ | ⚠️ |
-| RTF | ✅ | ❌ | ❌ | ❌ |
-| TXT | ✅ | ❌ | ❌ | ❌ |
-| MD | ✅ | ❌ | ❌ | ❌ |
-| HTML | ❌ | ✅ | ❌ | ❌ |
-| XLSX | 💥 | ✅ | 💥 | 💥 |
-| XLS | ❌ | ✅ | ❌ | ❌ |
-| ODS | ⚠️ | ✅ | ⚠️ | ⚠️ |
-| CSV | ❌ | ✅ | ❌ | ❌ |
-| PPTX | 💥 | 💥 | ✅ | ⚠️ |
-| PPT | ❌ | ❌ | ✅ | ❌ |
-| ODP | ⚠️ | ⚠️ | ✅ | ⚠️ |
-| ODG | ⚠️ | ⚠️ | ⚠️ | ✅ |
-| SVG | ❌ | ❌ | ✅ | ✅ |
-| PNG | ✅ | ✅ | ✅ | ✅ |
-| JPG | ✅ | ✅ | ✅ | ✅ |
-| FODT | ✅ | ⚠️ | ⚠️ | ⚠️ |
-| FODS | ❌ | ✅ | ❌ | ❌ |
-| FODP | ❌ | ⚠️ | ✅ | ❌ |
 
 #### Common outputs (every input)
 
@@ -207,6 +179,34 @@ the spreadsheet filter comes back as an ODT, or the file is empty).
 | BMP | ✅ | ✅ |
 | WEBP | ✅ | ✅ |
 | TIFF | ✅ | ✅ |
+
+#### Which outputs each kind of document supports
+
+| Output | Text documents | Spreadsheets | Presentations | Drawings and images |
+| --- | :---: | :---: | :---: | :---: |
+| PDF | ✅ | ✅ | ✅ | ✅ |
+| PDF/A | ✅ | ✅ | ✅ | ✅ |
+| DOCX | ✅ | ❌ | ❌ | ❌ |
+| DOC | ✅ | ❌ | ❌ | ❌ |
+| ODT | ✅ | ⚠️ | ⚠️ | ⚠️ |
+| RTF | ✅ | ❌ | ❌ | ❌ |
+| TXT | ✅ | ❌ | ❌ | ❌ |
+| MD | ✅ | ❌ | ❌ | ❌ |
+| HTML | ❌ | ✅ | ❌ | ❌ |
+| XLSX | 💥 | ✅ | 💥 | 💥 |
+| XLS | ❌ | ✅ | ❌ | ❌ |
+| ODS | ⚠️ | ✅ | ⚠️ | ⚠️ |
+| CSV | ❌ | ✅ | ❌ | ❌ |
+| PPTX | 💥 | 💥 | ✅ | ⚠️ |
+| PPT | ❌ | ❌ | ✅ | ❌ |
+| ODP | ⚠️ | ⚠️ | ✅ | ⚠️ |
+| ODG | ⚠️ | ⚠️ | ⚠️ | ✅ |
+| SVG | ❌ | ❌ | ✅ | ✅ |
+| PNG | ✅ | ✅ | ✅ | ✅ |
+| JPG | ✅ | ✅ | ✅ | ✅ |
+| FODT | ✅ | ⚠️ | ⚠️ | ⚠️ |
+| FODS | ❌ | ✅ | ❌ | ❌ |
+| FODP | ❌ | ⚠️ | ✅ | ❌ |
 <!-- compat:end -->
 
 Notes:

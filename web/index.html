@@ -13,6 +13,7 @@
     import { ensureCrossOriginIsolation } from './office-converter/isolation.js';
     ensureCrossOriginIsolation('sw.js');
 </script>
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="style.css">
 <script type="module" src="app.js"></script>
 </head>
@@ -40,11 +41,14 @@
 
     <section class="drop" id="drop">
         <input type="file" id="file-input" multiple class="visually-hidden">
+        <input type="file" id="folder-input" webkitdirectory multiple hidden>
         <label for="file-input" class="drop-label">
             <svg class="drop-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
             <span class="drop-title">Drop files here or <u>choose files</u></span>
             <span class="drop-hint">Word, Excel, PowerPoint, OpenDocument, RTF, TXT, Markdown, CSV, SVG, images</span>
         </label>
+        <p class="drop-more">or <button type="button" class="link" id="pick-folder">convert a whole folder</button></p>
+        <div class="fs-error" id="fs-error" hidden role="alert"></div>
     </section>
 
     <section class="engine" aria-live="polite">
@@ -61,8 +65,15 @@
         <ul class="files" id="files"></ul>
         <div class="queue-bar">
             <button type="button" class="btn btn-quiet" id="clear">Clear list</button>
-            <button type="button" class="btn btn-primary" id="convert-all" disabled>Convert</button>
+            <div class="queue-actions">
+                <button type="button" class="btn" id="save-folder" hidden
+                    title="Save every result as a new file in a folder you choose; existing files are never replaced">Save to folder…</button>
+                <button type="button" class="btn btn-primary" id="convert-all" disabled>Convert</button>
+            </div>
         </div>
+        <p class="out-dir" id="out-dir" hidden>Results are saved as new files in
+            <strong id="out-dir-name"></strong>; nothing there is replaced.
+            <button type="button" class="link" id="out-dir-stop">Stop saving there</button></p>
     </section>
 
     <section class="about">
@@ -73,6 +84,14 @@
                 <li>Convert a file. Only this page's own files appear, and none carries your document.</li>
                 <li>Switch the Network tab to <strong>Offline</strong> (or disconnect from the internet): conversions keep working.</li>
             </ol>
+        </details>
+        <details>
+            <summary>Are my original files changed?</summary>
+            <p>Never. The converter only reads them. Results are saved as new files: when a
+                name is already taken, for example when converting DOCX to DOCX in the same folder,
+                the result is called <code>report (converted).docx</code> or <code>report (1).pdf</code>
+                instead. In Chrome and Edge you can save straight into a folder (next to the originals,
+                if you pick their folder); the browser asks for permission first.</p>
         </details>
         <details>
             <summary>How does it work?</summary>

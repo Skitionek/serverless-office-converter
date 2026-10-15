@@ -24,6 +24,12 @@ component: files are converted inside the visitor's browser tab and are never up
   converter is unmodified LibreOffice, not a black-box web service.
 * **Fast and private for batches.** Drop many files and convert them one after another
   without any upload time, size limit or queue at someone else's server.
+* **Whole folders, saved straight to disk, originals untouched.** Drop or pick a folder and
+  its subfolders are converted too. In Chrome and Edge (File System Access API) results can be
+  saved directly into a folder of your choice, keeping the folder structure, or next to the
+  originals. Inputs are only ever read: results are always **new files**, and a name that is
+  taken gets ` (1)`, ` (2)`, ... (DOCX to DOCX gives `report (converted).docx`). Installed as an
+  app, the converter also appears in the operating system's *Open with* menu.
 
 | From | To |
 | --- | --- |

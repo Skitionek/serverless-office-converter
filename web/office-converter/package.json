@@ -10,6 +10,7 @@
     "./office-engine.js": "./office-engine.js",
     "./isolation.js": "./isolation.js",
     "./formats.js": "./formats.js",
+    "./file-system.js": "./file-system.js",
     "./engine-worker.js": "./engine-worker.js",
     "./service-worker.js": "./service-worker.js",
     "./package.json": "./package.json"
@@ -19,6 +20,7 @@
     "office-engine.js",
     "isolation.js",
     "formats.js",
+    "file-system.js",
     "engine-worker.js",
     "lo-thread.js",
     "service-worker.js",

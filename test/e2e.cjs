@@ -202,6 +202,90 @@ async function main() {
     thumbs.forEach((th) => console.log(`${th.state === 'ready' && th.width ? 'PASS' : 'FAIL'}  thumbnail ${th.name} ${th.state} ${th.width}px ${th.title}`));
     failed += badThumbs.length;
 
+    // File System Access: folders keep their structure, results are written as new files and
+    // the originals are never replaced.  The origin private file system stands in for the
+    // user's folders (its handles are the same kind of objects the pickers return).
+    const fsResult = await page.evaluate(async (docxB64) => {
+        const fsm = await import(new URL('office-converter/file-system.js', location.href).href);
+        const conv = window.officeConverter;
+        const docx = Uint8Array.from(atob(docxB64), (ch) => ch.charCodeAt(0));
+        const opfs = await navigator.storage.getDirectory();
+        for await (const name of opfs.keys()) await opfs.removeEntry(name, { recursive: true });
+        const docs = await opfs.getDirectoryHandle('Docs', { create: true });
+        const sub = await docs.getDirectoryHandle('sub', { create: true });
+        for (const dir of [docs, sub]) {
+            const w = await (await dir.getFileHandle('report.docx', { create: true })).createWritable();
+            await w.write(docx);
+            await w.close();
+            await (await dir.getFileHandle('.hidden.docx', { create: true })).createWritable().then((x) => x.close());
+        }
+        async function tree(dir, prefix = '') {
+            const out = {};
+            for await (const h of dir.values()) {
+                if (h.kind === 'file') out[prefix + h.name] = (await h.getFile()).size;
+                else Object.assign(out, await tree(h, prefix + h.name + '/'));
+            }
+            return out;
+        }
+        async function run(entries, targets) {
+            conv.addFiles(entries);
+            conv.items.forEach((item, i) => { item.row.querySelector('.file-target').value = targets[i]; });
+            await conv.runQueue();
+            return conv.items.map((i) => i.savedTo || i.row.querySelector('.file-status').textContent);
+        }
+        document.getElementById('clear').click();
+        const entries = await fsm.listDirectory(docs);
+        const paths = entries.map((e) => e.path);
+        // Saving into the folder the files came from: results go next to the originals.
+        await conv.setOutputDirectory(docs);
+        const first = await run(entries, ['docx', 'pdf']);
+        document.getElementById('clear').click();
+        const second = await run(entries.slice(1), ['pdf']);
+        document.getElementById('clear').click();
+        // Saving somewhere else keeps the dropped folder's name and structure.
+        await conv.setOutputDirectory(await opfs.getDirectoryHandle('Out', { create: true }));
+        const third = await run(entries.slice(1), ['pdf']);
+        await conv.setOutputDirectory(null);
+        document.getElementById('clear').click();
+        // Concurrent writes of the same name never collide.
+        const scratch = await opfs.getDirectoryHandle('scratch', { create: true });
+        const names = (await Promise.all([1, 2, 3].map((n) => fsm.writeNewFile(scratch, 'a/x.txt', 'v' + n))))
+            .map((r) => r.path);
+        // Picking an original in the save dialog (which empties it) puts it back and refuses.
+        const original = await docs.getFileHandle('report.docx');
+        const protect = [{ handle: original, data: (await original.getFile()).arrayBuffer() }];
+        const realPicker = window.showSaveFilePicker;
+        window.showSaveFilePicker = async () => {
+            await (await original.createWritable()).close(); // what the browser does
+            return docs.getFileHandle('report.docx');
+        };
+        let refused = null;
+        try {
+            await fsm.saveFileAs(new Blob(['x']), 'report.docx', { protect });
+        } catch (e) {
+            refused = e.name + (e.restored ? ' restored' : '');
+        }
+        window.showSaveFilePicker = realPicker;
+        document.getElementById('clear').click();
+        return { refused, paths, first, second, third, names, tree: await tree(opfs), size: docx.length };
+    }, fs.readFileSync(path.join(FIXTURES, 'sample.docx')).toString('base64'));
+    const t = fsResult.tree;
+    const fsChecks = [
+        ['folder listing skips hidden files', JSON.stringify(fsResult.paths) === '["Docs/report.docx","Docs/sub/report.docx"]'],
+        ['originals unchanged', t['Docs/report.docx'] === fsResult.size && t['Docs/sub/report.docx'] === fsResult.size],
+        ['same format gets a new name', fsResult.first[0] === 'Docs/report (converted).docx' && t['Docs/report (converted).docx'] > 1000],
+        ['result next to the original', fsResult.first[1] === 'Docs/sub/report.pdf' && t['Docs/sub/report.pdf'] > 1000],
+        ['taken name is not replaced', fsResult.second[0] === 'Docs/sub/report (1).pdf' && t['Docs/sub/report (1).pdf'] > 1000],
+        ['other folder keeps structure', fsResult.third[0] === 'Out/Docs/sub/report.pdf' && t['Out/Docs/sub/report.pdf'] > 1000],
+        ['save dialog never replaces an original', fsResult.refused === 'SourceFileError restored'],
+        ['concurrent writes', JSON.stringify(fsResult.names) === '["a/x.txt","a/x (1).txt","a/x (2).txt"]'],
+    ];
+    for (const [name, ok] of fsChecks) {
+        console.log(`${ok ? 'PASS' : 'FAIL'}  file system: ${name}`);
+        if (!ok) failed++;
+    }
+    if (fsChecks.some(([, ok]) => !ok)) console.log(JSON.stringify(fsResult, null, 1));
+
     if (!process.argv.includes('--keep-open')) {
         await browser.close();
         server.close();

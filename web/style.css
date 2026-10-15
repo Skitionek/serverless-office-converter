@@ -131,6 +131,11 @@ select {
 .drop-icon { width: 40px; height: 40px; color: var(--brand); }
 .drop-title { font-size: 1.1rem; font-weight: 600; }
 .drop-hint { color: var(--muted); font-size: 0.85rem; max-width: 60ch; }
+.drop-more { margin: 8px 0 0; text-align: center; color: var(--muted); font-size: 0.9rem; }
+.link { font: inherit; color: var(--brand); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+.link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.fs-error { color: var(--err); font-size: 0.9rem; margin-top: 8px; text-align: center; overflow-wrap: anywhere; }
+.out-dir { margin: 0; padding: 8px 16px 10px; background: var(--surface-2); color: var(--muted); font-size: 0.85rem; overflow-wrap: anywhere; }
 
 .queue {
     background: var(--surface);

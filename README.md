@@ -38,14 +38,46 @@ Every input format against every output format the converter offers for it. Each
 **actually converted** in headless Chromium with the shipped engine, and the output was
 validated: it must be a real file of the target type (PDF, a DOCX/XLSX/PPTX package, an ODF
 package of the right type, an OLE file for DOC/XLS/PPT, a decodable PNG/JPEG, ...) **and still
-contain the text of the input**. Drawings and images are checked for validity only.
+have its content**: the text of the input, or for images and drawings a PDF page with content, a
+slide, drawing shapes, a non-blank picture.
 
-✅ works · ❌ fails. Combinations across document kinds, such as a spreadsheet to DOCX, are not
-offered and are not listed. Every input can be turned into the **common outputs** (PDF, PDF/A,
-PNG, JPG); the other tables show the outputs that depend on the kind of document.
+✅ works · ❌ fails. Every input can be turned into the **common outputs** (PDF, PDF/A, PNG,
+JPG); the other tables show the outputs that depend on the kind of document. The first table
+also lists the outputs that are *not* offered, and what happens when they are forced anyway:
+❌ the export fails, 💥 it crashes the browser tab (the export runs out of memory), ⚠️ it
+"succeeds" but the file is not what was asked for (for example a text document exported with
+the spreadsheet filter comes back as an ODT, or the file is empty).
 
 <!-- compat:start -->
-208 of 208 offered conversions produce a valid file with the content intact (298 combinations are not offered).
+460 of 460 offered conversions produce a valid file with the content intact (690 combinations are not offered).
+
+#### Which outputs each kind of document supports
+
+| Output | Text documents | Spreadsheets | Presentations | Drawings and images |
+| --- | :---: | :---: | :---: | :---: |
+| PDF | ✅ | ✅ | ✅ | ✅ |
+| PDF/A | ✅ | ✅ | ✅ | ✅ |
+| DOCX | ✅ | ❌ | ❌ | ❌ |
+| DOC | ✅ | ❌ | ❌ | ❌ |
+| ODT | ✅ | ⚠️ | ⚠️ | ⚠️ |
+| RTF | ✅ | ❌ | ❌ | ❌ |
+| TXT | ✅ | ❌ | ❌ | ❌ |
+| MD | ✅ | ❌ | ❌ | ❌ |
+| HTML | ❌ | ✅ | ❌ | ❌ |
+| XLSX | 💥 | ✅ | 💥 | 💥 |
+| XLS | ❌ | ✅ | ❌ | ❌ |
+| ODS | ⚠️ | ✅ | ⚠️ | ⚠️ |
+| CSV | ❌ | ✅ | ❌ | ❌ |
+| PPTX | 💥 | 💥 | ✅ | ⚠️ |
+| PPT | ❌ | ❌ | ✅ | ❌ |
+| ODP | ⚠️ | ⚠️ | ✅ | ⚠️ |
+| ODG | ⚠️ | ⚠️ | ⚠️ | ✅ |
+| SVG | ❌ | ❌ | ✅ | ✅ |
+| PNG | ✅ | ✅ | ✅ | ✅ |
+| JPG | ✅ | ✅ | ✅ | ✅ |
+| FODT | ✅ | ⚠️ | ⚠️ | ⚠️ |
+| FODS | ❌ | ✅ | ❌ | ❌ |
+| FODP | ❌ | ⚠️ | ✅ | ❌ |
 
 #### Common outputs (every input)
 
@@ -60,6 +92,13 @@ PNG, JPG); the other tables show the outputs that depend on the kind of document
 | TXT | ✅ | ✅ | ✅ | ✅ |
 | MD | ✅ | ✅ | ✅ | ✅ |
 | HTML | ✅ | ✅ | ✅ | ✅ |
+| DOTX | ✅ | ✅ | ✅ | ✅ |
+| DOCM | ✅ | ✅ | ✅ | ✅ |
+| DOTM | ✅ | ✅ | ✅ | ✅ |
+| OTT | ✅ | ✅ | ✅ | ✅ |
+| HTM | ✅ | ✅ | ✅ | ✅ |
+| XHTML | ✅ | ✅ | ✅ | ✅ |
+| MARKDOWN | ✅ | ✅ | ✅ | ✅ |
 | **Spreadsheets** | | | | |
 | XLSX | ✅ | ✅ | ✅ | ✅ |
 | XLS | ✅ | ✅ | ✅ | ✅ |
@@ -67,16 +106,37 @@ PNG, JPG); the other tables show the outputs that depend on the kind of document
 | FODS | ✅ | ✅ | ✅ | ✅ |
 | CSV | ✅ | ✅ | ✅ | ✅ |
 | TSV | ✅ | ✅ | ✅ | ✅ |
+| XLTX | ✅ | ✅ | ✅ | ✅ |
+| XLSM | ✅ | ✅ | ✅ | ✅ |
+| XLTM | ✅ | ✅ | ✅ | ✅ |
+| OTS | ✅ | ✅ | ✅ | ✅ |
+| TAB | ✅ | ✅ | ✅ | ✅ |
+| DIF | ✅ | ✅ | ✅ | ✅ |
+| SLK | ✅ | ✅ | ✅ | ✅ |
 | **Presentations** | | | | |
 | PPTX | ✅ | ✅ | ✅ | ✅ |
 | PPT | ✅ | ✅ | ✅ | ✅ |
 | ODP | ✅ | ✅ | ✅ | ✅ |
 | FODP | ✅ | ✅ | ✅ | ✅ |
+| POTX | ✅ | ✅ | ✅ | ✅ |
+| PPTM | ✅ | ✅ | ✅ | ✅ |
+| PPSX | ✅ | ✅ | ✅ | ✅ |
+| PPSM | ✅ | ✅ | ✅ | ✅ |
+| OTP | ✅ | ✅ | ✅ | ✅ |
+| PPS | ✅ | ✅ | ✅ | ✅ |
+| POT | ✅ | ✅ | ✅ | ✅ |
 | **Drawings and images** | | | | |
 | SVG | ✅ | ✅ | ✅ | ✅ |
 | ODG | ✅ | ✅ | ✅ | ✅ |
 | PNG | ✅ | ✅ | ✅ | ✅ |
 | JPG | ✅ | ✅ | ✅ | ✅ |
+| OTG | ✅ | ✅ | ✅ | ✅ |
+| JPEG | ✅ | ✅ | ✅ | ✅ |
+| SVGZ | ✅ | ✅ | ✅ | ✅ |
+| GIF | ✅ | ✅ | ✅ | ✅ |
+| BMP | ✅ | ✅ | ✅ | ✅ |
+| WEBP | ✅ | ✅ | ✅ | ✅ |
+| TIFF | ✅ | ✅ | ✅ | ✅ |
 
 #### Text documents: format-specific outputs
 
@@ -90,6 +150,13 @@ PNG, JPG); the other tables show the outputs that depend on the kind of document
 | TXT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | MD | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | HTML | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| DOTX | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| DOCM | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| DOTM | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| OTT | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| HTM | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| XHTML | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| MARKDOWN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 #### Spreadsheets: format-specific outputs
 
@@ -101,6 +168,13 @@ PNG, JPG); the other tables show the outputs that depend on the kind of document
 | FODS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | CSV | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | TSV | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| XLTX | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| XLSM | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| XLTM | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| OTS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| TAB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| DIF | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| SLK | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 #### Presentations: format-specific outputs
 
@@ -110,6 +184,13 @@ PNG, JPG); the other tables show the outputs that depend on the kind of document
 | PPT | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ODP | ✅ | ✅ | ✅ | ✅ | ✅ |
 | FODP | ✅ | ✅ | ✅ | ✅ | ✅ |
+| POTX | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PPTM | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PPSX | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PPSM | ✅ | ✅ | ✅ | ✅ | ✅ |
+| OTP | ✅ | ✅ | ✅ | ✅ | ✅ |
+| PPS | ✅ | ✅ | ✅ | ✅ | ✅ |
+| POT | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 #### Drawings and images: format-specific outputs
 
@@ -119,13 +200,29 @@ PNG, JPG); the other tables show the outputs that depend on the kind of document
 | ODG | ✅ | ✅ |
 | PNG | ✅ | ✅ |
 | JPG | ✅ | ✅ |
+| OTG | ✅ | ✅ |
+| JPEG | ✅ | ✅ |
+| SVGZ | ✅ | ✅ |
+| GIF | ✅ | ✅ |
+| BMP | ✅ | ✅ |
+| WEBP | ✅ | ✅ |
+| TIFF | ✅ | ✅ |
 <!-- compat:end -->
 
 Notes:
 
-* The XLS/DOC/PPT/ODG/FODT/... inputs, and the PNG/JPG inputs, were produced from the DOCX, XLSX,
-  PPTX and SVG samples by this converter itself (round trip); the others are hand-written or
-  generated with python-docx/openpyxl/python-pptx. All fixtures are in `test/fixtures/matrix/`.
+* **Not offered means tested and not working.** `node test/matrix.cjs --cross` forces each
+  output's own export filter onto every kind of document it is not offered for (298
+  combinations of the first 22 inputs): none works. The outcome was the same for every input of a
+  kind, so it is recorded per kind in `test/forced-results.json`. In particular, Markdown is
+  only available from text documents, and HTML only from spreadsheets (Writer's HTML export
+  needs a component left out of the build).
+* **Inputs.** 50 formats: hand-written ones (TXT, MD, HTML, CSV, TSV, DIF, SYLK, SVG), samples
+  made with python-docx/openpyxl/python-pptx (DOCX, XLSX, PPTX), Pillow (GIF, BMP, WebP, TIFF), and the
+  rest converted from those by this converter itself, or derived by changing the package type
+  (templates, macro-enabled files) or the file extension (HTM, MARKDOWN, TAB, PPS, ...). All
+  fixtures are in `test/fixtures/matrix/`. Old binary formats such as DOC, XLS and PPT are
+  written by LibreOffice, not by Microsoft Office, and real-world files will vary.
 * "Works" means the content survives, not pixel-perfect layout. Tables, formulas (recalculated),
   Unicode text and bullets are in the samples; complex documents will expose differences like any
   other LibreOffice conversion.
@@ -133,8 +230,11 @@ Notes:
 * SVG export exists for slides and drawings only: LibreOffice's Writer and Calc SVG filters are
   internal and fail to export, so they're not offered.
 * PNG/JPEG/SVG exports contain the first page or slide.
-* Regenerate: `node test/matrix.cjs && python3 test/matrix-report.py` (needs Playwright,
-  poppler's `pdftotext` and Pillow). `node test/matrix.cjs --make-fixtures` rebuilds the fixtures.
+* Regenerate: `node test/matrix.cjs --make-fixtures && python3 test/make-extra-fixtures.py`
+  (fixtures), `node test/matrix.cjs && python3 test/matrix-report.py` (tables; needs Playwright,
+  poppler's `pdftotext`, Pillow and pypdf), and `node test/matrix.cjs --cross --out test/out/cross`
+  then `python3 test/matrix-report.py --out test/out/cross --forced-from test/out/cross/validated.json`
+  (forced combinations; over an hour, because every crash restarts the tab).
 
 The engine is a **29.7 MB** download (xz-compressed; 94.5 MB `soffice.wasm` + 51 MB file
 system image uncompressed), fetched once and then served from the browser cache. It starts in

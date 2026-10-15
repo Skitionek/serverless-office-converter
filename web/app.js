@@ -2,7 +2,8 @@ import {
     ACCEPT, FAMILY_LABELS, INPUT_FILTERS, OfficeEngine, TARGETS, TARGET_BY_ID,
     canPickDirectory, canPickFiles, canPickSaveFile, ensureWritable, entriesFromDataTransfer,
     entriesFromInput, extensionOf, guessFamily, openDirectory, openFiles, outputName, outputPath,
-    pickOutputDirectory, saveFileAs, targetsForFamily, writeNewFile,
+    pickOutputDirectory, recallHandle, relativePath, rememberHandle, saveFileAs, targetsForFamily,
+    watchDirectory, writeNewFile,
 } from './office-converter/index.js';
 import { OfficeThumbnail } from './office-thumbnail/office-thumbnail.js';
 
@@ -172,9 +173,11 @@ function resetResult(item) {
 
 // Accepts Files and FileEntry objects ({file, handle?, path, root?}, see
 // office-converter/file-system.js), so files keep their handle and folder path.
+// Returns the new queue items.
 function addFiles(list) {
     const entries = [...list].map((x) => (x instanceof Blob ? { file: x, path: x.name } : x));
-    if (!entries.length) return;
+    const added = [];
+    if (!entries.length) return added;
     const defaultTarget = $('all-target').value;
     for (const { file, handle = null, path = file.name, root = null } of entries) {
         const family = guessFamily(file.name);
@@ -215,17 +218,20 @@ function addFiles(list) {
             updateQueueVisibility();
         });
         items.push(item);
+        added.push(item);
         $('files').append(row);
         setStatus(item, 'queued', '');
     }
     updateQueueVisibility();
+    for (const item of added) if (item.root) offerWatch(item.root);
     // Load the engine early (for the thumbnails and so that it is ready), but convert
     // nothing until the user presses Convert.
     if (supported) engine.start().catch(() => {});
+    return added;
 }
 
 function updateQueueVisibility() {
-    $('queue').hidden = items.length === 0;
+    $('queue').hidden = items.length === 0 && !watches.length;
     const pending = items.filter((i) => (i.status === 'queued' || i.status === 'error') &&
                                         !requested.has(i)).length;
     const button = $('convert-all');
@@ -320,6 +326,13 @@ $('clear').addEventListener('click', () => {
         item.row.remove();
         items.splice(items.indexOf(item), 1);
     }
+    // Folders that are not being watched go too.
+    for (const w of [...watches]) {
+        if (w.watcher) continue;
+        w.row.remove();
+        watches.splice(watches.indexOf(w), 1);
+    }
+    $('watches').hidden = !watches.length;
     updateQueueVisibility();
 });
 
@@ -339,6 +352,7 @@ async function addEntries(promise, { folder = false } = {}) {
     $('fs-error').hidden = true;
     try {
         const entries = await promise;
+        for (const entry of entries) if (entry.root) entry.root = await canonicalRoot(entry.root);
         if (entries.length) addFiles(entries);
         else if (folder) reportError(new Error('That folder has no files the converter can open.'));
     } catch (e) {
@@ -408,20 +422,19 @@ async function saveItemAs(item) {
     for (const p of protect) p.data.catch(() => {});
     try {
         const handle = await saveFileAs(blob, item.outName, { startIn: item.handle || undefined, protect });
+        if (handle) await noteWritten(handle);
         if (handle && item.blob === blob) showSaved(item, handle.name);
     } catch (e) {
         if (item.blob === blob) setStatus(item, 'done', item.doneText + ' · not saved: ' + (e.message || e));
     }
 }
 
-// Where in outDir an item's result goes: its folder path is kept, and when outDir is the
-// folder it came from, the result lands next to the original.
+// Where in outDir an item's result goes: next to the original when that is inside outDir,
+// otherwise in the original's folder path (e.g. "Reports/2025/") under outDir.
 async function outPathFor(item) {
-    let path = outputPath(item.path, TARGET_BY_ID.get(item.doneTarget).ext);
-    if (item.root && path.includes('/') && await outDir.isSameEntry(item.root).catch(() => false)) {
-        path = path.slice(path.indexOf('/') + 1);
-    }
-    return path;
+    const ext = TARGET_BY_ID.get(item.doneTarget).ext;
+    const inside = item.handle && await relativePath(outDir, item.handle);
+    return outputPath(inside || item.path, ext);
 }
 
 async function saveToOutDir(item) {
@@ -430,7 +443,8 @@ async function saveToOutDir(item) {
     if (!dir || !blob || item.savedTo || item.saving) return;
     item.saving = true;
     try {
-        const { path } = await writeNewFile(dir, await outPathFor(item), blob);
+        const { path, handle } = await writeNewFile(dir, await outPathFor(item), blob);
+        await noteWritten(handle);
         if (item.blob === blob) showSaved(item, dir.name + '/' + path);
     } catch (e) {
         if (item.blob === blob) setStatus(item, 'done', item.doneText + ' · not saved: ' + (e.message || e));
@@ -439,15 +453,23 @@ async function saveToOutDir(item) {
     }
 }
 
+// The folder is remembered (handles can be kept in IndexedDB); after a reload the browser
+// may want the permission confirmed, which needs a click.
+let rememberedOutDir = null;
+
 function renderOutDir() {
     $('save-folder').textContent = outDir ? 'Change folder…' : 'Save to folder…';
     $('out-dir').hidden = !outDir;
     $('out-dir-name').textContent = outDir ? outDir.name : '';
+    $('out-dir-resume').hidden = !!outDir || !rememberedOutDir;
+    $('out-dir-resume').textContent = rememberedOutDir ? 'Save to “' + rememberedOutDir.name + '” again' : '';
 }
 
 async function setOutputDirectory(dir) {
     if (dir && !await ensureWritable(dir)) throw new Error('No permission to write to "' + dir.name + '".');
     outDir = dir;
+    rememberedOutDir = dir;
+    rememberHandle('out-dir', dir).catch(() => {});
     renderOutDir();
     if (!dir) return;
     for (const item of items) {
@@ -468,6 +490,105 @@ $('save-folder').addEventListener('click', async () => {
 });
 
 $('out-dir-stop').addEventListener('click', () => setOutputDirectory(null));
+
+$('out-dir-resume').addEventListener('click', () => {
+    $('fs-error').hidden = true;
+    setOutputDirectory(rememberedOutDir).catch(reportError);
+});
+
+if (canPickDirectory) {
+    recallHandle('out-dir').then(async (dir) => {
+        if (!dir || outDir) return;
+        rememberedOutDir = dir;
+        const granted = await dir.queryPermission({ mode: 'readwrite' }).catch(() => 'denied');
+        if (granted === 'granted') await setOutputDirectory(dir);
+        else renderOutDir();
+    }).catch(() => {});
+}
+
+// ---------------------------------------------------------------------------
+// Watching folders.  A folder that was opened or dropped can be watched: files that appear
+// in it or change are added and converted (and saved, if a folder is chosen above).  The
+// app's own results are ignored, so a folder can be both watched and saved into.
+
+const watches = []; // { dir, row, watcher, ignored: Set<path> }
+
+// The same folder dropped or picked twice gives two handles: use the first one, so that a
+// watch can match the files to the queue.
+async function canonicalRoot(dir) {
+    for (const w of watches) if (w.dir === dir || await w.dir.isSameEntry(dir)) return w.dir;
+    return dir;
+}
+
+async function noteWritten(handle) {
+    for (const w of watches) {
+        const rel = await relativePath(w.dir, handle);
+        if (rel) w.ignored.add(w.dir.name + '/' + rel);
+    }
+}
+
+function offerWatch(dir) {
+    if (!canPickDirectory || watches.some((w) => w.dir === dir)) return;
+    const row = $('watch-row').content.firstElementChild.cloneNode(true);
+    const watch = { dir, row, watcher: null, ignored: new Set() };
+    watches.push(watch);
+    row.querySelector('.watch-name').textContent = dir.name;
+    const button = row.querySelector('.watch-toggle');
+    const render = () => {
+        row.dataset.watching = watch.watcher ? 'yes' : 'no';
+        button.textContent = watch.watcher ? 'Stop watching' : 'Watch for new files';
+        row.querySelector('.watch-state').textContent = watch.watcher
+            ? 'Watching: new and changed files are converted to ' +
+              TARGET_BY_ID.get($('all-target').value).label + (watch.watcher.observed ? '.' : ' (checked every few seconds).')
+            : '';
+    };
+    button.addEventListener('click', async () => {
+        if (watch.watcher) {
+            watch.watcher.stop();
+            watch.watcher = null;
+        } else {
+            button.disabled = true;
+            try {
+                watch.watcher = await watchDirectory(dir, (entries) => onWatchedChange(entries), {
+                    ignore: (path) => watch.ignored.has(path),
+                    onError: reportError,
+                });
+            } catch (e) {
+                reportError(e);
+            }
+            button.disabled = false;
+        }
+        render();
+    });
+    $('all-target').addEventListener('change', render);
+    render();
+    $('watches').append(row);
+    $('watches').hidden = false;
+}
+
+function onWatchedChange(entries) {
+    const fresh = [];
+    const added = [];
+    for (const entry of entries) {
+        const item = items.find((i) => i.root === entry.root && i.path === entry.path && i.status !== 'working');
+        if (!item) {
+            added.push(entry);
+            continue;
+        }
+        // A new version of a listed file: convert it again (into a new result file).
+        requested.delete(item);
+        resetResult(item);
+        item.file = entry.file;
+        item.handle = entry.handle;
+        item.row.querySelector('.file-thumb').file = entry.file;
+        item.row.querySelector('.file-meta').textContent =
+            FAMILY_LABELS[item.family] + ' · ' + formatBytes(entry.file.size);
+        setStatus(item, 'queued', '');
+        fresh.push(item);
+    }
+    fresh.push(...addFiles(added));
+    runQueue(fresh);
+}
 
 const drop = $('drop');
 for (const type of ['dragenter', 'dragover']) {
@@ -491,4 +612,4 @@ document.addEventListener('drop', (e) => {
 });
 
 // Expose for automated tests and the browser console.
-window.officeConverter = { engine, addFiles, runQueue, items, TARGETS, setOutputDirectory };
+window.officeConverter = { engine, addFiles, addEntries, runQueue, items, TARGETS, setOutputDirectory, watches };

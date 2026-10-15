@@ -33,12 +33,6 @@
 <main class="wrap">
     <div class="support-error" id="support-error" hidden role="alert"></div>
 
-    <section class="step">
-        <label class="target-pick">Convert to
-            <select id="all-target"></select>
-        </label>
-    </section>
-
     <section class="drop" id="drop">
         <input type="file" id="file-input" multiple class="visually-hidden">
         <input type="file" id="folder-input" webkitdirectory multiple hidden>
@@ -59,6 +53,12 @@
         </div>
         <progress id="engine-progress" max="1" value="0" hidden></progress>
         <p class="engine-detail" id="engine-detail"></p>
+    </section>
+
+    <section class="step">
+        <label class="target-pick">Default output format
+            <select id="all-target"></select>
+        </label>
     </section>
 
     <section class="queue" id="queue" hidden>

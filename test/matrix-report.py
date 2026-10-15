@@ -139,6 +139,14 @@ def main():
             cell = row['cells'][tid]
             if cell['status'] == 'n/a':
                 na += 1
+                if cell.get('cross') == 'converted':
+                    data = open(os.path.join(args.out, cell['file']), 'rb').read()
+                    reason = check(tid, ext_of[tid], data, row['marker'])
+                    cell['cross_verdict'] = 'ok' if reason is None else 'fail'
+                    cell['cross_reason'] = reason
+                elif cell.get('cross'):
+                    cell['cross_verdict'] = 'fail'
+                    cell['cross_reason'] = cell.get('error')
                 continue
             if cell['status'] == 'error':
                 cell['verdict'] = 'fail'

@@ -1,0 +1,14 @@
+ID;PSCALC3
+C;Y1;X1;K"Region"
+C;X2;K"Q1"
+C;X3;K"Q2"
+C;X4;K"Total"
+C;Y2;X1;K"North"
+C;X2;K200
+C;X3;K300
+C;X4;K500
+C;Y3;X1;K"South"
+C;X2;K300
+C;X3;K450
+C;X4;K750
+E

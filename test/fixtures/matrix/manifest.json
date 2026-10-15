@@ -108,5 +108,145 @@
     "ext": "jpg",
     "marker": null,
     "source": "converted from sample.docx by this converter"
+  },
+  {
+    "ext": "dotx",
+    "marker": "Serverless Office Converter",
+    "source": "package type of sample.docx changed"
+  },
+  {
+    "ext": "docm",
+    "marker": "Serverless Office Converter",
+    "source": "package type of sample.docx changed"
+  },
+  {
+    "ext": "dotm",
+    "marker": "Serverless Office Converter",
+    "source": "package type of sample.docx changed"
+  },
+  {
+    "ext": "xltx",
+    "marker": "North",
+    "source": "package type of sample.xlsx changed"
+  },
+  {
+    "ext": "xlsm",
+    "marker": "North",
+    "source": "package type of sample.xlsx changed"
+  },
+  {
+    "ext": "xltm",
+    "marker": "North",
+    "source": "package type of sample.xlsx changed"
+  },
+  {
+    "ext": "potx",
+    "marker": "Serverless Office Converter",
+    "source": "package type of sample.pptx changed"
+  },
+  {
+    "ext": "pptm",
+    "marker": "Serverless Office Converter",
+    "source": "package type of sample.pptx changed"
+  },
+  {
+    "ext": "ppsx",
+    "marker": "Serverless Office Converter",
+    "source": "package type of sample.pptx changed"
+  },
+  {
+    "ext": "ppsm",
+    "marker": "Serverless Office Converter",
+    "source": "package type of sample.pptx changed"
+  },
+  {
+    "ext": "ott",
+    "marker": "Serverless Office Converter",
+    "source": "ODF template made from sample.odt"
+  },
+  {
+    "ext": "ots",
+    "marker": "North",
+    "source": "ODF template made from sample.ods"
+  },
+  {
+    "ext": "otp",
+    "marker": "Serverless Office Converter",
+    "source": "ODF template made from sample.odp"
+  },
+  {
+    "ext": "otg",
+    "marker": null,
+    "source": "ODF template made from sample.odg"
+  },
+  {
+    "ext": "htm",
+    "marker": null,
+    "source": "copy of sample.html"
+  },
+  {
+    "ext": "xhtml",
+    "marker": null,
+    "source": "copy of sample.html"
+  },
+  {
+    "ext": "markdown",
+    "marker": null,
+    "source": "copy of sample.md"
+  },
+  {
+    "ext": "tab",
+    "marker": null,
+    "source": "copy of sample.tsv"
+  },
+  {
+    "ext": "pps",
+    "marker": null,
+    "source": "copy of sample.ppt"
+  },
+  {
+    "ext": "pot",
+    "marker": null,
+    "source": "copy of sample.ppt"
+  },
+  {
+    "ext": "jpeg",
+    "marker": null,
+    "source": "copy of sample.jpg"
+  },
+  {
+    "ext": "dif",
+    "marker": "North",
+    "source": "hand-written DIF"
+  },
+  {
+    "ext": "slk",
+    "marker": "North",
+    "source": "hand-written SYLK"
+  },
+  {
+    "ext": "svgz",
+    "marker": null,
+    "source": "gzipped sample.svg"
+  },
+  {
+    "ext": "gif",
+    "marker": null,
+    "source": "sample.png saved as GIF with Pillow"
+  },
+  {
+    "ext": "bmp",
+    "marker": null,
+    "source": "sample.png saved as BMP with Pillow"
+  },
+  {
+    "ext": "webp",
+    "marker": null,
+    "source": "sample.png saved as WEBP with Pillow"
+  },
+  {
+    "ext": "tiff",
+    "marker": null,
+    "source": "sample.png saved as TIFF with Pillow"
   }
 ]

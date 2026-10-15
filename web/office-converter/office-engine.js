@@ -7,6 +7,7 @@
  * conversion the user asked for.
  */
 
+import { outputName } from './file-system.js';
 import { INPUT_FILTERS, TARGET_BY_ID, extensionOf } from './formats.js';
 
 // Errors that mean the WebAssembly runtime itself is corrupted (not that the document is bad):
@@ -127,22 +128,24 @@ export class OfficeEngine extends EventTarget {
     }
 
     /**
-     * Converts a File/Blob to one of the targets in formats.js (e.g. 'pdf', 'docx', 'png').
+     * Converts a File/Blob (or a FileSystemFileHandle, which is only read) to one of the
+     * targets in formats.js (e.g. 'pdf', 'docx', 'png').
      * Picks the import filter from the file name's extension.
-     * @param {Blob} file
+     * @param {Blob|FileSystemFileHandle} file
      * @param {string} targetId Key of TARGET_BY_ID, e.g. 'pdf'.
      * @param {{name?: string, priority?: number, quiet?: boolean}} [opts]
      * @returns {Promise<{blob: Blob, filename: string, family: string, filter: string, ms: number}>}
      */
-    async convertFile(file, targetId, { name = file.name || 'document', ...opts } = {}) {
+    async convertFile(file, targetId, { name, ...opts } = {}) {
+        if (typeof file.getFile === 'function') file = await file.getFile();
+        if (!name) name = file.name || 'document';
         const target = TARGET_BY_ID.get(targetId);
         if (!target) throw new Error('Unknown target format: ' + targetId);
         const result = await this.convert(
             await file.arrayBuffer(), name, target, INPUT_FILTERS[extensionOf(name)], opts);
-        const dot = name.lastIndexOf('.');
         return {
             blob: new Blob([result.data], { type: target.mime || 'application/octet-stream' }),
-            filename: (dot > 0 ? name.slice(0, dot) : name) + '.' + target.ext,
+            filename: outputName(name, target.ext),
             family: result.family,
             filter: result.filter,
             ms: result.ms,

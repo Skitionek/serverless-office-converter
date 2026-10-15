@@ -52,7 +52,7 @@ Starts lazily on the first conversion (or `engine.start()`): a dedicated worker 
 LibreOffice (about 7-10 s the first time; the download is cached afterwards).
 
 * `convertFile(file, targetId, { name?, priority?, quiet? })` → `{ blob, filename, family, filter, ms }`
-  converts a `File`/`Blob`. `targetId` is a key of `TARGET_BY_ID`: `pdf`, `pdfa`, `docx`, `doc`,
+  converts a `File`/`Blob` (or reads a `FileSystemFileHandle`). `targetId` is a key of `TARGET_BY_ID`: `pdf`, `pdfa`, `docx`, `doc`,
   `odt`, `rtf`, `txt`, `md`, `xlsx`, `xls`, `ods`, `csv`, `html` (spreadsheets), `pptx`, `ppt`, `odp`,
   `odg`, `svg` (slides and drawings only), `png`, `jpg`, `fodt`, `fods`, `fodp`. The input format is detected from the file
   name's extension and content; `family` tells what it turned out to be (`writer`, `calc`,
@@ -67,6 +67,31 @@ LibreOffice (about 7-10 s the first time; the download is cached afterwards).
   goes to `error`; the next call starts a fresh worker.
 * Download progress: the service worker posts `{file, loaded, total, version}` on a
   `BroadcastChannel('lo-assets')`.
+
+### Files and folders (`file-system.js`)
+
+Helpers for the [File System Access API](https://developer.mozilla.org/docs/Web/API/File_System_API),
+with fallbacks where it is missing (Firefox, Safari). Inputs are only read; nothing is ever
+written over an existing file.
+
+* `openFiles(opts?)`, `openDirectory(opts?)` (recursive), `entriesFromDataTransfer(dataTransfer)`
+  (call it synchronously in the `drop` handler; folders are expanded),
+  `entriesFromInput(input.files)` (also for `<input webkitdirectory>`), `listDirectory(dirHandle)`
+  → `[{ file, handle?, path, root? }]`. `path` is relative, e.g. `Reports/2025/q1.docx`; files
+  inside folders are filtered with `isConvertible(name)` (known extension, not hidden, not a
+  `~$` lock file). Cancelling a picker resolves with `[]`.
+* `writeNewFile(dirHandle, 'Reports/2025/q1.pdf', blob)` → `{ handle, path }` creates the file
+  (and folders). If the name is taken it writes `q1 (1).pdf`, `q1 (2).pdf`, ... instead;
+  calls are serialised so concurrent writes never pick the same name.
+* `saveFileAs(blob, suggestedName, { startIn?, protect? })` → handle or `null`: the save dialog.
+  Browsers empty a file as soon as it is picked there, so pass the originals as
+  `protect: [{ handle, data }]` (`data`: their bytes, or a promise of them started before the
+  call): picking one puts its content back and rejects with a `SourceFileError`.
+* `pickOutputDirectory()`, `ensureWritable(handle)`, `availableName(dirHandle, name)`.
+* `outputName('report.docx', 'pdf')` → `report.pdf`; for the same format
+  `report (converted).docx`, so a result never has its input's name. `outputPath()` keeps the
+  folders. `convertFile()` uses the same naming and also accepts a `FileSystemFileHandle`.
+* `canPickFiles`, `canPickDirectory`, `canPickSaveFile`, `PICKER_TYPES`.
 
 ### Format tables (`formats.js`)
 

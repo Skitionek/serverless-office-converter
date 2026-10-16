@@ -253,6 +253,7 @@ async function convertItem(item) {
         const secs = ((performance.now() - started) / 1000).toFixed(1);
         item.doneText = formatBytes(blob.size) + ' · ' + secs + ' s';
         setStatus(item, 'done', item.doneText);
+        suggestInstall();
         if (outDir) await saveToOutDir(item);
         if (result.family && result.family !== item.family) {
             item.family = result.family;
@@ -372,6 +373,78 @@ if ('launchQueue' in window) {
             async (handle) => ({ file: await handle.getFile(), handle, path: handle.name }))));
     });
 }
+
+// ---------------------------------------------------------------------------
+// Installing as an app is optional.  Chrome and Edge offer it through beforeinstallprompt;
+// Safari on macOS has File › Add to Dock instead (no API, so the card says where it is);
+// elsewhere nothing is shown.  The header button is there whenever installing is possible;
+// the card suggests it once, after the first conversion, and "Not now" quiets it for 30 days.
+
+const INSTALL_KEY = 'office-converter-install-snoozed';
+const INSTALL_SNOOZE_MS = 30 * 24 * 3600 * 1000;
+// Safari 17+ on a Mac (iPads also say "Macintosh", but have touch points).
+const macSafari = /Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints === 0
+    && /Version\/(1[7-9]|[2-9]\d)\b.* Safari\//.test(navigator.userAgent);
+let installPrompt = null;
+let installed = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+let installCard = false;
+
+function installSnoozed() {
+    try {
+        return Date.now() - Number(localStorage.getItem(INSTALL_KEY) || 0) < INSTALL_SNOOZE_MS;
+    } catch {
+        return false;
+    }
+}
+
+function renderInstall() {
+    const possible = supported && !installed && (installPrompt !== null || macSafari);
+    $('install-header').hidden = !possible;
+    $('install').hidden = !(possible && installCard);
+    $('install-app').hidden = installPrompt === null;
+    $('install-safari').hidden = installPrompt !== null || !macSafari;
+}
+
+function suggestInstall() {
+    if (installCard || installSnoozed()) return;
+    installCard = true;
+    renderInstall();
+}
+
+async function install() {
+    if (!installPrompt) { // Safari: show where the menu item is
+        installCard = true;
+        renderInstall();
+        $('install').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+    }
+    const prompt = installPrompt;
+    installPrompt = null; // each prompt can be shown once; the browser sends a new one if declined
+    prompt.prompt();
+    if ((await prompt.userChoice).outcome === 'accepted') installed = true;
+    renderInstall();
+}
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); // offered by the button and the card instead of the browser's own bar
+    installPrompt = e;
+    renderInstall();
+});
+window.addEventListener('appinstalled', () => {
+    installed = true;
+    installPrompt = null;
+    renderInstall();
+});
+$('install-header').addEventListener('click', install);
+$('install-app').addEventListener('click', install);
+$('install-dismiss').addEventListener('click', () => {
+    try {
+        localStorage.setItem(INSTALL_KEY, String(Date.now()));
+    } catch { /* private mode: suggested again next visit */ }
+    installCard = false;
+    renderInstall();
+});
+renderInstall();
 
 // ---------------------------------------------------------------------------
 // Before anything that makes the browser ask for access to a folder, say what is about to

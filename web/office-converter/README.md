@@ -75,7 +75,8 @@ with fallbacks where it is missing (Firefox, Safari). Inputs are only read; noth
 written over an existing file.
 
 * `openFiles(opts?)`, `openDirectory(opts?)` (recursive), `entriesFromDataTransfer(dataTransfer)`
-  (call it synchronously in the `drop` handler; folders are expanded),
+  (call it synchronously in the `drop` handler; folders are expanded; `{ handles: false }` uses
+  only plain files, without the File System Access API),
   `entriesFromInput(input.files)` (also for `<input webkitdirectory>`), `listDirectory(dirHandle)`
   → `[{ file, handle?, path, root? }]`. `path` is relative, e.g. `Reports/2025/q1.docx`; files
   inside folders are filtered with `isConvertible(name)` (known extension, not hidden, not a

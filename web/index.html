@@ -65,17 +65,35 @@
         <ul class="files" id="files"></ul>
         <div class="queue-bar">
             <button type="button" class="btn btn-quiet" id="clear">Clear list</button>
-            <div class="queue-actions">
-                <button type="button" class="btn" id="save-folder" hidden
-                    title="Save every result as a new file in a folder you choose; existing files are never replaced">Save to folder…</button>
-                <button type="button" class="btn btn-primary" id="convert-all" disabled>Convert</button>
-            </div>
+            <button type="button" class="btn btn-primary" id="convert-all" disabled>Convert</button>
         </div>
-        <p class="out-dir" id="out-dir" hidden>Results are saved as new files in
-            <strong id="out-dir-name"></strong>; nothing there is replaced.
-            <button type="button" class="link" id="out-dir-stop">Stop saving there</button></p>
-        <p class="out-dir out-dir-resume-bar"><button type="button" class="link" id="out-dir-resume" hidden></button></p>
-        <ul class="watches" id="watches" hidden></ul>
+    </section>
+
+    <section class="folder-tools" id="folder-tools" hidden>
+        <details id="folder-tools-details">
+            <summary>Save into a folder, or watch a folder <span class="summary-note">optional</span></summary>
+            <p>Normally you download each result, and that's all you need. Your browser can also let
+                this page work with a folder on your computer directly. Each time, the converter first
+                explains what will happen, and then your browser asks for your permission.</p>
+            <div class="folder-tool">
+                <button type="button" class="btn" id="save-folder">Save results into a folder…</button>
+                <p>Writes every result into a folder you pick, as new files, for example next to the
+                    originals. Nothing already in the folder is changed or replaced.</p>
+            </div>
+            <p class="folder-status" id="out-dir" hidden>Saving results as new files in
+                <strong id="out-dir-name"></strong>. Nothing already there is changed or replaced.
+                <button type="button" class="link" id="out-dir-stop">Stop saving there</button></p>
+            <p class="folder-status" id="out-dir-resume-bar" hidden>Last time, results were saved into
+                <strong id="out-dir-resume-name"></strong>.
+                <button type="button" class="link" id="out-dir-resume">Save there again</button></p>
+            <div class="folder-tool">
+                <button type="button" class="btn" id="watch-folder">Watch a folder…</button>
+                <p>Converts the documents that are added to a folder, or changed in it, automatically
+                    to the default output format.</p>
+            </div>
+            <ul class="watches" id="watches" hidden></ul>
+            <div class="fs-error" id="folder-error" hidden role="alert"></div>
+        </details>
     </section>
 
     <section class="about">
@@ -89,12 +107,11 @@
         </details>
         <details>
             <summary>Are my original files changed?</summary>
-            <p>Never. The converter only reads them. Results are saved as new files: when a
-                name is already taken, for example when converting DOCX to DOCX in the same folder,
-                the result is called <code>report (converted).docx</code> or <code>report (1).pdf</code>
-                instead. In Chrome and Edge you can save straight into a folder (next to the originals,
-                if you pick their folder); the browser asks for permission first. A watched
-                folder converts files that appear in it or change, again as new files.</p>
+            <p>Never. The converter only reads them, and results are downloaded. Only if you choose
+                to save results straight into a folder (Chrome and Edge, under “Save into a folder, or
+                watch a folder”) does it write there, and then only new files: when a name is already
+                taken, for example when converting DOCX to DOCX next to the original, the result is
+                called <code>report (converted).docx</code> or <code>report (1).pdf</code> instead.</p>
         </details>
         <details>
             <summary>How does it work?</summary>
@@ -131,11 +148,25 @@
     </li>
 </template>
 <template id="watch-row">
-    <li class="watch">
-        <span>Folder <strong class="watch-name"></strong></span>
-        <span class="watch-state"></span>
-        <button type="button" class="btn btn-quiet watch-toggle"></button>
+    <li class="folder-status watch">
+        <span>Watching <strong class="watch-name"></strong>: documents added to it or changed are
+            converted to <span class="watch-target"></span><span class="watch-polling"> (it is checked
+            every few seconds)</span>.</span>
+        <button type="button" class="link watch-stop">Stop watching</button>
     </li>
 </template>
+
+<dialog class="fs-dialog" id="fs-dialog" aria-labelledby="fs-dialog-title">
+    <form method="dialog">
+        <h2 id="fs-dialog-title"></h2>
+        <ul id="fs-dialog-body"></ul>
+        <label class="fs-dialog-skip" id="fs-dialog-skip-label"><input type="checkbox" id="fs-dialog-skip">
+            Don't explain this again</label>
+        <div class="fs-dialog-actions">
+            <button type="submit" value="cancel" class="btn btn-quiet">Cancel</button>
+            <button type="submit" value="ok" class="btn btn-primary" id="fs-dialog-ok" autofocus></button>
+        </div>
+    </form>
+</dialog>
 </body>
 </html>

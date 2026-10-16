@@ -139,14 +139,15 @@ async function listEntry(entry, filter, prefix) {
  * The files of a drop, with folders expanded.  Dropped files are all kept (the converter says
  * if it can't open one); files inside dropped folders are filtered with `filter`.
  * Call it synchronously from the drop handler: the DataTransfer is emptied afterwards.
+ * With `handles: false` the File System Access API is not used (no handles, plain files only).
  * @param {DataTransfer} dataTransfer
- * @param {{filter?: (name: string) => boolean}} [opts]
+ * @param {{filter?: (name: string) => boolean, handles?: boolean}} [opts]
  * @returns {Promise<FileEntry[]>}
  */
-export function entriesFromDataTransfer(dataTransfer, { filter = isConvertible } = {}) {
+export function entriesFromDataTransfer(dataTransfer, { filter = isConvertible, handles = true } = {}) {
     // Everything has to be requested before the first await.
     const pending = [...dataTransfer.items].filter((item) => item.kind === 'file').map((item) => ({
-        handle: typeof item.getAsFileSystemHandle === 'function' ? item.getAsFileSystemHandle() : null,
+        handle: handles && typeof item.getAsFileSystemHandle === 'function' ? item.getAsFileSystemHandle() : null,
         entry: typeof item.webkitGetAsEntry === 'function' ? item.webkitGetAsEntry() : null,
         file: item.getAsFile(),
     }));

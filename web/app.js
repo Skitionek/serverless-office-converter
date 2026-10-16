@@ -375,7 +375,9 @@ if ('launchQueue' in window) {
 }
 
 // ---------------------------------------------------------------------------
-// Installing as an app is optional.  Chrome and Edge offer it through beforeinstallprompt;
+// Installing as an app is optional, and offered as saving a shortcut (the header promises
+// "Nothing to install", and that is what it amounts to: the same page in its own window, with
+// nothing more to download).  Chrome and Edge offer it through beforeinstallprompt;
 // Safari on macOS has File › Add to Dock instead (no API, so the card says where it is);
 // elsewhere nothing is shown.  The header button is there whenever installing is possible;
 // the card suggests it once, after the first conversion, and "Not now" quiets it for 30 days.

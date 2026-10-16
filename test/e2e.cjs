@@ -202,12 +202,12 @@ async function main() {
     thumbs.forEach((th) => console.log(`${th.state === 'ready' && th.width ? 'PASS' : 'FAIL'}  thumbnail ${th.name} ${th.state} ${th.width}px ${th.title}`));
     failed += badThumbs.length;
 
-    // Installing as an app: Chrome finds nothing missing, and the page offers it once the
-    // browser says it can (beforeinstallprompt, simulated here), after the conversions above.
+    // Installing as an app ("Save shortcut"): Chrome finds nothing missing, and only the header
+    // button offers it, once the browser says it can (beforeinstallprompt, simulated here).
     const { installabilityErrors } = await (await page.context().newCDPSession(page))
         .send('Page.getInstallabilityErrors');
     const install = await page.evaluate(async () => {
-        const shown = () => ['install-header', 'install', 'install-app']
+        const shown = () => ['install-header', 'install-safari']
             .filter((id) => !document.getElementById(id).hidden).join(',');
         const before = shown();
         let prompted = 0;
@@ -216,15 +216,15 @@ async function main() {
         event.userChoice = Promise.resolve({ outcome: 'accepted', platform: 'web' });
         window.dispatchEvent(event);
         const offered = shown();
-        document.getElementById('install-app').click();
+        document.getElementById('install-header').click();
         await new Promise((r) => setTimeout(r, 100));
         return { before, offered, prevented: event.defaultPrevented, prompted, after: shown() };
     });
     const installChecks = [
         ['installable', installabilityErrors.length === 0, JSON.stringify(installabilityErrors)],
-        ['offered after beforeinstallprompt', install.before === '' && install.offered === 'install-header,install,install-app'
+        ['header button after beforeinstallprompt', install.before === '' && install.offered === 'install-header'
             && install.prevented, JSON.stringify(install)],
-        ['Install shows the prompt, then nothing', install.prompted === 1 && install.after === '', JSON.stringify(install)],
+        ['Save shortcut shows the prompt, then nothing', install.prompted === 1 && install.after === '', JSON.stringify(install)],
     ];
     for (const [name, ok, detail] of installChecks) {
         console.log(`${ok ? 'PASS' : 'FAIL'}  install: ${name}${ok ? '' : ' ' + detail}`);

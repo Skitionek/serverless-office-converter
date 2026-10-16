@@ -37,7 +37,9 @@ body {
 
 .site-header { padding-block: 40px 16px; }
 .site-header h1 { margin: 0 0 6px; font-size: clamp(1.7rem, 4vw, 2.3rem); letter-spacing: -0.02em; }
-.title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; }
+.title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap;
+    margin-bottom: 6px; }
+.title-row h1 { margin: 0; }
 .title-row .btn { color: var(--brand); }
 .title-row .btn svg { width: 18px; height: 18px; }
 .tagline { margin: 0; color: var(--muted); font-size: 1.1rem; max-width: 60ch; }

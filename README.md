@@ -1,5 +1,7 @@
 # Serverless Office Converter
 
+[![Office Converter: convert office files right in your browser](web/social-preview.png)](https://skitionek.github.io/serverless-office-converter/)
+
 Convert office documents **entirely in the browser** with **LibreOffice core compiled to
 WebAssembly**, hosted as a static site on GitHub Pages. There is no server-side
 component: files are converted inside the visitor's browser tab and are never uploaded.
@@ -283,6 +285,7 @@ service-worker.js (service worker)
 | `build/patches/` | Size reductions applied to LibreOffice before building |
 | `build/embind-allowlist.txt` | The only UNO types exposed to JavaScript |
 | `build/Dockerfile` | Build environment (`emscripten/emsdk:4.0.10` + LibreOffice build deps) |
+| `build/social-preview.{html,cjs}` | The link-preview image (`web/social-preview.png`) and the PNG icons; `node build/social-preview.cjs` re-renders them |
 | `test/e2e.cjs` | End-to-end test: serves `web/` like Pages does and converts fixtures in Chromium |
 | `.github/workflows/pages.yml` | Deploys `web/` to GitHub Pages |
 

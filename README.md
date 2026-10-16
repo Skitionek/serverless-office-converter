@@ -4,8 +4,7 @@ Convert office documents **entirely in the browser** with **LibreOffice core com
 WebAssembly**, hosted as a static site on GitHub Pages. There is no server-side
 component: files are converted inside the visitor's browser tab and are never uploaded.
 
-**Live:** https://skitionek.github.io/serverless-office-converter/ (once Pages is enabled, see
-[Deploying](#deploying-to-github-pages)).
+**Live:** https://skitionek.github.io/serverless-office-converter/
 
 ## Why it's nice
 
@@ -317,7 +316,7 @@ On top of LibreOffice's own `--enable-wasm-strip` (on by default for Emscripten)
 | Embind UNO bindings only for the types in `embind-allowlist.txt` and their dependencies (48 instead of 1728 types) | `patches/0004`, with `patches/0007` keeping the exception RTTI the bridge exports |
 | ICU data without per-locale display names of languages, regions, currencies, units and time zones (33 → 20 MB) | `patches/0005` |
 | No spell checking, hyphenation or thesaurus code (no dictionaries ship anyway) | `patches/0002` |
-| Fonts: only Liberation Sans/Serif/Mono/Sans Narrow and DejaVu Sans (regular + bold), Carlito, Caladea, OpenSymbol; italics of these are synthesized | `data-exclude.txt`, applied by `package-wasm.py` |
+| Fonts: only Liberation Sans/Serif/Mono/Sans Narrow and DejaVu Sans (regular + bold; italics are synthesized), Carlito and Caladea (all four styles), OpenSymbol | `data-exclude.txt`, applied by `package-wasm.py` |
 | xz instead of gzip for the download (35–40% smaller) | `package-wasm.py`, `office-converter/service-worker.js` |
 
 `patches/0001` fixes `--disable-curl` (uui linked curl unconditionally).
@@ -339,12 +338,12 @@ End-to-end test (headless Chromium via Playwright):
 cd test && npm install && npm test
 ```
 
-## Deploying to GitHub Pages
+## Deployment
 
-1. Merge this branch into `main`.
-2. *Settings → Pages → Build and deployment → Source: GitHub Actions.*
-3. The **Deploy to GitHub Pages** workflow publishes `web/` on every push to `main` that
-   touches it (or run it manually).
+The site is deployed to GitHub Pages at https://skitionek.github.io/serverless-office-converter/.
+The **Deploy to GitHub Pages** workflow publishes `web/` as-is on every push to `main` that
+touches it (it can also be run manually from the Actions tab). A fork deploys the same way once
+*Settings → Pages → Build and deployment → Source* is set to *GitHub Actions*.
 
 ## Limits
 
@@ -363,4 +362,4 @@ cd test && npm install && npm test
 LibreOffice is licensed under the [MPL-2.0](https://www.mozilla.org/MPL/2.0/); the runtime in
 `web/office-converter/lo/` is built from upstream LibreOffice sources (the exact commit is recorded in
 `web/office-converter/lo/manifest.json` and shown in the page footer) with the patches in `build/patches/`.
-`web/office-converter/vendor/xz-decompress.min.js` is MIT-licensed (see `web/vendor/README.md`).
+`web/office-converter/vendor/xz-decompress.min.js` is MIT-licensed (see `web/office-converter/vendor/README.md`).

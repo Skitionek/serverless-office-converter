@@ -285,7 +285,7 @@ service-worker.js (service worker)
 | `build/patches/` | Size reductions applied to LibreOffice before building |
 | `build/embind-allowlist.txt` | The only UNO types exposed to JavaScript |
 | `build/Dockerfile` | Build environment (`emscripten/emsdk:4.0.10` + LibreOffice build deps) |
-| `build/social-preview.{html,cjs}` | The link-preview image (`web/social-preview.png`) and the PNG icons; `node build/social-preview.cjs` re-renders them |
+| `build/social-preview.{html,cjs}` | The link-preview image (`web/social-preview.png`), the PNG icons and the app screenshot shown in the browser's install dialog (`web/screenshot-wide.png`); `node build/social-preview.cjs` re-renders them |
 | `test/e2e.cjs` | End-to-end test: serves `web/` like Pages does and converts fixtures in Chromium |
 | `.github/workflows/pages.yml` | Deploys `web/` to GitHub Pages |
 

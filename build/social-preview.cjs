@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-/* Renders the link-preview image (Open Graph / Twitter card) from build/social-preview.html and
- * the PNG icons from web/icon.svg, with headless Chromium.
+/* Renders the link-preview image (Open Graph / Twitter card) from build/social-preview.html, the
+ * PNG icons from web/icon.svg, and the app screenshot that the browser's install dialog shows
+ * (web/screenshot-wide.png, converting the test fixtures), with headless Chromium.
  *
- *   node build/social-preview.cjs                 # web/social-preview.png and the web/*.png icons
+ *   node build/social-preview.cjs                 # web/social-preview.png, icons and screenshot
  *   node build/social-preview.cjs --github x.png  # 1280×640 image for the repository's
  *                                                 # Settings → General → Social preview
  *
@@ -14,6 +15,7 @@
 
 const { execFileSync } = require('child_process');
 const fs = require('fs');
+const http = require('http');
 const path = require('path');
 const { chromium } = require('playwright');
 
@@ -25,6 +27,7 @@ im = Image.open(sys.argv[1]).convert('RGB')
 im.quantize(256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(sys.argv[1], optimize=True)`;
 
 const WEB = path.join(__dirname, '..', 'web');
+const FIXTURES = path.join(__dirname, '..', 'test', 'fixtures');
 const TEMPLATE = 'file://' + path.join(__dirname, 'social-preview.html');
 const argv = process.argv.slice(2);
 
@@ -34,6 +37,62 @@ const ICONS = [
     ['icon-512.png', 512, 'transparent'],
     ['apple-touch-icon.png', 180, '#ffffff'],
 ];
+
+// [fixture, name shown, target]
+const SCREENSHOT_FILES = [
+    ['sample.docx', 'Quarterly report.docx', 'pdf'],
+    ['sample.xlsx', 'Sales by region.xlsx', 'pdf'],
+    ['sample.pptx', 'Product launch.pptx', 'pdf'],
+    ['sample.md', 'Meeting notes.md', 'docx'],
+];
+
+const MIME = {
+    '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
+    '.json': 'application/json', '.webmanifest': 'application/manifest+json',
+    '.wasm': 'application/wasm', '.svg': 'image/svg+xml', '.png': 'image/png',
+};
+
+// Serves web/ like GitHub Pages (under a project path) and converts the fixtures in the page.
+async function appScreenshot(browser, out) {
+    const prefix = '/serverless-office-converter/';
+    const server = http.createServer((req, res) => {
+        const rel = decodeURIComponent(new URL(req.url, 'http://x').pathname.slice(prefix.length)) || 'index.html';
+        const file = path.join(WEB, rel);
+        if (!file.startsWith(WEB) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) {
+            return res.writeHead(404).end();
+        }
+        res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
+        fs.createReadStream(file).pipe(res);
+    });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    try {
+        const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+        await page.goto(`http://127.0.0.1:${server.address().port}${prefix}`);
+        await page.waitForFunction(() => window.crossOriginIsolated === true, null, { timeout: 30000 });
+        const files = SCREENSHOT_FILES.map(([fixture, name, target]) => (
+            { name, target, b64: fs.readFileSync(path.join(FIXTURES, fixture)).toString('base64') }));
+        await page.evaluate(async (files) => {
+            const conv = window.officeConverter;
+            await conv.engine.start(); // conversion times without the engine's start-up
+            conv.addFiles(files.map((f) => new File([Uint8Array.from(atob(f.b64), (c) => c.charCodeAt(0))], f.name)));
+            conv.items.forEach((item, i) => { item.row.querySelector('.file-target').value = files[i].target; });
+            await conv.runQueue();
+            const deadline = Date.now() + 120000;
+            const thumbs = [...document.querySelectorAll('office-thumbnail')];
+            while (Date.now() < deadline && thumbs.some((t) => !['ready', 'error'].includes(t.getAttribute('state')))) {
+                await new Promise((r) => setTimeout(r, 100));
+            }
+            document.activeElement.blur();
+            document.documentElement.style.zoom = '0.8'; // the header, the drop zone and every row
+            scrollTo(0, 0);
+        }, files);
+        await page.screenshot({ path: out });
+        execFileSync('python3', ['-c', QUANTIZE, out]);
+        console.log(out, '1280×800', fs.statSync(out).size, 'bytes');
+    } finally {
+        server.close();
+    }
+}
 
 async function main() {
     const browser = await chromium.launch();
@@ -64,6 +123,7 @@ async function main() {
             await page.close();
             console.log(out, `${size}×${size}`, fs.statSync(out).size, 'bytes');
         }
+        await appScreenshot(browser, path.join(WEB, 'screenshot-wide.png'));
     } finally {
         await browser.close();
     }

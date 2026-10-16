@@ -61,7 +61,12 @@
 <body>
 <header class="site-header">
     <div class="wrap">
-        <h1>Office Converter</h1>
+        <div class="title-row">
+            <h1>Office Converter</h1>
+            <button type="button" class="btn" id="install-header" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Install app</button>
+        </div>
         <p class="tagline">Convert Word, Excel, PowerPoint and OpenDocument files right in your browser.</p>
         <ul class="badges">
             <li>Nothing to install</li>
@@ -107,6 +112,22 @@
         <div class="queue-bar">
             <button type="button" class="btn btn-quiet" id="clear">Clear list</button>
             <button type="button" class="btn btn-primary" id="convert-all" disabled>Convert</button>
+        </div>
+    </section>
+
+    <section class="install" id="install" hidden aria-labelledby="install-title">
+        <img src="icon.svg" alt="" width="40" height="40">
+        <div class="install-text">
+            <h2 id="install-title">Install Office Converter as an app</h2>
+            <p>Optional. It then opens in its own window from your dock, taskbar or Start menu, works
+                offline, and appears under “Open with” for office files. It is the same converter as
+                this page: your files still never leave your device.</p>
+            <p id="install-safari" hidden>In Safari, choose <strong>File › Add to Dock</strong>
+                (macOS Sonoma or later).</p>
+        </div>
+        <div class="install-actions">
+            <button type="button" class="btn btn-primary" id="install-app" hidden>Install</button>
+            <button type="button" class="btn btn-quiet" id="install-dismiss">Not now</button>
         </div>
     </section>
 

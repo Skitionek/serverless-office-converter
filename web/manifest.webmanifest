@@ -1,7 +1,9 @@
 {
+  "id": "./",
   "name": "Office Converter",
   "short_name": "Office Converter",
-  "description": "Convert office documents in the browser. Nothing is uploaded.",
+  "description": "Convert Word, Excel, PowerPoint and OpenDocument files to PDF, DOCX, PNG and more, right on your computer. Works offline, and your files are never uploaded.",
+  "categories": ["productivity", "utilities"],
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -25,6 +27,15 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "A Word document, a spreadsheet and a presentation converted to PDF, and Markdown notes to DOCX"
     }
   ],
   "file_handlers": [

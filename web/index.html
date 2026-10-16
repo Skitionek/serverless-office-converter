@@ -4,9 +4,50 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<title>Office Converter</title>
-<meta name="description" content="Convert Word, Excel, PowerPoint, OpenDocument and other office files entirely in your browser with LibreOffice compiled to WebAssembly. Nothing is uploaded.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='5' y='2' width='22' height='28' rx='3' fill='%2318a303'/%3E%3Cpath d='M10 10h12M10 15h12M10 20h8' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<title>Office Converter: convert Word, Excel and PowerPoint files in your browser</title>
+<meta name="description" content="Convert Word, Excel, PowerPoint and OpenDocument files to PDF, DOCX, ODT, PNG and more, right in your browser. Free, open source, and nothing is uploaded.">
+<meta name="keywords" content="office converter, docx to pdf, word to pdf, excel to pdf, powerpoint to pdf, odt to docx, xlsx to csv, document converter, libreoffice, webassembly, private, offline, no upload">
+<link rel="canonical" href="https://skitionek.github.io/serverless-office-converter/">
+<meta name="theme-color" content="#0f7d02">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<!-- Link previews (Open Graph, X/Twitter). Crawlers need absolute URLs. The image is made by
+     build/social-preview.cjs. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Office Converter">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://skitionek.github.io/serverless-office-converter/">
+<meta property="og:title" content="Office Converter: convert office files right in your browser">
+<meta property="og:description" content="Word, Excel, PowerPoint and OpenDocument to PDF, DOCX, PNG and more. LibreOffice runs inside the browser tab: nothing to install, and your files are never uploaded.">
+<meta property="og:image" content="https://skitionek.github.io/serverless-office-converter/social-preview.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Office Converter: DOCX, XLSX and PPTX documents turning into a PDF, with the promises nothing uploaded, nothing to install, works offline.">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Office Converter",
+    "url": "https://skitionek.github.io/serverless-office-converter/",
+    "description": "Convert Word, Excel, PowerPoint and OpenDocument files to PDF, DOCX, ODT, PNG and more in the browser with LibreOffice compiled to WebAssembly. Nothing is uploaded.",
+    "image": "https://skitionek.github.io/serverless-office-converter/social-preview.png",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires a current desktop browser with WebAssembly and JavaScript enabled.",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "featureList": [
+        "Converts DOCX, DOC, ODT, RTF, XLSX, XLS, ODS, CSV, PPTX, PPT, ODP and more",
+        "Exports to PDF, PDF/A, DOCX, ODT, XLSX, PPTX, PNG, JPEG and more",
+        "Runs entirely in the browser; files are never uploaded",
+        "Works offline after the first visit",
+        "Converts whole folders and can watch a folder"
+    ]
+}
+</script>
 <script type="module">
     // GitHub Pages cannot send the COOP/COEP headers that SharedArrayBuffer (and so the
     // multi-threaded LibreOffice build) requires: sw.js adds them, reloading once on the first visit.

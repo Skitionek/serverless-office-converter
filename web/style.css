@@ -42,6 +42,8 @@ body {
 .title-row h1 { margin: 0; }
 .title-row .btn { color: var(--brand); }
 .title-row .btn svg { width: 18px; height: 18px; }
+.shortcut-hint { margin: 0 0 8px; font-size: 0.9rem; color: var(--muted); text-align: end; }
+@media (max-width: 520px) { .shortcut-hint { text-align: start; } } /* the button wraps under the title */
 .tagline { margin: 0; color: var(--muted); font-size: 1.1rem; max-width: 60ch; }
 .badges { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .badges li { font-size: 0.82rem; color: var(--brand); border: 1px solid var(--border); background: var(--surface);
@@ -140,16 +142,6 @@ select {
 .link { font: inherit; color: var(--brand); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
 .link:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .fs-error { color: var(--err); font-size: 0.9rem; margin-top: 8px; text-align: center; overflow-wrap: anywhere; }
-.install {
-    display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap;
-    margin-block: 16px; padding: 14px 16px;
-    background: var(--surface); border: 1px solid var(--brand); border-radius: var(--radius);
-}
-.install img { flex: none; }
-.install-text { flex: 1 1 18rem; }
-.install h2 { margin: 0 0 4px; font-size: 1.05rem; }
-.install p { margin: 0 0 4px; color: var(--muted); font-size: 0.92rem; max-width: 64ch; }
-.install-actions { display: flex; gap: 8px; align-self: center; margin-left: auto; }
 .folder-tools { margin-block: 16px; }
 .folder-tools details { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 16px; }
 .folder-tools summary { cursor: pointer; font-weight: 600; }

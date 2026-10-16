@@ -225,7 +225,6 @@ def main():
     forced_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'forced-results.json')
     if args.forced_from:
         save_forced(json.load(open(args.forced_from)), forced_path)
-    forced = json.load(open(forced_path)) if os.path.exists(forced_path) else None
     print(f'{ok} ok, {failed} failed, {na} not offered')
     for ext, tid, reason in problems:
         print(f'  FAIL {ext} -> {tid}: {reason}')
@@ -248,25 +247,6 @@ def main():
                     c = row['cells'][tid]
                     cells.append('·' if c['status'] == 'n/a' else '✅' if c['verdict'] == 'ok' else '❌')
                 lines.append('| ' + row['ext'].upper() + ' | ' + ' | '.join(cells) + ' |')
-        return '\n'.join(lines)
-
-    def overview():
-        fams = list(groups)
-        head = '| Output | ' + ' | '.join(groups[f] for f in fams) + ' |'
-        lines = [head, '| --- |' + ' :---: |' * len(fams)]
-        symbol = {'error': '❌', 'crash': '💥', 'invalid': '⚠️', 'ok': '✅'}
-        for tid in targets:
-            cells = []
-            for f in fams:
-                rows = [r for r in results['inputs'] if r['family'] == f]
-                offered = any(r['cells'][tid]['status'] != 'n/a' for r in rows)
-                if offered:
-                    cells.append('✅' if all(r['cells'][tid].get('verdict') == 'ok' for r in rows) else '❌')
-                elif forced and tid in forced.get(f, {}):
-                    cells.append(symbol[forced[f][tid]])
-                else:
-                    cells.append('?')
-            lines.append('| ' + names.get(tid, tid.upper()) + ' | ' + ' | '.join(cells) + ' |')
         return '\n'.join(lines)
 
     common = ['pdf', 'pdfa', 'png', 'jpg']  # offered for every input

@@ -242,6 +242,9 @@ async function main() {
         document.getElementById('clear').click();
         const second = await run(entries.slice(1), ['pdf']);
         document.getElementById('clear').click();
+        // A dropped folder's files have no handle: the original is recognised in the folder.
+        const dropped = await run([{ file: entries[1].file, path: 'Docs/sub/report.docx' }], ['pdf']);
+        document.getElementById('clear').click();
         // Saving somewhere else keeps the dropped folder's name and structure.
         await conv.setOutputDirectory(await opfs.getDirectoryHandle('Out', { create: true }));
         const third = await run(entries.slice(1), ['pdf']);
@@ -289,9 +292,8 @@ async function main() {
         await conv.addEntries(fsm.listDirectory(docs));
         const listedBefore = conv.items.map((i) => i.path);
         await conv.setOutputDirectory(docs);
+        await conv.startWatching(docs);
         const watch = conv.watches.find((w) => w.dir === docs);
-        watch.row.querySelector('.watch-toggle').click();
-        await until(() => watch.watcher);
         const observed = watch.watcher.observed;
         const writeFile = async (dir, name) => {
             const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
@@ -308,7 +310,8 @@ async function main() {
         const changedSaved = report.savedTo;
         await new Promise((r) => setTimeout(r, 4000)); // the results' own events
         const watchedPaths = conv.items.map((i) => i.path).filter((p) => !listedBefore.includes(p));
-        watch.row.querySelector('.watch-toggle').click();
+        watch.row.querySelector('.watch-stop').click();
+        const watchStopped = !conv.watches.length;
         await conv.setOutputDirectory(null);
         document.getElementById('clear').click();
         target.value = 'pdf';
@@ -322,7 +325,45 @@ async function main() {
         await until(() => polled, 10000);
         poller.stop();
 
-        return { refused, recalled, resolved, observed, newSaved, changedSaved, watchedPaths, polled,
+        // Folder access starts with an explanation; the browser's picker only opens on Continue.
+        const pickerCalls = [];
+        const realDirPicker = window.showDirectoryPicker;
+        const picked = await opfs.getDirectoryHandle('Picked', { create: true });
+        await writeFile(picked, 'a.docx');
+        window.showDirectoryPicker = async (opts) => { pickerCalls.push(opts.mode); return picked; };
+        const dialog = document.getElementById('fs-dialog');
+        const press = async (value) => {
+            dialog.querySelector(`button[value="${value}"]`).click();
+            await new Promise((r) => setTimeout(r, 300));
+        };
+        document.getElementById('save-folder').click();
+        const explainedFirst = dialog.open && pickerCalls.length === 0;
+        await press('cancel');
+        const cancelled = !dialog.open && pickerCalls.length === 0 && document.getElementById('out-dir').hidden;
+        document.getElementById('save-folder').click();
+        await press('ok');
+        await until(() => !document.getElementById('out-dir').hidden, 5000);
+        const savingShown = document.getElementById('out-dir-name').textContent === 'Picked' && pickerCalls[0] === 'readwrite';
+        document.getElementById('out-dir-stop').click();
+        await new Promise((r) => setTimeout(r, 200));
+        const resumeOffered = !document.getElementById('out-dir-resume-bar').hidden;
+        // Converting a folder: explained, then read-only access; "don't explain again" is remembered.
+        document.getElementById('pick-folder').click();
+        dialog.querySelector('#fs-dialog-skip').checked = true;
+        await press('ok');
+        await until(() => conv.items.length === 1, 5000);
+        document.getElementById('clear').click();
+        document.getElementById('pick-folder').click();
+        await new Promise((r) => setTimeout(r, 300));
+        const skippedSecondTime = !dialog.open;
+        await until(() => conv.items.length === 1, 5000);
+        const folderPicks = pickerCalls.slice(1);
+        document.getElementById('clear').click();
+        localStorage.removeItem('office-converter-skip-explanations');
+        window.showDirectoryPicker = realDirPicker;
+
+        return { dropped, explainedFirst, cancelled, savingShown, resumeOffered, skippedSecondTime, folderPicks,
+                 watchStopped, refused, recalled, resolved, observed, newSaved, changedSaved, watchedPaths, polled,
                  pollerObserved: poller.observed, paths, first, second, third, names, tree: await tree(opfs), size: docx.length };
     }, fs.readFileSync(path.join(FIXTURES, 'sample.docx')).toString('base64'));
     const t = fsResult.tree;
@@ -332,6 +373,7 @@ async function main() {
         ['same format gets a new name', fsResult.first[0] === 'Docs/report (converted).docx' && t['Docs/report (converted).docx'] > 1000],
         ['result next to the original', fsResult.first[1] === 'Docs/sub/report.pdf' && t['Docs/sub/report.pdf'] > 1000],
         ['taken name is not replaced', fsResult.second[0] === 'Docs/sub/report (1).pdf' && t['Docs/sub/report (1).pdf'] > 1000],
+        ['dropped folder: result next to the original', fsResult.dropped[0] === 'Docs/sub/report (2).pdf'],
         ['other folder keeps structure', fsResult.third[0] === 'Out/Docs/sub/report.pdf' && t['Out/Docs/sub/report.pdf'] > 1000],
         ['save dialog never replaces an original', fsResult.refused === 'SourceFileError restored'],
         ['handles remembered in IndexedDB', fsResult.recalled === true],
@@ -340,6 +382,13 @@ async function main() {
         ['watched folder: changed file converted again', fsResult.changedSaved === 'Docs/report (converted) (1).docx'],
         ['watched folder: own results not picked up', JSON.stringify(fsResult.watchedPaths) === '["Docs/sub/new.docx"]'],
         ['watching without FileSystemObserver polls', !fsResult.pollerObserved && JSON.stringify(fsResult.polled) === '["sub/polled.docx"]'],
+        ['watching stops', fsResult.watchStopped],
+        ['saving into a folder is explained before the browser asks', fsResult.explainedFirst],
+        ['cancelling the explanation asks nothing', fsResult.cancelled],
+        ['saving shows where results go', fsResult.savingShown],
+        ['the folder is offered again, not reused silently', fsResult.resumeOffered],
+        ['folder conversion asks for read access only', JSON.stringify(fsResult.folderPicks) === '["read","read"]'],
+        ['"don\'t explain again" is remembered', fsResult.skippedSecondTime],
         ['concurrent writes', JSON.stringify(fsResult.names) === '["a/x.txt","a/x (1).txt","a/x (2).txt"]'],
     ];
     for (const [name, ok] of fsChecks) {

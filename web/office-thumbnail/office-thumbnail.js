@@ -93,9 +93,10 @@ export class OfficeThumbnail extends HTMLElement {
     #visible = false;
 
     constructor() {
+        // No attributes here: document.createElement() rejects custom elements whose
+        // constructor adds any. `state` is set from connectedCallback() and `file`.
         super();
         this.attachShadow({ mode: 'open' }).append(template.content.cloneNode(true));
-        this.setAttribute('state', 'empty');
     }
 
     /** The document to preview (File or Blob); alternative to the `src` attribute. */

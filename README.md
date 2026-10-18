@@ -25,9 +25,10 @@ component: files are converted inside the visitor's browser tab and are never up
   software: its parsers are large and old, and a crafted file can take over the program. Here
   LibreOffice runs as WebAssembly inside the browser's sandbox, not as a program on your
   computer, so a malicious document can't take over your system, and macros never run. And
-  should one take over the converter itself, it still can't send your documents anywhere,
-  reach the browser's storage or the folders you let the page use, see the other documents you
-  convert, or leave anything behind for your next visit. See [Security](#security).
+  should one take over the converter itself, it still can't send your documents anywhere (a
+  setting, on by default), reach the browser's storage or the folders you let the page use, or
+  leave anything behind for your next visit; an optional setting also keeps it away from the
+  other files you convert. See [Security](#security).
 * **Your files never leave your computer.** There is no server to send them to, and you
   don't have to take our word for it, you can check it yourself:
   1. Open the page, then open DevTools (F12 or Ctrl/Cmd+Shift+I) → **Network** tab.
@@ -259,7 +260,8 @@ page (index.html / app.js, UI)
                                         lo-thread.js: UNO API
                                           loadComponentFromURL(file:///tmp/…)
                                           storeToURL(…, FilterName)
-       a fresh engine per document;     lockdown.js: no network, storage or messaging APIs
+       optional: a fresh                lockdown.js: no network, storage or messaging APIs
+       engine per document
 service-worker.js (service worker)
   • adds COOP/COEP headers → cross-origin isolation → SharedArrayBuffer (pthreads)
   • gives the engine's workers a Content Security Policy (no network but lo/)
@@ -304,35 +306,46 @@ possible:
    WebAssembly also keeps return addresses out of reach of memory corruption, which rules out
    the classic stack-smashing exploit. Documents are opened hidden, without updating linked
    content, and with macros never executed.
-2. **No network.** Corrupted memory can still change what the engine does, and through
-   Embind it can call JavaScript, with the page's origin. So the engine's workers (the engine
-   worker and LibreOffice's threads) get a Content Security Policy from the service worker:
-   requests only to `lo/`, scripts only from the engine directory, no workers but
-   LibreOffice's own threads. On top of that, once the engine is loaded and before any
-   document is opened, `web/office-converter/lockdown.js` deletes `fetch`, `XMLHttpRequest`,
-   `WebSocket`, `EventSource`, `importScripts`, ... from those workers.
+2. **No network.** Corrupted memory can still change what the engine does, and through Embind
+   it can call JavaScript, with the page's origin. So the engine's workers (the engine worker
+   and LibreOffice's threads) get a Content Security Policy from the service worker: requests
+   only to `lo/`, scripts only from the engine directory, no workers but LibreOffice's own
+   threads. On top of that, once the engine is loaded and before any document is opened,
+   `web/office-converter/lockdown.js` deletes `fetch`, `XMLHttpRequest`, `WebSocket`,
+   `EventSource`, `importScripts`, ... from those workers. This is the page's **Block the
+   converter's network access** setting (`OfficeEngine`'s `isolateNetwork` option), **on by
+   default** and free: converting never needs the network. Unticked, the engine worker is
+   loaded as `engine-worker.js?network`, without the policy and network lockdown; a
+   locked-down engine can't start that worker itself (its policy allows no worker but
+   LibreOffice's threads, and those always get the policy).
 3. **No storage, no other pages.** A policy can't restrict storage, so `lockdown.js` also
    deletes IndexedDB (where the folders for "save into a folder" and "watch a folder" are
    remembered), Cache Storage (where the engine is kept), `navigator.storage`,
    `BroadcastChannel` and the service worker API from them.
-4. **A fresh engine per document.** A document can't see or change the ones converted after
-   it: each one gets a new engine (about 1.5 s once it is cached); only its own jobs, its
-   thumbnail and its conversion, share one.
+4. **Optional: a fresh engine per document.** By default one engine converts every document
+   of a visit, so a document that took over the engine could read the documents converted
+   after it and change their results (with point 2 it still can't send anything anywhere;
+   it matters if you share those results). The page's **A fresh converter for each file**
+   setting (`OfficeEngine`'s `isolateDocuments` option) rules that out: each document gets a new engine,
+   shared only by its own jobs, its thumbnail and its conversion. This is a performance fee of
+   about **1.5 s per document** (a restart of the cached engine), so it is off by default.
 5. **Nothing left behind.** With no storage APIs (point 3) the engine can't plant anything for
    later, and the engine files kept in Cache Storage are also checked against the SHA-256
    hashes in `lo/manifest.json` the first time the service worker uses them on a visit, and
    downloaded again if they don't match.
 
-What a document that took over the engine can still do: produce whatever result *for itself*,
-fail, or hang until the timeout. Out of reach of all this: a bug in the browser itself (keep
-it up to date), and other pages on the same origin. `skitionek.github.io` is shared by every
-GitHub Pages site of the account, and each of them has the same access to this origin's
-storage as the converter; a custom domain would give the converter an origin of its own.
+What a document that took over the engine can still do: produce whatever result *for itself*
+(and, without point 4, for the documents after it in the same visit), fail, or hang until the
+timeout. Out of reach of all this: a bug in the browser itself (keep it up to date), and other
+pages on the same origin. `skitionek.github.io` is shared by every GitHub Pages site of the
+account, and each of them has the same access to this origin's storage as the converter; a
+custom domain would give the converter an origin of its own.
 
 `test/security.cjs` checks points 2–5 in Chromium against the real engine: it inspects the
 engine's workers, tries the usual ways out (fetch, XHR, WebSocket, scripts, workers, storage)
 from a worker in the engine directory while a server on another origin counts the requests it
-gets, poisons the cache, and checks which engine each document gets. Firefox and Safari get
+gets, poisons the cache, checks which engine each document gets, and that both settings do
+what they say (with the network setting off, the engine does reach the other origin). Firefox and Safari get
 the same policy and lockdown, but aren't tested here.
 
 ## Repository layout
@@ -422,8 +435,8 @@ touches it (it can also be run manually from the Actions tab). A fork deploys th
 * No PowerPoint 95 (or 1–4) import, and none of the other formats LibreOffice reads through
   libmwaw and librevenge (Works, Write, WordPerfect, ClarisWorks, …): those filters are left out
   to keep the download small (`build/patches/0006`).
-* Every document gets a fresh engine for safety (see [Security](#security)), which adds about
-  1.5 s per document to a batch.
+* The optional fresh converter for each file (see [Security](#security)) adds about 1.5 s per
+  file to a batch.
 * Text documents cannot be exported to HTML (Writer's HTML export needs the forms component,
   which comes with database connectivity and is left out of the WASM build).
 * Image exports (PNG/JPEG, and SVG for slides and drawings) contain the first page/slide only; CSV export contains the

@@ -55,16 +55,22 @@ Preview thumbnails for your file lists: [`serverless-office-thumbnail`](../offic
 
 ## API
 
-### `new OfficeEngine({ base?, workerUrl?, timeoutMs?, isolate? })`
+### `new OfficeEngine({ base?, workerUrl?, timeoutMs?, isolateNetwork?, isolateDocuments? })`
 
 Starts lazily on the first conversion (or `engine.start()`): a dedicated worker that loads
 LibreOffice (about 7-10 s the first time; the download is cached afterwards).
 
-* `isolate` (default `true`): every document gets a fresh engine, so a document crafted to take
-  over LibreOffice can't see or change the ones converted after it. Jobs with the same `key`
-  (by default the `File` or handle passed to `convertFile`) are one document and share an
-  engine; they run before other documents' jobs when one is open. A restart takes about 1.5 s
-  once the engine is cached. `isolate: false` keeps one engine for everything (faster batches).
+* `isolateNetwork` (default `true`): the engine has no network (see [Security](#security)), so a
+  document crafted to take over LibreOffice can't send anything anywhere. No cost: converting
+  never needs the network. `false` loads the worker as `engine-worker.js?network`, without
+  the policy and network lockdown.
+* `isolateDocuments` (default `false`): every document gets a fresh engine, so such a document
+  can't read or change the ones converted after it either. Performance fee: about **1.5 s per
+  document**, the restart of the cached engine. Jobs with the same `key` (by default the `File`
+  or handle passed to `convertFile`) are one document and share an engine; they run before
+  other documents' jobs while it is open.
+* Both can be changed at any time (`engine.isolateNetwork`, `engine.isolateDocuments`); a change
+  applies from the next job, which gets a fresh engine if needed.
 
 * `convertFile(file, targetId, { name?, priority?, quiet?, key? })` → `{ blob, filename, family, filter, ms }`
   converts a `File`/`Blob` (or reads a `FileSystemFileHandle`). `targetId` is a key of `TARGET_BY_ID`: `pdf`, `pdfa`, `docx`, `doc`,
@@ -129,19 +135,25 @@ browser's sandbox, so a crafted document can't take over the computer, and macro
 run. In case one takes over the engine itself (WebAssembly memory corruption, then JavaScript
 through Embind), it is contained further:
 
-* **No network.** The service worker gives the engine's workers a Content Security Policy:
-  requests only to `lo/`, scripts only from the package directory, no other workers. Once the
-  engine has started, `lockdown.js` also removes `fetch`, `XMLHttpRequest`, `WebSocket`, ... and
-  `importScripts` from its workers.
-* **No storage, no other pages.** `lockdown.js` removes IndexedDB (where `rememberHandle()` keeps
+* **No network** (`isolateNetwork`, on by default). The service worker gives the engine's
+  workers a Content Security Policy: requests only to `lo/`, scripts only from the package
+  directory, no workers but LibreOffice's threads (`lo-pthread.js`, which always get the
+  policy). Once the engine has started, `lockdown.js` also removes `fetch`, `XMLHttpRequest`,
+  `WebSocket`, ... and `importScripts` from its workers. Only the page can start the engine
+  with the network (`engine-worker.js?network`).
+* **No storage, no other pages** (always). `lockdown.js` removes IndexedDB (where `rememberHandle()` keeps
   folder handles), Cache Storage, `navigator.storage`, `BroadcastChannel`, ... from the engine's
   workers.
 * **Nothing that outlives the document.** Without storage APIs the engine can't plant
   anything; the cached engine is also checked against the SHA-256 in `lo/manifest.json` when a
-  service worker instance first serves it. With `isolate`, every document gets a fresh engine.
+  service worker instance first serves it.
+* **Optional: nothing shared between documents.** With `isolateDocuments`, every document gets a
+  fresh engine (about 1.5 s per document).
 
-What remains: a compromised engine controls the result of *its* document, and can fail or hang
-(see `timeoutMs`). Other pages on your origin are outside this: they share its storage. `test/security.cjs` in the repository checks the above in Chromium.
+What remains: a compromised engine controls the result of *its* document (without
+`isolateDocuments`, also of the documents converted after it by the same engine), and can fail
+or hang (see `timeoutMs`). Other pages on your origin are outside this: they share its storage.
+`test/security.cjs` in the repository checks the above in Chromium.
 
 ## What's inside, and what isn't
 

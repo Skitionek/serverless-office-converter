@@ -6,10 +6,12 @@
  * important first, so background work such as thumbnails never delays a
  * conversion the user asked for.
  *
- * Documents are untrusted, so by default each one gets a fresh engine: a file
- * crafted to take over LibreOffice can't see or alter the documents converted
- * after it.  Jobs for the same document (e.g. its thumbnail and its
- * conversion) share one.
+ * Documents are untrusted.  By default (`isolateNetwork`) the engine has no
+ * network: a file crafted to take over LibreOffice can't send anything anywhere
+ * (see lockdown.js and service-worker.js).  Optionally (`isolateDocuments`),
+ * each document also gets a fresh engine, so such a file can't see or alter
+ * the documents converted after it; jobs for the same document (e.g. its
+ * thumbnail and its conversion) share one.
  */
 
 import { outputName } from './file-system.js';
@@ -21,7 +23,7 @@ const ENGINE_FAULT = /table index is out of bounds|memory access out of bounds|u
 
 const READY_TEXT = 'Ready. Everything stays on this device.';
 
-// The document key of every job when documents are not isolated.
+// The document of every job while documents are not isolated.
 const SHARED = Symbol('shared engine');
 
 export class OfficeEngine extends EventTarget {
@@ -31,18 +33,25 @@ export class OfficeEngine extends EventTarget {
      *   (default: the directory this module is loaded from).
      * @param {string|URL} [options.workerUrl] URL of engine-worker.js if it is not directly under `base`.
      * @param {number} [options.timeoutMs] Abort and restart the engine when one job takes longer.
-     * @param {boolean} [options.isolate] Start a fresh engine for each document (default true;
-     *   about 1.5 s per document once the engine is cached).
+     * @param {boolean} [options.isolateNetwork] Keep the engine off the network (default true;
+     *   no cost: conversions never need it).
+     * @param {boolean} [options.isolateDocuments] Start a fresh engine for each document (default
+     *   false; costs about 1.5 s per document once the engine is cached).
+     * Both can be changed at any time (`engine.isolateNetwork`, `engine.isolateDocuments`); they
+     * apply from the next job on.
      */
     constructor({
-        base = new URL('./', import.meta.url), workerUrl, timeoutMs = 5 * 60 * 1000, isolate = true,
+        base = new URL('./', import.meta.url), workerUrl, timeoutMs = 5 * 60 * 1000,
+        isolateNetwork = true, isolateDocuments = false,
     } = {}) {
         super();
         this.base = new URL(base, document.baseURI).href;
         this.workerUrl = new URL(workerUrl || 'engine-worker.js', this.base).href;
         this.timeoutMs = timeoutMs;
-        this.isolate = isolate;
-        this.document = undefined; // key of the document the current worker has opened
+        this.isolateNetwork = isolateNetwork;
+        this.isolateDocuments = isolateDocuments;
+        this.document = undefined; // the document the current worker has opened (or SHARED)
+        this.network = false; // whether the current worker may use the network
         this.state = 'idle';
         this.worker = null;
         this.ready = null;
@@ -63,6 +72,7 @@ export class OfficeEngine extends EventTarget {
         this.startedAt = performance.now();
         this.quietStart = quiet;
         this.document = undefined;
+        this.network = !this.isolateNetwork;
         if (!quiet) this.setState('loading', '');
         this.ready = new Promise((resolve, reject) => {
             this.resolveReady = resolve;
@@ -70,7 +80,9 @@ export class OfficeEngine extends EventTarget {
         });
         // Avoid an unhandled rejection when nobody awaits a failed start.
         this.ready.catch(() => {});
-        const worker = new Worker(this.workerUrl);
+        const url = new URL(this.workerUrl);
+        if (this.network) url.searchParams.set('network', '');
+        const worker = new Worker(url);
         worker.onmessage = (event) => this.onMessage(worker, event.data || {});
         worker.onerror = (event) => {
             event.preventDefault();
@@ -134,13 +146,12 @@ export class OfficeEngine extends EventTarget {
      * @param {{filter?: string, options?: string}} [input] Forced import filter.
      * @param {{priority?: number, quiet?: boolean, key?: *}} [opts] Higher priority runs first;
      *   quiet jobs do not change the engine's 'busy' state (use for background work).  Jobs
-     *   with the same `key` (e.g. the File) are the same document and may share an engine;
-     *   without one, the job gets an engine of its own.
+     *   with the same `key` (e.g. the File) are the same document and share an engine when
+     *   `isolateDocuments` is on; without one, the job then gets an engine of its own.
      * @returns {Promise<{data: ArrayBuffer, family: string, filter: string, ms: number}>}
      */
     convert(data, name, target, input, { priority = 0, quiet = false, key } = {}) {
-        if (!this.isolate) key = SHARED;
-        else if (key === undefined) key = Symbol(name);
+        if (key === undefined) key = Symbol(name);
         return new Promise((resolve, reject) => {
             this.queue.push({
                 data, name, target, input, quiet, priority, key, seq: this.seq++, resolve, reject,
@@ -183,7 +194,7 @@ export class OfficeEngine extends EventTarget {
             while (this.queue.length) {
                 // Jobs for the document the engine already has open come first: they need no
                 // restart (when isolating documents, any other one does).
-                const other = (job) => (this.isolate && job.key === this.document ? 0 : 1);
+                const other = (job) => (this.isolateDocuments && job.key === this.document ? 0 : 1);
                 this.queue.sort((a, b) => other(a) - other(b) || b.priority - a.priority || a.seq - b.seq);
                 const job = this.queue.shift();
                 try {
@@ -208,13 +219,15 @@ export class OfficeEngine extends EventTarget {
     }
 
     async runJob({ data, name, target, input, quiet, key }) {
-        if (this.worker && this.document !== undefined && this.document !== key) {
-            // The engine has opened another document: it gets a fresh one.
+        const doc = this.isolateDocuments ? key : SHARED;
+        if (this.worker && ((this.document !== undefined && this.document !== doc)
+                            || this.network === this.isolateNetwork)) {
+            // The engine has opened another document, or the network setting changed.
             this.stop('Restarted for the next document.');
             this.start({ quiet: true });
         }
         await this.start();
-        this.document = key;
+        this.document = doc;
         if (!quiet) this.setState('busy', 'Converting…');
         const id = this.nextId++;
         return new Promise((resolve, reject) => {

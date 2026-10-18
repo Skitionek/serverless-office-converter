@@ -109,6 +109,12 @@
         <label class="target-pick">Default output format
             <select id="all-target"></select>
         </label>
+        <label class="isolate-pick"><input type="checkbox" id="isolate-network">
+            <span>Block the converter's network access <span class="summary-note">recommended: converting
+                never needs the network</span></span></label>
+        <label class="isolate-pick"><input type="checkbox" id="isolate-documents">
+            <span>A fresh converter for each file <span class="summary-note">extra protection,
+                about 1.5 s slower per file</span></span></label>
     </section>
 
     <section class="queue" id="queue" hidden>
@@ -169,10 +175,15 @@
                 formats are where its bugs tend to be. Here the converter runs inside your
                 browser's sandbox, not as a program on your computer, so a malicious file can't
                 take over your system, and macros never run. Even if a file took over the
-                converter itself, it has no way to send anything over the internet, can't reach
-                your browser's storage or the folders you let this page use, gets a converter of
-                its own so it can't see your other documents, and leaves nothing behind for your
-                next visit.</p>
+                converter itself, it can't reach your browser's storage or the folders you let
+                this page use, and leaves nothing behind for your next visit. With <strong>Block the converter's
+                network access</strong> ticked (the default), it also has no way to send
+                anything over the internet; converting never needs the network, so there is no
+                reason to untick it.</p>
+            <p>It could still read and change the files you convert after it during the same
+                visit. To rule that out too, tick <strong>A fresh converter for each file</strong>:
+                each file then gets a converter of its own, which takes about 1.5 seconds more
+                per file.</p>
         </details>
         <details>
             <summary>Are my original files changed?</summary>

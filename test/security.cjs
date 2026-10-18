@@ -8,7 +8,10 @@
  *     other origins even with code that kept a reference to fetch;
  *   - a cached engine file that was replaced is not served on the next visit (a new service
  *     worker instance), but downloaded again;
- *   - every document gets a fresh engine, shared only by jobs for the same document.
+ *   - with the (optional) setting on, every document gets a fresh engine, shared only by jobs
+ *     for the same document;
+ *   - the network setting is on by default, and only the page can turn it off.  (Off, a
+ *     fresh engine does reach the other origin: the check above would have caught it.)
  *
  *   node test/security.cjs
  */
@@ -116,11 +119,14 @@ async function escapeAttempts(collector, savedFetch) {
     if (self.importScripts) {
         await attempt('importScripts other origin', () => importScripts(collector + '/script.js'));
     }
-    await attempt('blob: worker', () => new Promise((resolve, reject) => {
-        const w = new Worker(URL.createObjectURL(new Blob(['postMessage(1)'])));
+    const worker = (url) => () => new Promise((resolve, reject) => {
+        const w = new Worker(url);
         w.onmessage = () => resolve('ran');
         w.onerror = () => reject(new Error('error'));
-    }));
+    });
+    await attempt('blob: worker', worker(URL.createObjectURL(new Blob(['postMessage(1)']))));
+    // The engine worker with the network allowed: only the page may start that one.
+    await attempt('engine worker with network', worker(new URL('engine-worker.js?network', self.location.href)));
     return out;
 }
 
@@ -159,6 +165,10 @@ async function main() {
         console.log(`${ok ? 'PASS' : 'FAIL'}  ${label}${detail ? ' ' + detail : ''}`);
     };
 
+    const network = await page.evaluate(() => [document.getElementById('isolate-network').checked,
+                                                window.officeConverter.engine.isolateNetwork]);
+    check(network[0] && network[1], 'network isolation: on by default', JSON.stringify(network));
+
     // The collector works: the page itself (no policy) can reach it.
     await page.evaluate((c) => fetch(c + '/control').then((r) => r.status), collector);
     check(hits.length === 1, 'control: the page can reach the collector', JSON.stringify(hits));
@@ -173,11 +183,11 @@ async function main() {
     if (probeResult.error) {
         check(false, 'probe worker', probeResult.error);
     } else {
-        const blocked = (r) => Object.entries(r).filter(([k]) => / other origin|outside|blob:/.test(k));
+        const blocked = (r) => Object.entries(r).filter(([k]) => / other origin|outside| worker/.test(k));
         for (const [k, v] of blocked(probeResult.policy)) check(v === 'blocked', `policy: ${k}`, v);
         check(probeResult.allowed === 200, 'policy: the engine files are still reachable', String(probeResult.allowed));
         for (const [k, v] of Object.entries(probeResult.lockedDown)) {
-            if (/ other origin|outside|blob:/.test(k)) check(v === 'blocked', `lockdown: ${k}`, v);
+            if (/ other origin|outside| worker/.test(k)) check(v === 'blocked', `lockdown: ${k}`, v);
             else check(v === 'gone', `lockdown: ${k}`, v);
         }
     }
@@ -237,24 +247,61 @@ async function main() {
     check(poison.started === true, 'replaced cache entry: the engine still starts', String(poison.started));
     check(poison.restored, 'replaced cache entry: downloaded and cached again');
 
-    // 4. A fresh engine per document; a document's jobs share one.
+    // 4. Optional: a fresh engine per document; a document's jobs share one.
+    const files = ['sample.docx', 'sample.xlsx']
+        .map((n) => [n, fs.readFileSync(path.join(FIXTURES, n)).toString('base64')]);
     const isolation = await page.evaluate(async (files) => {
         const engine = window.officeConverter.engine;
         const make = ([name, b64]) => new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], name);
-        const [a, b] = files.map(make);
         const run = async (file, target) => {
             await engine.convertFile(file, target);
             return engine.worker;
         };
+        const off = {
+            setting: document.getElementById('isolate-documents').checked, option: engine.isolateDocuments,
+        };
+        const [c, d] = files.map(make);
+        const shared = (await run(c, 'pdf')) === (await run(d, 'pdf'));
+        document.getElementById('isolate-documents').click(); // the page's setting
+        const [a, b] = files.map(make);
         const a1 = await run(a, 'png');
         const a2 = await run(a, 'pdf');
         const b1 = await run(b, 'pdf');
         const a3 = await run(a, 'pdf');
-        return { sameDocShares: a1 === a2, otherDocFresh: b1 !== a2, backToFirstFresh: a3 !== b1 && a3 !== a1 };
-    }, ['sample.docx', 'sample.xlsx'].map((n) => [n, fs.readFileSync(path.join(FIXTURES, n)).toString('base64')]));
-    check(isolation.sameDocShares, 'isolation: jobs for the same document share an engine');
-    check(isolation.otherDocFresh, 'isolation: another document gets a fresh engine');
-    check(isolation.backToFirstFresh, 'isolation: an engine is never reused for a document after another');
+        return {
+            off, shared, on: engine.isolateDocuments,
+            sameDocShares: a1 === a2, otherDocFresh: b1 !== a2, backToFirstFresh: a3 !== b1 && a3 !== a1,
+        };
+    }, files);
+    check(!isolation.off.setting && !isolation.off.option, 'isolation: off by default', JSON.stringify(isolation.off));
+    check(isolation.shared, 'isolation off: documents share an engine');
+    check(isolation.on, 'isolation: the page setting turns it on');
+    check(isolation.sameDocShares, 'isolation on: jobs for the same document share an engine');
+    check(isolation.otherDocFresh, 'isolation on: another document gets a fresh engine');
+    check(isolation.backToFirstFresh, 'isolation on: an engine is never reused for a document after another');
+
+    // 5. Network isolation off (the page's setting): a fresh engine that keeps the network.
+    hits.length = 0;
+    await page.evaluate(async (b64) => {
+        document.getElementById('isolate-network').click();
+        const file = new File([Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))], 'sample.docx');
+        await window.officeConverter.engine.convertFile(file, 'pdf');
+    }, files[0][1]);
+    const open = page.workers().find((w) => /engine-worker\.js\?network/.test(w.url()));
+    const reached = open && await open.evaluate((c) => fetch(c + '/allowed').then((r) => r.status, () => 'blocked'), collector);
+    check(reached === 200 && hits.includes('GET /allowed'), 'network isolation off: the engine reaches the network',
+          JSON.stringify({ worker: !!open, reached, hits }));
+
+    await page.reload();
+    await page.waitForFunction(() => window.officeConverter && window.crossOriginIsolated);
+    const remembered = await page.evaluate(() => ({
+        documents: [document.getElementById('isolate-documents').checked,
+                    window.officeConverter.engine.isolateDocuments],
+        network: [document.getElementById('isolate-network').checked,
+                  window.officeConverter.engine.isolateNetwork],
+    }));
+    check(remembered.documents.every(Boolean) && !remembered.network.some(Boolean),
+          'settings are remembered', JSON.stringify(remembered));
 
     await browser.close();
     site.close();

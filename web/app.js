@@ -20,6 +20,31 @@ function formatBytes(n) {
 const engine = new OfficeEngine();
 OfficeThumbnail.engine = engine;
 
+// Protection settings, remembered in this browser (see "Is it safe to open old or unknown
+// files?" on the page).
+function protectionSetting(id, fallback, apply) {
+    const key = 'office-converter-' + id;
+    let on = fallback;
+    try {
+        const stored = localStorage.getItem(key);
+        if (stored !== null) on = stored === '1';
+    } catch {
+        // storage unavailable: the default
+    }
+    $(id).checked = on;
+    apply(on);
+    $(id).addEventListener('change', () => {
+        apply($(id).checked);
+        try {
+            localStorage.setItem(key, $(id).checked ? '1' : '0');
+        } catch {
+            // not remembered
+        }
+    });
+}
+protectionSetting('isolate-network', true, (on) => { engine.isolateNetwork = on; });
+protectionSetting('isolate-documents', false, (on) => { engine.isolateDocuments = on; });
+
 // ---------------------------------------------------------------------------
 // Engine status UI, including download progress reported by sw.js.
 

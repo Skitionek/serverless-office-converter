@@ -34,8 +34,11 @@ importScripts(ENGINE_DIR + 'vendor/xz-decompress.min.js');
 const LO_DIR = ENGINE_DIR + 'lo/';
 const MANIFEST_URL = LO_DIR + 'manifest.json';
 // The engine's worker scripts, and their policy.  'unsafe-eval': Embind builds its glue
-// functions with new Function().
-const ENGINE_WORKERS = [ENGINE_DIR + 'engine-worker.js', ENGINE_DIR + 'lo-pthread.js'];
+// functions with new Function().  engine-worker.js?network (OfficeEngine's isolateNetwork:
+// false) goes without; only the page can start it, the policy allows no such worker.
+// lo-pthread.js always has it.
+const ENGINE_WORKER = ENGINE_DIR + 'engine-worker.js';
+const ENGINE_THREAD = ENGINE_DIR + 'lo-pthread.js';
 const ENGINE_CSP = [
     "default-src 'none'",
     `script-src ${ENGINE_DIR} 'unsafe-eval' 'wasm-unsafe-eval'`,
@@ -64,12 +67,17 @@ self.addEventListener('fetch', (event) => {
     if (url.origin !== self.location.origin) return;
     if (request.method === 'GET' && url.href.startsWith(LO_DIR) && url.href !== MANIFEST_URL) {
         event.respondWith(serveLibreOfficeAsset(event, url));
-    } else if (request.destination === 'worker' && ENGINE_WORKERS.includes(url.origin + url.pathname)) {
+    } else if (request.destination === 'worker' && isLockedDownWorker(url)) {
         event.respondWith(fetchIsolated(request, ENGINE_CSP));
     } else {
         event.respondWith(fetchIsolated(request));
     }
 });
+
+function isLockedDownWorker(url) {
+    const path = url.origin + url.pathname;
+    return path === ENGINE_THREAD || (path === ENGINE_WORKER && !url.searchParams.has('network'));
+}
 
 function isolationHeaders(headers) {
     headers.set('Cross-Origin-Opener-Policy', 'same-origin');

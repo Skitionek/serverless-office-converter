@@ -262,19 +262,23 @@ async function main() {
         };
         const [c, d] = files.map(make);
         const shared = (await run(c, 'pdf')) === (await run(d, 'pdf'));
-        document.getElementById('isolate-documents').click(); // the page's setting
+        document.getElementById('open-settings').click(); // the page's settings dialog
+        const dialogOpened = document.getElementById('settings-dialog').open;
+        document.getElementById('isolate-documents').click();
+        document.getElementById('settings-dialog').close();
         const [a, b] = files.map(make);
         const a1 = await run(a, 'png');
         const a2 = await run(a, 'pdf');
         const b1 = await run(b, 'pdf');
         const a3 = await run(a, 'pdf');
         return {
-            off, shared, on: engine.isolateDocuments,
+            off, shared, on: engine.isolateDocuments, dialogOpened,
             sameDocShares: a1 === a2, otherDocFresh: b1 !== a2, backToFirstFresh: a3 !== b1 && a3 !== a1,
         };
     }, files);
     check(!isolation.off.setting && !isolation.off.option, 'isolation: off by default', JSON.stringify(isolation.off));
     check(isolation.shared, 'isolation off: documents share an engine');
+    check(isolation.dialogOpened, 'the Settings button opens the settings dialog');
     check(isolation.on, 'isolation: the page setting turns it on');
     check(isolation.sameDocShares, 'isolation on: jobs for the same document share an engine');
     check(isolation.otherDocFresh, 'isolation on: another document gets a fresh engine');

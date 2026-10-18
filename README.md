@@ -312,23 +312,24 @@ possible:
    only to `lo/`, scripts only from the engine directory, no workers but LibreOffice's own
    threads. On top of that, once the engine is loaded and before any document is opened,
    `web/office-converter/lockdown.js` deletes `fetch`, `XMLHttpRequest`, `WebSocket`,
-   `EventSource`, `importScripts`, ... from those workers. This is the page's **Block the
-   converter's network access** setting (`OfficeEngine`'s `isolateNetwork` option), **on by
-   default** and free: converting never needs the network. Unticked, the engine worker is
-   loaded as `engine-worker.js?network`, without the policy and network lockdown; a
-   locked-down engine can't start that worker itself (its policy allows no worker but
-   LibreOffice's threads, and those always get the policy).
+   `EventSource`, `importScripts`, ... from those workers. This is the **Block the converter's
+   network access** setting in the page's **Settings** (`OfficeEngine`'s `isolateNetwork`
+   option), **on by default** and free: converting never needs the network. Unticked, the
+   engine worker is loaded as `engine-worker.js?network`, without the policy and network
+   lockdown; a locked-down engine can't start that worker itself (its policy allows no worker
+   but LibreOffice's threads, and those always get the policy).
 3. **No storage, no other pages.** A policy can't restrict storage, so `lockdown.js` also
    deletes IndexedDB (where the folders for "save into a folder" and "watch a folder" are
    remembered), Cache Storage (where the engine is kept), `navigator.storage`,
    `BroadcastChannel` and the service worker API from them.
-4. **Optional: a fresh engine per document.** By default one engine converts every document
-   of a visit, so a document that took over the engine could read the documents converted
-   after it and change their results (with point 2 it still can't send anything anywhere;
-   it matters if you share those results). The page's **A fresh converter for each file**
-   setting (`OfficeEngine`'s `isolateDocuments` option) rules that out: each document gets a new engine,
-   shared only by its own jobs, its thumbnail and its conversion. This is a performance fee of
-   about **1.5 s per document** (a restart of the cached engine), so it is off by default.
+4. **Optional: a fresh engine per document.** By default one engine converts every document of
+   a visit, so a document that took over the engine could read the documents converted after
+   it and change their results (with point 2 it still can't send anything anywhere; it matters
+   if you share those results). The **A fresh converter for each file** setting in the page's
+   **Settings** (`OfficeEngine`'s `isolateDocuments` option) rules that out: each document
+   gets a new engine, shared only by its own jobs, its thumbnail and its conversion. This is a
+   performance fee of about **1.5 s per document** (a restart of the cached engine), so it is
+   off by default.
 5. **Nothing left behind.** With no storage APIs (point 3) the engine can't plant anything for
    later, and the engine files kept in Cache Storage are also checked against the SHA-256
    hashes in `lo/manifest.json` the first time the service worker uses them on a visit, and

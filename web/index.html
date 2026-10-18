@@ -64,9 +64,14 @@
     <div class="wrap">
         <div class="title-row">
             <h1>Office Converter</h1>
-            <button type="button" class="btn" id="install-header" hidden>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4.2L6 20V5a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-                Save shortcut</button>
+            <div class="header-actions">
+                <button type="button" class="btn" id="install-header" hidden>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4.2L6 20V5a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                    Save shortcut</button>
+                <button type="button" class="btn btn-quiet open-settings" id="open-settings" aria-haspopup="dialog">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Settings</button>
+            </div>
         </div>
         <p class="shortcut-hint" id="install-safari" hidden role="status">To save a shortcut in Safari,
             choose <strong>File › Add to Dock</strong> (macOS Sonoma or later).</p>
@@ -109,12 +114,6 @@
         <label class="target-pick">Default output format
             <select id="all-target"></select>
         </label>
-        <label class="isolate-pick"><input type="checkbox" id="isolate-network">
-            <span>Block the converter's network access <span class="summary-note">recommended: converting
-                never needs the network</span></span></label>
-        <label class="isolate-pick"><input type="checkbox" id="isolate-documents">
-            <span>A fresh converter for each file <span class="summary-note">extra protection,
-                about 1.5 s slower per file</span></span></label>
     </section>
 
     <section class="queue" id="queue" hidden>
@@ -176,14 +175,15 @@
                 browser's sandbox, not as a program on your computer, so a malicious file can't
                 take over your system, and macros never run. Even if a file took over the
                 converter itself, it can't reach your browser's storage or the folders you let
-                this page use, and leaves nothing behind for your next visit. With <strong>Block the converter's
-                network access</strong> ticked (the default), it also has no way to send
-                anything over the internet; converting never needs the network, so there is no
-                reason to untick it.</p>
+                this page use, and leaves nothing behind for your next visit. With <strong>Block
+                the converter's network access</strong> ticked in
+                <button type="button" class="link open-settings">Settings</button> (the default),
+                it also has no way to send anything over the internet; converting never needs
+                the network, so there is no reason to untick it.</p>
             <p>It could still read and change the files you convert after it during the same
-                visit. To rule that out too, tick <strong>A fresh converter for each file</strong>:
-                each file then gets a converter of its own, which takes about 1.5 seconds more
-                per file.</p>
+                visit. To rule that out too, tick <strong>A fresh converter for each file</strong> in
+                <button type="button" class="link open-settings">Settings</button>: each file then
+                gets a converter of its own, which takes about 1.5 seconds more per file.</p>
         </details>
         <details>
             <summary>Are my original files changed?</summary>
@@ -236,6 +236,24 @@
     </li>
 </template>
 
+<dialog class="fs-dialog" id="settings-dialog" aria-labelledby="settings-title">
+    <form method="dialog">
+        <h2 id="settings-title">Settings</h2>
+        <label class="setting"><input type="checkbox" id="isolate-network">
+            <span><strong>Block the converter's network access</strong>
+                <span class="setting-note">Recommended, and free: converting never needs the network.
+                    Even a booby-trapped file that took over the converter can't send anything
+                    anywhere.</span></span></label>
+        <label class="setting"><input type="checkbox" id="isolate-documents">
+            <span><strong>A fresh converter for each file</strong>
+                <span class="setting-note">Extra protection: such a file can't read or change the
+                    files converted after it either. About 1.5 s slower per file.</span></span></label>
+        <p class="setting-saved">Changes apply to the next file and are remembered in this browser.</p>
+        <div class="fs-dialog-actions">
+            <button type="submit" value="close" class="btn btn-primary" autofocus>Done</button>
+        </div>
+    </form>
+</dialog>
 <dialog class="fs-dialog" id="fs-dialog" aria-labelledby="fs-dialog-title">
     <form method="dialog">
         <h2 id="fs-dialog-title"></h2>

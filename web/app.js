@@ -44,6 +44,9 @@ function protectionSetting(id, fallback, apply) {
 }
 protectionSetting('isolate-network', true, (on) => { engine.isolateNetwork = on; });
 protectionSetting('isolate-documents', false, (on) => { engine.isolateDocuments = on; });
+for (const button of document.querySelectorAll('.open-settings')) {
+    button.addEventListener('click', () => $('settings-dialog').showModal());
+}
 
 // ---------------------------------------------------------------------------
 // Engine status UI, including download progress reported by sw.js.

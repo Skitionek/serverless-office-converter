@@ -47,6 +47,16 @@ const CASES = [
     ['sample.html', 'pdf', 'pdf'],
     ['sample.svg', 'pdf', 'pdf'],
     ['sample.docx', 'pdfa', 'pdf'],
+    // Old Microsoft Office formats that current Office blocks or opens read-only.
+    ['legacy/word6.doc', 'docx', 'zip'],
+    ['legacy/word6.doc', 'txt', /quick brown fox jumps over the lazy dog/],
+    ['legacy/word95.doc', 'pdf', 'pdf'],
+    ['legacy/word95.doc', 'txt', /Has some RED text and some BLUE BOLD text/],
+    ['legacy/excel4.xls', 'xlsx', 'zip'],
+    ['legacy/excel4.xls', 'csv', /Examination Coverage/],
+    ['legacy/excel5.xls', 'csv', /Numbers and their Squares/],
+    ['legacy/excel95.xls', 'xlsx', 'zip'],
+    ['legacy/excel95.xls', 'csv', /,12,144,/],
 ];
 
 const MAGIC = {
@@ -110,7 +120,7 @@ async function main() {
         const conv = window.officeConverter;
         const files = cases.map((c) => {
             const bytes = Uint8Array.from(atob(c.b64), (ch) => ch.charCodeAt(0));
-            return new File([bytes], c.fixture);
+            return new File([bytes], c.fixture.split('/').pop());
         });
         conv.addFiles(files);
         conv.items.forEach((item, i) => {
@@ -153,13 +163,13 @@ async function main() {
         let note = r.status;
         if (ok) {
             const buf = Buffer.from(r.b64, 'base64');
-            const file = path.join(OUT, `${c.fixture.replace('.', '_')}-${c.target}-${r.name}`);
+            const file = path.join(OUT, `${path.basename(c.fixture).replace('.', '_')}-${c.target}-${r.name}`);
             fs.writeFileSync(file, buf);
             ok = c.check instanceof RegExp ? c.check.test(buf.toString('utf8')) : MAGIC[c.check](buf);
             if (!ok) note += ' (unexpected content)';
         }
         if (!ok) failed++;
-        console.log(`${ok ? 'PASS' : 'FAIL'}  ${c.fixture.padEnd(12)} -> ${c.target.padEnd(5)} ${note}`);
+        console.log(`${ok ? 'PASS' : 'FAIL'}  ${c.fixture.padEnd(19)} -> ${c.target.padEnd(5)} ${note}`);
     });
     console.log(`${results.length - failed}/${results.length} conversions passed; engine startup ${startup} ms`);
 

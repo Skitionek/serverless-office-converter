@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Office Converter: convert Word, Excel and PowerPoint files in your browser</title>
-<meta name="description" content="Convert Word, Excel, PowerPoint and OpenDocument files to PDF, DOCX, ODT, PNG and more, right in your browser. Free, open source, and nothing is uploaded.">
-<meta name="keywords" content="office converter, docx to pdf, word to pdf, excel to pdf, powerpoint to pdf, odt to docx, xlsx to csv, document converter, libreoffice, webassembly, private, offline, no upload">
+<meta name="description" content="Convert Word, Excel, PowerPoint and OpenDocument files to PDF, DOCX, ODT, PNG and more, right in your browser, even old Word 95 and Excel 95 files that current Office opens read-only or blocks. Free, open source, and nothing is uploaded.">
+<meta name="keywords" content="office converter, docx to pdf, word to pdf, excel to pdf, powerpoint to pdf, odt to docx, xlsx to csv, word 95 to docx, word 6.0, excel 95 to xlsx, excel 4.0, open old office files, document converter, libreoffice, webassembly, private, offline, no upload">
 <link rel="canonical" href="https://skitionek.github.io/serverless-office-converter/">
 <meta name="theme-color" content="#0f7d02">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -41,6 +41,7 @@
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "featureList": [
         "Converts DOCX, DOC, ODT, RTF, XLSX, XLS, ODS, CSV, PPTX, PPT, ODP and more",
+        "Opens old Word 6.0/95 and Excel 4.0/5.0/95 files that current Microsoft Office opens read-only or blocks",
         "Exports to PDF, PDF/A, DOCX, ODT, XLSX, PPTX, PNG, JPEG and more",
         "Runs entirely in the browser; files are never uploaded",
         "Works offline after the first visit",
@@ -69,7 +70,8 @@
         </div>
         <p class="shortcut-hint" id="install-safari" hidden role="status">To save a shortcut in Safari,
             choose <strong>File › Add to Dock</strong> (macOS Sonoma or later).</p>
-        <p class="tagline">Convert Word, Excel, PowerPoint and OpenDocument files right in your browser.</p>
+        <p class="tagline">Convert Word, Excel, PowerPoint and OpenDocument files right in your browser,
+            even old Word 95 and Excel 95 files.</p>
         <ul class="badges">
             <li>Nothing to install</li>
             <li>Files never leave your device</li>
@@ -152,6 +154,14 @@
                 <li>Convert a file. Only this page's own files appear, and none carries your document.</li>
                 <li>Switch the Network tab to <strong>Offline</strong> (or disconnect from the internet): conversions keep working.</li>
             </ol>
+        </details>
+        <details>
+            <summary>Can it open old Word 95 and Excel 95 files?</summary>
+            <p>Yes. Current Microsoft Office opens Word 6.0 and Word 95 documents only read-only,
+                and its File Block settings can refuse them outright, along with Excel 4.0 and
+                Excel 95 workbooks. LibreOffice still reads them: convert them to DOCX, XLSX, PDF or
+                OpenDocument and they open anywhere again. PowerPoint 95 presentations are one of
+                the rare formats left out of this converter.</p>
         </details>
         <details>
             <summary>Are my original files changed?</summary>

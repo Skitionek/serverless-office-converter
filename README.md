@@ -12,6 +12,15 @@ component: files are converted inside the visitor's browser tab and are never up
 
 * **Nothing to install.** Open the page and convert: no Word, no LibreOffice, no admin
   rights, no account. It works the same on Windows, macOS, Linux and Chromebooks.
+* **Opens the old Office files that Office itself no longer will.** Current Microsoft Office
+  opens Word 6.0 and Word 95 documents only read-only, in Protected View, and its *File Block*
+  settings can refuse them outright, along with Excel 4.0 and Excel 95 workbooks
+  ([XDA: *LibreOffice opens files from the '90s that Microsoft Office now refuses to touch*](https://www.xda-developers.com/libreoffice-opens-files-from-the-90s-that-microsoft-office-now-refuses-to-touch/)).
+  This converter is LibreOffice, so it still reads them: turn **Word 6.0/95** and
+  **Excel 4.0/5.0/95** files into DOCX, XLSX, PDF or OpenDocument, and they open anywhere again
+  (tested with the samples in [`test/fixtures/legacy/`](test/fixtures/legacy/)). PowerPoint 95
+  decks are the exception: their importer is one of the [formats left out](#size-reductions) of
+  the build.
 * **Your files never leave your computer.** There is no server to send them to, and you
   don't have to take our word for it, you can check it yourself:
   1. Open the page, then open DevTools (F12 or Ctrl/Cmd+Shift+I) → **Network** tab.
@@ -37,9 +46,9 @@ component: files are converted inside the visitor's browser tab and are never up
 
 | From | To |
 | --- | --- |
-| DOCX, DOC, ODT, RTF, TXT, Markdown, HTML, … | PDF, PDF/A, DOCX, DOC, ODT, RTF, TXT, Markdown, PNG/JPEG (first page), FODT |
-| XLSX, XLS, XLSB, ODS, CSV/TSV, Lotus, … | PDF, PDF/A, XLSX, XLS, ODS, CSV, HTML, PNG/JPEG, FODS |
-| PPTX, PPT, ODP | PDF, PDF/A, PPTX, PPT, ODP, PNG/JPEG/SVG (first slide), FODP |
+| DOCX, DOC (Word 6.0 to 2003), ODT, RTF, TXT, Markdown, HTML, … | PDF, PDF/A, DOCX, DOC, ODT, RTF, TXT, Markdown, PNG/JPEG (first page), FODT |
+| XLSX, XLS (Excel 4.0 to 2003), XLSB, ODS, CSV/TSV, Lotus, … | PDF, PDF/A, XLSX, XLS, ODS, CSV, HTML, PNG/JPEG, FODS |
+| PPTX, PPT (PowerPoint 97 to 2003), ODP | PDF, PDF/A, PPTX, PPT, ODP, PNG/JPEG/SVG (first slide), FODP |
 | ODG, SVG, WMF/EMF, PNG/JPEG/… | PDF, PDF/A, ODG, PNG/JPEG/SVG |
 
 ## Compatibility
@@ -355,6 +364,9 @@ touches it (it can also be run manually from the Actions tab). A fork deploys th
 * The first visit downloads the engine (see the size shown on the page); later visits use the
   cached copy until a new build is deployed.
 * No PDF import, no password-protected documents, no macros (they are never executed).
+* No PowerPoint 95 (or 1–4) import, and none of the other formats LibreOffice reads through
+  libmwaw and librevenge (Works, Write, WordPerfect, ClarisWorks, …): those filters are left out
+  to keep the download small (`build/patches/0006`).
 * Text documents cannot be exported to HTML (Writer's HTML export needs the forms component,
   which comes with database connectivity and is left out of the WASM build).
 * Image exports (PNG/JPEG, and SVG for slides and drawings) contain the first page/slide only; CSV export contains the

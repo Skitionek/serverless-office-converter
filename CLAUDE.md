@@ -2,6 +2,11 @@
 
 ## Commits and pull requests
 
+- Commits are authored and committed by the repository owner, never by `Claude`. Before the
+  first commit of a session, take the identity from `main`'s history:
+  `git config user.name "$(git log -1 --format=%an origin/main)"` and
+  `git config user.email "$(git log -1 --format=%ae origin/main)"`, and check with
+  `git log --format='%an <%ae> / %cn <%ce>'` before pushing.
 - Load the `llm-prompt-log` skill before the first commit of every session and follow it: keep
   `.llm-prompts.md` (untracked) at the root, log each meaningful prompt, and end every commit
   message with the cleaned prompts that drove it:

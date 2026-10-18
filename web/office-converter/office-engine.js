@@ -5,6 +5,11 @@
  * cross-origin isolated (see README).  Jobs are run one at a time, most
  * important first, so background work such as thumbnails never delays a
  * conversion the user asked for.
+ *
+ * Documents are untrusted, so by default each one gets a fresh engine: a file
+ * crafted to take over LibreOffice can't see or alter the documents converted
+ * after it.  Jobs for the same document (e.g. its thumbnail and its
+ * conversion) share one.
  */
 
 import { outputName } from './file-system.js';
@@ -16,6 +21,9 @@ const ENGINE_FAULT = /table index is out of bounds|memory access out of bounds|u
 
 const READY_TEXT = 'Ready. Everything stays on this device.';
 
+// The document key of every job when documents are not isolated.
+const SHARED = Symbol('shared engine');
+
 export class OfficeEngine extends EventTarget {
     /**
      * @param {object} [options]
@@ -23,12 +31,18 @@ export class OfficeEngine extends EventTarget {
      *   (default: the directory this module is loaded from).
      * @param {string|URL} [options.workerUrl] URL of engine-worker.js if it is not directly under `base`.
      * @param {number} [options.timeoutMs] Abort and restart the engine when one job takes longer.
+     * @param {boolean} [options.isolate] Start a fresh engine for each document (default true;
+     *   about 1.5 s per document once the engine is cached).
      */
-    constructor({ base = new URL('./', import.meta.url), workerUrl, timeoutMs = 5 * 60 * 1000 } = {}) {
+    constructor({
+        base = new URL('./', import.meta.url), workerUrl, timeoutMs = 5 * 60 * 1000, isolate = true,
+    } = {}) {
         super();
         this.base = new URL(base, document.baseURI).href;
         this.workerUrl = new URL(workerUrl || 'engine-worker.js', this.base).href;
         this.timeoutMs = timeoutMs;
+        this.isolate = isolate;
+        this.document = undefined; // key of the document the current worker has opened
         this.state = 'idle';
         this.worker = null;
         this.ready = null;
@@ -44,10 +58,12 @@ export class OfficeEngine extends EventTarget {
         this.dispatchEvent(new CustomEvent('state', { detail: { state, text, detail } }));
     }
 
-    start() {
+    start({ quiet = false } = {}) {
         if (this.ready) return this.ready;
         this.startedAt = performance.now();
-        this.setState('loading', '');
+        this.quietStart = quiet;
+        this.document = undefined;
+        if (!quiet) this.setState('loading', '');
         this.ready = new Promise((resolve, reject) => {
             this.resolveReady = resolve;
             this.rejectReady = reject;
@@ -92,7 +108,7 @@ export class OfficeEngine extends EventTarget {
             const secs = ((performance.now() - this.startedAt) / 1000).toFixed(1);
             this.rejectReady = null;
             this.resolveReady();
-            this.setState('ready', READY_TEXT, 'Started in ' + secs + ' s.');
+            if (!this.quietStart) this.setState('ready', READY_TEXT, 'Started in ' + secs + ' s.');
             break;
         }
         case 'result': {
@@ -116,13 +132,19 @@ export class OfficeEngine extends EventTarget {
      * @param {string} name Input file name (its extension helps format detection).
      * @param {object} target `{ ext, label, filters, filterOptions?, filterData? }`, see formats.js.
      * @param {{filter?: string, options?: string}} [input] Forced import filter.
-     * @param {{priority?: number, quiet?: boolean}} [opts] Higher priority runs first;
-     *   quiet jobs do not change the engine's 'busy' state (use for background work).
+     * @param {{priority?: number, quiet?: boolean, key?: *}} [opts] Higher priority runs first;
+     *   quiet jobs do not change the engine's 'busy' state (use for background work).  Jobs
+     *   with the same `key` (e.g. the File) are the same document and may share an engine;
+     *   without one, the job gets an engine of its own.
      * @returns {Promise<{data: ArrayBuffer, family: string, filter: string, ms: number}>}
      */
-    convert(data, name, target, input, { priority = 0, quiet = false } = {}) {
+    convert(data, name, target, input, { priority = 0, quiet = false, key } = {}) {
+        if (!this.isolate) key = SHARED;
+        else if (key === undefined) key = Symbol(name);
         return new Promise((resolve, reject) => {
-            this.queue.push({ data, name, target, input, quiet, priority, seq: this.seq++, resolve, reject });
+            this.queue.push({
+                data, name, target, input, quiet, priority, key, seq: this.seq++, resolve, reject,
+            });
             this.pump();
         });
     }
@@ -133,10 +155,12 @@ export class OfficeEngine extends EventTarget {
      * Picks the import filter from the file name's extension.
      * @param {Blob|FileSystemFileHandle} file
      * @param {string} targetId Key of TARGET_BY_ID, e.g. 'pdf'.
-     * @param {{name?: string, priority?: number, quiet?: boolean}} [opts]
+     * @param {{name?: string, priority?: number, quiet?: boolean, key?: *}} [opts] `key`
+     *   defaults to `file`: jobs for the same File (or handle) share an engine.
      * @returns {Promise<{blob: Blob, filename: string, family: string, filter: string, ms: number}>}
      */
-    async convertFile(file, targetId, { name, ...opts } = {}) {
+    async convertFile(file, targetId, { name, key = file, ...opts } = {}) {
+        opts.key = key;
         if (typeof file.getFile === 'function') file = await file.getFile();
         if (!name) name = file.name || 'document';
         const target = TARGET_BY_ID.get(targetId);
@@ -157,7 +181,10 @@ export class OfficeEngine extends EventTarget {
         this.running = true;
         try {
             while (this.queue.length) {
-                this.queue.sort((a, b) => b.priority - a.priority || a.seq - b.seq);
+                // Jobs for the document the engine already has open come first: they need no
+                // restart (when isolating documents, any other one does).
+                const other = (job) => (this.isolate && job.key === this.document ? 0 : 1);
+                this.queue.sort((a, b) => other(a) - other(b) || b.priority - a.priority || a.seq - b.seq);
                 const job = this.queue.shift();
                 try {
                     job.resolve(await this.runJob(job));
@@ -180,8 +207,14 @@ export class OfficeEngine extends EventTarget {
         }
     }
 
-    async runJob({ data, name, target, input, quiet }) {
+    async runJob({ data, name, target, input, quiet, key }) {
+        if (this.worker && this.document !== undefined && this.document !== key) {
+            // The engine has opened another document: it gets a fresh one.
+            this.stop('Restarted for the next document.');
+            this.start({ quiet: true });
+        }
         await this.start();
+        this.document = key;
         if (!quiet) this.setState('busy', 'Converting…');
         const id = this.nextId++;
         return new Promise((resolve, reject) => {

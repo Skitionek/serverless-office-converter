@@ -21,6 +21,13 @@ component: files are converted inside the visitor's browser tab and are never up
   (tested with the samples in [`test/fixtures/legacy/`](test/fixtures/legacy/)). PowerPoint 95
   decks are the exception: their importer is one of the [formats left out](#size-reductions) of
   the build.
+* **Built to contain malicious files.** Old file formats are a favourite way to attack office
+  software: its parsers are large and old, and a crafted file can take over the program. Here
+  LibreOffice runs as WebAssembly inside the browser's sandbox, not as a program on your
+  computer, so a malicious document can't take over your system, and macros never run. And
+  should one take over the converter itself, it still can't send your documents anywhere,
+  reach the browser's storage or the folders you let the page use, see the other documents you
+  convert, or leave anything behind for your next visit. See [Security](#security).
 * **Your files never leave your computer.** There is no server to send them to, and you
   don't have to take our word for it, you can check it yourself:
   1. Open the page, then open DevTools (F12 or Ctrl/Cmd+Shift+I) → **Network** tab.
@@ -252,10 +259,13 @@ page (index.html / app.js, UI)
                                         lo-thread.js: UNO API
                                           loadComponentFromURL(file:///tmp/…)
                                           storeToURL(…, FilterName)
+       a fresh engine per document;     lockdown.js: no network, storage or messaging APIs
 service-worker.js (service worker)
   • adds COOP/COEP headers → cross-origin isolation → SharedArrayBuffer (pthreads)
+  • gives the engine's workers a Content Security Policy (no network but lo/)
   • serves lo/soffice.{js,wasm,data} by streaming xz parts through a small wasm xz decoder
-  • keeps the decompressed files in Cache Storage (one download per release)
+  • keeps the decompressed files in Cache Storage (one download per release), checked
+    against the SHA-256 in lo/manifest.json before each use
 ```
 
 * **LibreOffice build** – `build/build-libreoffice-wasm.sh` checks out LibreOffice core from
@@ -281,6 +291,50 @@ service-worker.js (service worker)
   LibreOffice crashes or a conversion times out, the worker is discarded and a fresh one is
   started for the next file.
 
+## Security
+
+Every document is untrusted input to LibreOffice's C++ parsers, and old formats are where
+their bugs tend to be: in 2026, for example, a crafted PowerPoint 97–2003 file could overflow
+a buffer on the stack (CVE-2026-8356, fixed in the 26.2.4 releases; the shipped engine is
+LibreOffice 26.8.3). The converter is set up so that such a bug gets an attacker as little as
+possible:
+
+1. **The browser's sandbox.** LibreOffice is WebAssembly in a Web Worker, not a program on the
+   computer: it can't reach the operating system, other programs or any file it isn't given.
+   WebAssembly also keeps return addresses out of reach of memory corruption, which rules out
+   the classic stack-smashing exploit. Documents are opened hidden, without updating linked
+   content, and with macros never executed.
+2. **No network.** Corrupted memory can still change what the engine does, and through
+   Embind it can call JavaScript, with the page's origin. So the engine's workers (the engine
+   worker and LibreOffice's threads) get a Content Security Policy from the service worker:
+   requests only to `lo/`, scripts only from the engine directory, no workers but
+   LibreOffice's own threads. On top of that, once the engine is loaded and before any
+   document is opened, `web/office-converter/lockdown.js` deletes `fetch`, `XMLHttpRequest`,
+   `WebSocket`, `EventSource`, `importScripts`, ... from those workers.
+3. **No storage, no other pages.** A policy can't restrict storage, so `lockdown.js` also
+   deletes IndexedDB (where the folders for "save into a folder" and "watch a folder" are
+   remembered), Cache Storage (where the engine is kept), `navigator.storage`,
+   `BroadcastChannel` and the service worker API from them.
+4. **A fresh engine per document.** A document can't see or change the ones converted after
+   it: each one gets a new engine (about 1.5 s once it is cached); only its own jobs, its
+   thumbnail and its conversion, share one.
+5. **Nothing left behind.** With no storage APIs (point 3) the engine can't plant anything for
+   later, and the engine files kept in Cache Storage are also checked against the SHA-256
+   hashes in `lo/manifest.json` the first time the service worker uses them on a visit, and
+   downloaded again if they don't match.
+
+What a document that took over the engine can still do: produce whatever result *for itself*,
+fail, or hang until the timeout. Out of reach of all this: a bug in the browser itself (keep
+it up to date), and other pages on the same origin. `skitionek.github.io` is shared by every
+GitHub Pages site of the account, and each of them has the same access to this origin's
+storage as the converter; a custom domain would give the converter an origin of its own.
+
+`test/security.cjs` checks points 2–5 in Chromium against the real engine: it inspects the
+engine's workers, tries the usual ways out (fetch, XHR, WebSocket, scripts, workers, storage)
+from a worker in the engine directory while a server on another origin counts the requests it
+gets, poisons the cache, and checks which engine each document gets. Firefox and Safari get
+the same policy and lockdown, but aren't tested here.
+
 ## Repository layout
 
 | Path | Purpose |
@@ -296,6 +350,7 @@ service-worker.js (service worker)
 | `build/Dockerfile` | Build environment (`emscripten/emsdk:4.0.10` + LibreOffice build deps) |
 | `build/social-preview.{html,cjs}` | The link-preview image (`web/social-preview.png`), the PNG icons and the app screenshot shown in the browser's install dialog (`web/screenshot-wide.png`); `node build/social-preview.cjs` re-renders them |
 | `test/e2e.cjs` | End-to-end test: serves `web/` like Pages does and converts fixtures in Chromium |
+| `test/security.cjs` | Security test: what a document that took over the engine could still reach (see [Security](#security)) |
 | `.github/workflows/pages.yml` | Deploys `web/` to GitHub Pages |
 
 ## Building LibreOffice for WebAssembly
@@ -344,7 +399,7 @@ cd web && python3 -m http.server 8000
 # open http://localhost:8000/
 ```
 
-End-to-end test (headless Chromium via Playwright):
+End-to-end and security tests (headless Chromium via Playwright):
 
 ```sh
 cd test && npm install && npm test
@@ -367,6 +422,8 @@ touches it (it can also be run manually from the Actions tab). A fork deploys th
 * No PowerPoint 95 (or 1–4) import, and none of the other formats LibreOffice reads through
   libmwaw and librevenge (Works, Write, WordPerfect, ClarisWorks, …): those filters are left out
   to keep the download small (`build/patches/0006`).
+* Every document gets a fresh engine for safety (see [Security](#security)), which adds about
+  1.5 s per document to a batch.
 * Text documents cannot be exported to HTML (Writer's HTML export needs the forms component,
   which comes with database connectivity and is left out of the WASM build).
 * Image exports (PNG/JPEG, and SVG for slides and drawings) contain the first page/slide only; CSV export contains the

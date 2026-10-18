@@ -150,6 +150,8 @@ def main():
         files[name] = {
             'type': mime_for(name),
             'size': len(raw),
+            # Checked by the service worker before it serves a cached copy.
+            'sha256': hashlib.sha256(raw).hexdigest(),
             'encoding': args.compression,
             'compressedSize': len(packed),
             'parts': parts,

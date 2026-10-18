@@ -23,6 +23,8 @@
     "file-system.js",
     "engine-worker.js",
     "lo-thread.js",
+    "lo-pthread.js",
+    "lockdown.js",
     "service-worker.js",
     "vendor/",
     "lo/",

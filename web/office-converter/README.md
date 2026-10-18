@@ -22,14 +22,21 @@ Preview thumbnails for your file lists: [`serverless-office-thumbnail`](../offic
 ## Setup
 
 1. **Serve the package directory** (or copy it) from your own origin, so that `engine-worker.js`,
-   `lo-thread.js`, `vendor/` and `lo/` are reachable under `base`. With a bundler, copy
-   `node_modules/serverless-office-converter/{engine-worker.js,lo-thread.js,vendor,lo}` to your
-   public/static folder; they are plain files the worker loads at run time. `OfficeEngine`'s
+   `lo-thread.js`, `lo-pthread.js`, `lockdown.js`, `vendor/` and `lo/` are reachable under `base`.
+   With a bundler, copy
+   `node_modules/serverless-office-converter/{engine-worker.js,lo-thread.js,lo-pthread.js,lockdown.js,vendor,lo}`
+   to your public/static folder; they are plain files the worker loads at run time. `OfficeEngine`'s
    `base` defaults to the directory it is loaded from, which is right when you serve the package as is.
 2. **Make the page cross-origin isolated.** LibreOffice uses threads, so it needs
    `SharedArrayBuffer`, which browsers only give to pages sent with
    `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp`.
-   * If you control the headers: send them (and `Cross-Origin-Resource-Policy: same-origin` on the engine files).
+   * If you control the headers: send them (and `Cross-Origin-Resource-Policy: same-origin` on the engine files),
+     and give the engine's worker scripts (`engine-worker.js`, `lo-pthread.js`) the policy the
+     included service worker adds (see [Security](#security)), with `<base>` the URL of the
+     package directory:
+     ```
+     Content-Security-Policy: default-src 'none'; script-src <base> 'unsafe-eval' 'wasm-unsafe-eval'; connect-src <base>lo/; worker-src <base>lo-pthread.js
+     ```
    * If you can't (e.g. GitHub Pages): use the included service worker. Create `sw.js` at the
      root of your site:
      ```js
@@ -41,23 +48,32 @@ Preview thumbnails for your file lists: [`serverless-office-thumbnail`](../offic
      import { ensureCrossOriginIsolation } from 'serverless-office-converter';
      await ensureCrossOriginIsolation('sw.js'); // reloads once on the first visit
      ```
-     The service worker also adds the headers, and serves the engine from its compressed form
-     (xz, with a small wasm decoder) and caches it decompressed: one 30 MB download per release.
+     The service worker also adds the headers and the engine's Content Security Policy, and
+     serves the engine from its compressed form (xz, with a small wasm decoder) and caches it
+     decompressed (checked against the SHA-256 in `lo/manifest.json` the first time each
+     service worker instance serves it): one 30 MB download per release.
 
 ## API
 
-### `new OfficeEngine({ base?, workerUrl?, timeoutMs? })`
+### `new OfficeEngine({ base?, workerUrl?, timeoutMs?, isolate? })`
 
 Starts lazily on the first conversion (or `engine.start()`): a dedicated worker that loads
 LibreOffice (about 7-10 s the first time; the download is cached afterwards).
 
-* `convertFile(file, targetId, { name?, priority?, quiet? })` → `{ blob, filename, family, filter, ms }`
+* `isolate` (default `true`): every document gets a fresh engine, so a document crafted to take
+  over LibreOffice can't see or change the ones converted after it. Jobs with the same `key`
+  (by default the `File` or handle passed to `convertFile`) are one document and share an
+  engine; they run before other documents' jobs when one is open. A restart takes about 1.5 s
+  once the engine is cached. `isolate: false` keeps one engine for everything (faster batches).
+
+* `convertFile(file, targetId, { name?, priority?, quiet?, key? })` → `{ blob, filename, family, filter, ms }`
   converts a `File`/`Blob` (or reads a `FileSystemFileHandle`). `targetId` is a key of `TARGET_BY_ID`: `pdf`, `pdfa`, `docx`, `doc`,
   `odt`, `rtf`, `txt`, `md`, `xlsx`, `xls`, `ods`, `csv`, `html` (spreadsheets), `pptx`, `ppt`, `odp`,
   `odg`, `svg` (slides and drawings only), `png`, `jpg`, `fodt`, `fods`, `fodp`. The input format is detected from the file
   name's extension and content; `family` tells what it turned out to be (`writer`, `calc`,
   `impress`, `draw`).
-* `convert(arrayBuffer, name, target, input?, opts?)` is the lower-level variant.
+* `convert(arrayBuffer, name, target, input?, opts?)` is the lower-level variant (pass the
+  document's `key` in `opts` to share an engine with its other jobs).
 * If the WebAssembly runtime hits a fault (an engine trap rather than a problem with the
   document), the worker is discarded and the job is retried once on a fresh one.
 * Jobs run **one at a time, highest `priority` first** (default 0); `quiet` jobs don't flip the
@@ -105,6 +121,27 @@ written over an existing file.
 
 `TARGETS`, `TARGET_BY_ID`, `INPUT_FILTERS`, `INPUT_FAMILIES`, `ACCEPT` (for `<input accept>`),
 `extensionOf(name)`, `guessFamily(name)`, `targetsForFamily(family)`, `FAMILY_LABELS`.
+
+## Security
+
+Documents are untrusted input to a large C++ parser. LibreOffice runs as WebAssembly in the
+browser's sandbox, so a crafted document can't take over the computer, and macros are never
+run. In case one takes over the engine itself (WebAssembly memory corruption, then JavaScript
+through Embind), it is contained further:
+
+* **No network.** The service worker gives the engine's workers a Content Security Policy:
+  requests only to `lo/`, scripts only from the package directory, no other workers. Once the
+  engine has started, `lockdown.js` also removes `fetch`, `XMLHttpRequest`, `WebSocket`, ... and
+  `importScripts` from its workers.
+* **No storage, no other pages.** `lockdown.js` removes IndexedDB (where `rememberHandle()` keeps
+  folder handles), Cache Storage, `navigator.storage`, `BroadcastChannel`, ... from the engine's
+  workers.
+* **Nothing that outlives the document.** Without storage APIs the engine can't plant
+  anything; the cached engine is also checked against the SHA-256 in `lo/manifest.json` when a
+  service worker instance first serves it. With `isolate`, every document gets a fresh engine.
+
+What remains: a compromised engine controls the result of *its* document, and can fail or hang
+(see `timeoutMs`). Other pages on your origin are outside this: they share its storage. `test/security.cjs` in the repository checks the above in Chromium.
 
 ## What's inside, and what isn't
 

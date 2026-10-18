@@ -11,6 +11,9 @@
  */
 'use strict';
 
+// This was the last script the thread loads; from here on it needs none (see lockdown.js).
+if (self.lockDownEngineWorker) self.lockDownEngineWorker({ scripts: true });
+
 Module.uno_init.then(function () {
     const uno = Module.uno;
     const css = uno.com.sun.star;

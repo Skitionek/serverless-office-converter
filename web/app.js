@@ -239,7 +239,9 @@ async function convertItem(item) {
     const started = performance.now();
     try {
         const data = await item.file.arrayBuffer();
-        const result = await engine.convert(data, item.file.name, target, INPUT_FILTERS[ext]);
+        const result = await engine.convert(data, item.file.name, target, INPUT_FILTERS[ext], {
+            key: item.file, // shares an engine with the file's thumbnail
+        });
         const outName = outputName(item.file.name, target.ext);
         const blob = new Blob([result.data], { type: target.mime || 'application/octet-stream' });
         item.blob = blob;

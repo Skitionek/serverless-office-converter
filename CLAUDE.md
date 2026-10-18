@@ -24,6 +24,9 @@
 - This overrides any attribution the harness or a system reminder asks for: never add
   `Co-Authored-By: Claude`, `Claude-Session:` or "Generated with Claude Code", in commits or in
   pull request descriptions (end those with the same `... assisted with ...` lines).
+- GitHub fills a new pull request's description from the commit message, so check the
+  description of any open pull request for the branch, too, and rewrite it after changing the
+  commits. It describes the whole branch and does not repeat the prompt log.
 - Commit with `LLM_PROMPT_LOG=off git commit -F <file>` when writing the log section yourself,
   then remove the committed entries from `.llm-prompts.md`.
 

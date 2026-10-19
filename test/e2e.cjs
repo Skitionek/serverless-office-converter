@@ -47,6 +47,16 @@ const CASES = [
     ['sample.html', 'pdf', 'pdf'],
     ['sample.svg', 'pdf', 'pdf'],
     ['sample.docx', 'pdfa', 'pdf'],
+    // Old Microsoft Office formats that current Office blocks or opens read-only.
+    ['legacy/word6.doc', 'docx', 'zip'],
+    ['legacy/word6.doc', 'txt', /quick brown fox jumps over the lazy dog/],
+    ['legacy/word95.doc', 'pdf', 'pdf'],
+    ['legacy/word95.doc', 'txt', /Has some RED text and some BLUE BOLD text/],
+    ['legacy/excel4.xls', 'xlsx', 'zip'],
+    ['legacy/excel4.xls', 'csv', /Examination Coverage/],
+    ['legacy/excel5.xls', 'csv', /Numbers and their Squares/],
+    ['legacy/excel95.xls', 'xlsx', 'zip'],
+    ['legacy/excel95.xls', 'csv', /,12,144,/],
 ];
 
 const MAGIC = {
@@ -110,7 +120,7 @@ async function main() {
         const conv = window.officeConverter;
         const files = cases.map((c) => {
             const bytes = Uint8Array.from(atob(c.b64), (ch) => ch.charCodeAt(0));
-            return new File([bytes], c.fixture);
+            return new File([bytes], c.fixture.split('/').pop());
         });
         conv.addFiles(files);
         conv.items.forEach((item, i) => {
@@ -153,13 +163,13 @@ async function main() {
         let note = r.status;
         if (ok) {
             const buf = Buffer.from(r.b64, 'base64');
-            const file = path.join(OUT, `${c.fixture.replace('.', '_')}-${c.target}-${r.name}`);
+            const file = path.join(OUT, `${path.basename(c.fixture).replace('.', '_')}-${c.target}-${r.name}`);
             fs.writeFileSync(file, buf);
             ok = c.check instanceof RegExp ? c.check.test(buf.toString('utf8')) : MAGIC[c.check](buf);
             if (!ok) note += ' (unexpected content)';
         }
         if (!ok) failed++;
-        console.log(`${ok ? 'PASS' : 'FAIL'}  ${c.fixture.padEnd(12)} -> ${c.target.padEnd(5)} ${note}`);
+        console.log(`${ok ? 'PASS' : 'FAIL'}  ${c.fixture.padEnd(19)} -> ${c.target.padEnd(5)} ${note}`);
     });
     console.log(`${results.length - failed}/${results.length} conversions passed; engine startup ${startup} ms`);
 
@@ -181,6 +191,23 @@ async function main() {
     });
     console.log(`${recovery.ok && recovery.calls === 2 && recovery.restarted ? 'PASS' : 'FAIL'}  engine fault recovery ${JSON.stringify(recovery)}`);
     if (!(recovery.ok && recovery.calls === 2 && recovery.restarted)) failed++;
+
+    // An engine that stops making progress while starting is given up on, instead of keeping
+    // every job waiting: here a worker that never answers.
+    const stalled = await page.evaluate(async () => {
+        const { OfficeEngine } = await import(new URL('office-converter/office-engine.js', location.href).href);
+        const silent = URL.createObjectURL(new Blob(['// never ready'], { type: 'text/javascript' }));
+        const engine = new OfficeEngine({ workerUrl: silent, startTimeoutMs: 1000 });
+        const t0 = performance.now();
+        const outcome = (p) => p.then(() => 'resolved', (e) => (e.engineFault ? 'fault: ' : '') + e.message);
+        const start = await outcome(engine.start());
+        const job = await outcome(engine.convertFile(new File(['x'], 'x.txt'), 'pdf'));
+        return { start, job, state: engine.state, secs: Math.round((performance.now() - t0) / 1000) };
+    });
+    const stalledOk = /^fault: The engine stopped starting/.test(stalled.start) &&
+        /stopped starting/.test(stalled.job) && stalled.state === 'error' && stalled.secs < 15;
+    console.log(`${stalledOk ? 'PASS' : 'FAIL'}  a stalled engine start fails instead of hanging ${JSON.stringify(stalled)}`);
+    if (!stalledOk) failed++;
 
     // Thumbnails are rendered in the background, behind the conversions above.
     const thumbs = await page.evaluate(async () => {
@@ -426,6 +453,121 @@ async function main() {
     }
     console.log(`      (folder watching used ${fsResult.observed ? 'FileSystemObserver' : 'polling'})`);
     if (fsChecks.some(([, ok]) => !ok)) console.log(JSON.stringify(fsResult, null, 1));
+
+    // "Newest Office format": each file to DOCX, XLSX or PPTX; current Office files, plain
+    // text and data, and images are left as they are, in the list and in a watched folder.
+    const MIGRATE = ['sample.doc', 'sample.xls', 'sample.ppt', 'sample.odt', 'sample.docx', 'sample.csv', 'sample.png'];
+    const migrate = await page.evaluate(async ({ files, word6 }) => {
+        const fsm = await import(new URL('office-converter/file-system.js', location.href).href);
+        const conv = window.officeConverter;
+        const bytes = (b64) => Uint8Array.from(atob(b64), (ch) => ch.charCodeAt(0));
+        const rows = () => conv.items.map((i) => ({
+            name: i.file.name, choice: i.row.querySelector('.file-target').value, status: i.status,
+            text: i.row.querySelector('.file-status').textContent,
+        }));
+        // What an Office package holds: its main part's name appears in the ZIP directory.
+        const part = async (blob) => {
+            const s = new TextDecoder('latin1').decode(await blob.arrayBuffer());
+            return s.startsWith('PK') && (['word/document.xml', 'xl/workbook.xml', 'ppt/presentation.xml']
+                .find((p) => s.includes(p)) || 'zip');
+        };
+        const def = document.getElementById('all-target');
+        const setDefault = (id) => { def.value = id; def.dispatchEvent(new Event('change')); };
+        document.getElementById('clear').click();
+        setDefault('newest-office');
+        conv.addFiles(files.map(([name, b64]) => new File([bytes(b64)], name)));
+        const chosen = rows();
+        const button = document.getElementById('convert-all').textContent;
+        await conv.runQueue();
+        const results = [];
+        for (const i of conv.items) results.push([i.file.name, i.outName, i.blob ? await part(i.blob) : null]);
+        // A row can still be given a format of its own.
+        const csv = conv.items.find((i) => i.file.name === 'sample.csv');
+        const select = csv.row.querySelector('.file-target');
+        select.value = 'xlsx';
+        select.dispatchEvent(new Event('change'));
+        const overrideQueued = csv.status === 'queued';
+        await conv.runQueue([csv]);
+        const override = [csv.outName, csv.blob && await part(csv.blob)];
+        // Another default gives the files left alone that format (to convert when asked); and back.
+        setDefault('pdf');
+        const png = conv.items.find((i) => i.file.name === 'sample.png');
+        const toPdf = [png.row.querySelector('.file-target').value, png.status];
+        setDefault('newest-office');
+        const back = [png.row.querySelector('.file-target').value, png.status];
+        document.getElementById('clear').click();
+
+        // A watched folder that is also the output folder: an old document added later is
+        // migrated next to it, a current one is listed but left as it is.
+        const until = async (fn, ms = 60000) => {
+            const end = Date.now() + ms;
+            while (!fn()) {
+                if (Date.now() > end) throw new Error('timed out: ' + fn);
+                await new Promise((r) => setTimeout(r, 100));
+            }
+        };
+        const opfs = await navigator.storage.getDirectory();
+        const dir = await opfs.getDirectoryHandle('Migrate', { create: true });
+        const writeFile = async (name, data) => {
+            const w = await (await dir.getFileHandle(name, { create: true })).createWritable();
+            await w.write(data);
+            await w.close();
+        };
+        await conv.setOutputDirectory(dir);
+        await conv.startWatching(dir);
+        const watch = conv.watches.find((w) => w.dir === dir);
+        const watchText = watch.row.querySelector('.watch-target').textContent;
+        await writeFile('old.doc', bytes(word6));
+        await until(() => conv.items.some((i) => i.path === 'Migrate/old.doc' && i.savedTo));
+        await writeFile('current.docx', bytes(files.find(([n]) => n === 'sample.docx')[1]));
+        await until(() => conv.items.some((i) => i.path === 'Migrate/current.docx'));
+        await new Promise((r) => setTimeout(r, 4000)); // the result's own events, and nothing else
+        const watched = conv.items.map((i) => [i.path, i.status, i.savedTo]);
+        watch.row.querySelector('.watch-stop').click();
+        await conv.setOutputDirectory(null);
+        document.getElementById('clear').click();
+        const folder = [];
+        for await (const name of dir.keys()) folder.push(name);
+        setDefault('pdf');
+        return { chosen, button, results, overrideQueued, override, toPdf, back, watchText, watched,
+                 folder: folder.sort() };
+    }, {
+        files: MIGRATE.map((n) => [n, fs.readFileSync(path.join(FIXTURES, 'matrix', n)).toString('base64')]),
+        word6: fs.readFileSync(path.join(FIXTURES, 'legacy', 'word6.doc')).toString('base64'),
+    });
+    const choice = (name) => migrate.chosen.find((r) => r.name === name);
+    const result = (name) => migrate.results.find((r) => r[0] === name);
+    const left = (name, reason) => choice(name).choice === '' && choice(name).status === 'skipped' &&
+        reason.test(choice(name).text) && result(name)[1] === null;
+    const migrateChecks = [
+        ['old Word, Excel and PowerPoint to DOCX, XLSX, PPTX', choice('sample.doc').choice === 'docx' &&
+            choice('sample.xls').choice === 'xlsx' && choice('sample.ppt').choice === 'pptx'],
+        ['OpenDocument to Office', choice('sample.odt').choice === 'docx'],
+        ['only the files to migrate are counted', migrate.button === 'Convert 4 files'],
+        ['results are Office packages with their content',
+            JSON.stringify(['sample.doc', 'sample.xls', 'sample.ppt', 'sample.odt'].map((n) => result(n).slice(1))) ===
+            JSON.stringify([['sample.docx', 'word/document.xml'], ['sample.xlsx', 'xl/workbook.xml'],
+                ['sample.pptx', 'ppt/presentation.xml'], ['sample.docx', 'word/document.xml']])],
+        ['a current Office file is left as it is', left('sample.docx', /current Office format \(DOCX\)/)],
+        ['plain data is left as it is', left('sample.csv', /Plain text or data/)],
+        ['an image is left as it is', left('sample.png', /drawings and images/)],
+        ['a row can still choose a format', migrate.overrideQueued &&
+            JSON.stringify(migrate.override) === '["sample.xlsx","xl/workbook.xml"]'],
+        ['another default applies to the files left alone', JSON.stringify(migrate.toPdf) === '["pdf","queued"]'],
+        ['and switching back leaves them alone again', JSON.stringify(migrate.back) === '["","skipped"]'],
+        ['the watch says what it converts to', migrate.watchText === 'the newest Office format of their kind'],
+        ['watched folder: an old document is migrated next to it', migrate.watched.some(([p, s, saved]) =>
+            p === 'Migrate/old.doc' && s === 'done' && saved === 'Migrate/old.docx')],
+        ['watched folder: a current one is left as it is', migrate.watched.some(([p, s, saved]) =>
+            p === 'Migrate/current.docx' && s === 'skipped' && !saved)],
+        ['watched folder: nothing else is listed or written', migrate.watched.length === 2 &&
+            JSON.stringify(migrate.folder) === '["current.docx","old.doc","old.docx"]'],
+    ];
+    for (const [name, ok] of migrateChecks) {
+        console.log(`${ok ? 'PASS' : 'FAIL'}  newest Office format: ${name}`);
+        if (!ok) failed++;
+    }
+    if (migrateChecks.some(([, ok]) => !ok)) console.log(JSON.stringify(migrate, null, 1));
 
     if (!process.argv.includes('--keep-open')) {
         await browser.close();

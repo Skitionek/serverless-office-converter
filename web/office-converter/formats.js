@@ -189,6 +189,42 @@ export const TARGETS = [
 
 export const TARGET_BY_ID = new Map(TARGETS.map((t) => [t.id, t]));
 
+// "Newest Office format": not a target of its own, but a choice per file, for migrating old
+// documents: text documents become DOCX, spreadsheets XLSX and presentations PPTX.  Files that
+// are already in a current Office format, plain text and data files, and drawings and images
+// (Office has no format for them) are left as they are.
+export const NEWEST_OFFICE = { id: 'newest-office', label: 'Newest Office format' };
+
+const NEWEST_BY_FAMILY = { writer: 'docx', calc: 'xlsx', impress: 'pptx' };
+const CURRENT_OFFICE = new Set([
+    'docx', 'docm', 'dotx', 'dotm', 'xlsx', 'xlsm', 'xltx', 'xltm', 'xlsb',
+    'pptx', 'pptm', 'ppsx', 'ppsm', 'potx', 'potm',
+]);
+const PLAIN = new Set(['txt', 'md', 'markdown', 'html', 'htm', 'xhtml', 'xml', 'csv', 'tsv', 'tab']);
+
+/**
+ * What "Newest Office format" does with a file.
+ * @param {string} name File name (its extension decides).
+ * @param {string} [family] Its family, if known better than the extension says.
+ * @returns {{target: string|null, reason?: string}} `target`: 'docx', 'xlsx' or 'pptx';
+ *   `null` when the file is left as it is, with the `reason` to show.
+ */
+export function newestOfficeTarget(name, family = guessFamily(name)) {
+    const ext = extensionOf(name);
+    if (CURRENT_OFFICE.has(ext)) {
+        return { target: null, reason: 'Already in a current Office format (' + ext.toUpperCase() + ')' };
+    }
+    if (PLAIN.has(ext)) return { target: null, reason: 'Plain text or data, not an Office document' };
+    const target = NEWEST_BY_FAMILY[family];
+    if (!target) {
+        return {
+            target: null,
+            reason: family === 'draw' ? 'Office has no format for drawings and images' : 'Not an Office document',
+        };
+    }
+    return { target };
+}
+
 export function targetsForFamily(family) {
     if (family === 'unknown') return TARGETS;
     return TARGETS.filter((t) => t.filters[family]);

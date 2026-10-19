@@ -40,6 +40,7 @@ body {
 .title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap;
     margin-bottom: 6px; }
 .title-row h1 { margin: 0; }
+.header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .title-row .btn { color: var(--brand); }
 .title-row .btn svg { width: 18px; height: 18px; }
 .shortcut-hint { margin: 0 0 8px; font-size: 0.9rem; color: var(--muted); text-align: end; }
@@ -160,6 +161,10 @@ select {
 .fs-dialog ul { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; font-size: 0.93rem; }
 .fs-dialog-skip { display: flex; gap: 8px; align-items: center; margin-top: 14px; font-size: 0.88rem; color: var(--muted); }
 .fs-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.setting { display: flex; align-items: baseline; gap: 10px; margin-top: 14px; }
+.setting input { margin: 0; flex: none; }
+.setting-note { display: block; margin-top: 2px; font-size: 0.9rem; color: var(--muted); }
+.setting-saved { margin: 16px 0 0; font-size: 0.85rem; color: var(--muted); }
 
 .queue {
     background: var(--surface);
@@ -199,6 +204,7 @@ select {
 .file-status[data-state="done"] { color: var(--ok); }
 .file-status[data-state="error"] { color: var(--err); text-align: left; }
 .file-status[data-state="working"] { color: var(--warn); }
+.file-status[data-state="skipped"] { color: var(--muted); text-align: left; max-width: 12rem; }
 .file-actions { display: flex; gap: 6px; justify-content: flex-end; }
 
 @media (max-width: 640px) {

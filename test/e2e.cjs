@@ -192,6 +192,23 @@ async function main() {
     console.log(`${recovery.ok && recovery.calls === 2 && recovery.restarted ? 'PASS' : 'FAIL'}  engine fault recovery ${JSON.stringify(recovery)}`);
     if (!(recovery.ok && recovery.calls === 2 && recovery.restarted)) failed++;
 
+    // An engine that stops making progress while starting is given up on, instead of keeping
+    // every job waiting: here a worker that never answers.
+    const stalled = await page.evaluate(async () => {
+        const { OfficeEngine } = await import(new URL('office-converter/office-engine.js', location.href).href);
+        const silent = URL.createObjectURL(new Blob(['// never ready'], { type: 'text/javascript' }));
+        const engine = new OfficeEngine({ workerUrl: silent, startTimeoutMs: 1000 });
+        const t0 = performance.now();
+        const outcome = (p) => p.then(() => 'resolved', (e) => (e.engineFault ? 'fault: ' : '') + e.message);
+        const start = await outcome(engine.start());
+        const job = await outcome(engine.convertFile(new File(['x'], 'x.txt'), 'pdf'));
+        return { start, job, state: engine.state, secs: Math.round((performance.now() - t0) / 1000) };
+    });
+    const stalledOk = /^fault: The engine stopped starting/.test(stalled.start) &&
+        /stopped starting/.test(stalled.job) && stalled.state === 'error' && stalled.secs < 15;
+    console.log(`${stalledOk ? 'PASS' : 'FAIL'}  a stalled engine start fails instead of hanging ${JSON.stringify(stalled)}`);
+    if (!stalledOk) failed++;
+
     // Thumbnails are rendered in the background, behind the conversions above.
     const thumbs = await page.evaluate(async () => {
         const els = [...document.querySelectorAll('office-thumbnail')];

@@ -39,6 +39,7 @@
 
 - `cd test && npm install && npm test` runs the end-to-end test (`e2e.cjs`, about 10 minutes)
   and the security test (`security.cjs`, about 4 minutes) in headless Chromium. Run both before
-  pushing a change to `web/`.
+  pushing a change to `web/`, one after the other: run at the same time on this container's four
+  cores, a conversion or engine start has occasionally hung in the security test.
 - When waiting for a test started in the background, don't poll with `pgrep -f <script>`: the
   waiting command's own command line matches the pattern, so the loop never ends.

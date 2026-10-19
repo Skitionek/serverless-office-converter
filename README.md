@@ -317,7 +317,8 @@ service-worker.js (service worker)
   and decompresses them on the fly with the vendored 20 KB `web/office-converter/vendor/xz-decompress.min.js`.
 * **Robustness** – the engine runs in a dedicated Web Worker, off the page's main thread; if
   LibreOffice crashes or a conversion times out, the worker is discarded and a fresh one is
-  started for the next file.
+  started for the next file. An engine that stops making progress while starting is given up
+  on after two minutes and the job retried once, instead of every conversion waiting forever.
 
 ## Security
 

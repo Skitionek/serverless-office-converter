@@ -33,6 +33,8 @@ export class OfficeEngine extends EventTarget {
      *   (default: the directory this module is loaded from).
      * @param {string|URL} [options.workerUrl] URL of engine-worker.js if it is not directly under `base`.
      * @param {number} [options.timeoutMs] Abort and restart the engine when one job takes longer.
+     * @param {number} [options.startTimeoutMs] Give up on an engine that makes no progress for this
+     *   long while starting (no download progress, no message from it); default 2 min.
      * @param {boolean} [options.isolateNetwork] Keep the engine off the network (default true;
      *   no cost: conversions never need it).
      * @param {boolean} [options.isolateDocuments] Start a fresh engine for each document (default
@@ -42,12 +44,13 @@ export class OfficeEngine extends EventTarget {
      */
     constructor({
         base = new URL('./', import.meta.url), workerUrl, timeoutMs = 5 * 60 * 1000,
-        isolateNetwork = true, isolateDocuments = false,
+        startTimeoutMs = 2 * 60 * 1000, isolateNetwork = true, isolateDocuments = false,
     } = {}) {
         super();
         this.base = new URL(base, document.baseURI).href;
         this.workerUrl = new URL(workerUrl || 'engine-worker.js', this.base).href;
         this.timeoutMs = timeoutMs;
+        this.startTimeoutMs = startTimeoutMs;
         this.isolateNetwork = isolateNetwork;
         this.isolateDocuments = isolateDocuments;
         this.document = undefined; // the document the current worker has opened (or SHARED)
@@ -89,13 +92,41 @@ export class OfficeEngine extends EventTarget {
             this.fail(worker, event.message || 'The engine worker could not be started.');
         };
         this.worker = worker;
+        this.watchStart(worker);
         return this.ready;
+    }
+
+    // A worker that stops making progress before it is ready would otherwise keep every job
+    // waiting forever: after startTimeoutMs without a sign of life (download progress from the
+    // service worker, any message from the worker), it is discarded as a fault.
+    watchStart(worker) {
+        let timer = null;
+        const progress = new BroadcastChannel('lo-assets');
+        const poke = () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                done();
+                const secs = Math.round(this.startTimeoutMs / 1000);
+                this.fail(worker, 'The engine stopped starting (no progress for ' + secs + ' s).');
+            }, this.startTimeoutMs);
+        };
+        const done = () => {
+            clearTimeout(timer);
+            progress.close();
+            worker.removeEventListener('message', poke);
+        };
+        progress.onmessage = poke;
+        worker.addEventListener('message', poke);
+        this.ready.then(done, done);
+        poke();
     }
 
     stop(reason, { fault = false } = {}) {
         if (this.worker) this.worker.terminate();
         this.worker = null;
-        if (this.ready && this.rejectReady) this.rejectReady(new Error(reason));
+        if (this.ready && this.rejectReady) {
+            this.rejectReady(Object.assign(new Error(reason), { engineFault: fault }));
+        }
         this.ready = null;
         for (const { reject, timer } of this.pending.values()) {
             clearTimeout(timer);

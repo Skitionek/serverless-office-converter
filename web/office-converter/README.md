@@ -55,7 +55,7 @@ Preview thumbnails for your file lists: [`serverless-office-thumbnail`](../offic
 
 ## API
 
-### `new OfficeEngine({ base?, workerUrl?, timeoutMs?, isolateNetwork?, isolateDocuments? })`
+### `new OfficeEngine({ base?, workerUrl?, timeoutMs?, startTimeoutMs?, isolateNetwork?, isolateDocuments? })`
 
 Starts lazily on the first conversion (or `engine.start()`): a dedicated worker that loads
 LibreOffice (about 7-10 s the first time; the download is cached afterwards).
@@ -84,9 +84,10 @@ LibreOffice (about 7-10 s the first time; the download is cached afterwards).
   document), the worker is discarded and the job is retried once on a fresh one.
 * Jobs run **one at a time, highest `priority` first** (default 0); `quiet` jobs don't flip the
   engine's state to `busy`. Rejections carry `error.message` from LibreOffice.
-* `engine.state` and the `state` event (`detail: {state, text, detail}`): `idle`, `loading`, `ready`,
-  `busy`, `error`. A crashed, hung (`timeoutMs`, default 5 min) or unsupported-browser engine
-  goes to `error`; the next call starts a fresh worker.
+* `engine.state` and the `state` event (`detail: {state, text, detail}`): `idle`, `loading`,
+  `ready`, `busy`, `error`. A crashed, hung (`timeoutMs`, default 5 min), stalled while starting
+  (no download progress or message from it for `startTimeoutMs`, default 2 min) or
+  unsupported-browser engine goes to `error`; the next call starts a fresh worker.
 * Download progress: the service worker posts `{file, loaded, total, version}` on a
   `BroadcastChannel('lo-assets')`.
 

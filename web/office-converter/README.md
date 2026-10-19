@@ -128,6 +128,13 @@ written over an existing file.
 `TARGETS`, `TARGET_BY_ID`, `INPUT_FILTERS`, `INPUT_FAMILIES`, `ACCEPT` (for `<input accept>`),
 `extensionOf(name)`, `guessFamily(name)`, `targetsForFamily(family)`, `FAMILY_LABELS`.
 
+For migrating old documents: `newestOfficeTarget(name, family?)` → `{ target }` with `'docx'`,
+`'xlsx'` or `'pptx'` for a document whose current Office format differs (DOC, XLS, PPT, RTF,
+OpenDocument, Lotus, ...), or `{ target: null, reason }` for files to leave as they are
+(already DOCX/XLSX/PPTX or another current Office format, plain text and data such as CSV,
+drawings and images). `NEWEST_OFFICE` (`{ id, label }`) is the converter page's name for
+that choice.
+
 ## Security
 
 Documents are untrusted input to a large C++ parser. LibreOffice runs as WebAssembly in the

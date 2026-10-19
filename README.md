@@ -51,6 +51,11 @@ component: files are converted inside the visitor's browser tab and are never up
   read; results are always **new files**, and a name that is taken gets ` (1)`, ` (2)`, ...
   (DOCX to DOCX gives `report (converted).docx`). Installed as an app, the converter also
   appears in the operating system's *Open with* menu.
+* **Migrate old files in one go.** Choose **Newest Office format** as the default output
+  format, and each file becomes the current Office format of its kind (see
+  [Migrating to the newest Office formats](#migrating-to-the-newest-office-formats)). With a
+  watched folder that is also the output folder, old documents dropped into it get a DOCX,
+  XLSX or PPTX next to them.
 
 | From | To |
 | --- | --- |
@@ -238,6 +243,27 @@ about 10 seconds; typical conversions take 0.1–2 s.
 To keep it small, the build leaves out what file conversion does not need, and some rarely
 used formats (see [Size reductions](#size-reductions)): no PDF import, no Visio/Publisher/
 Keynote/WordPerfect/CorelDRAW/… import, no HTML export of text documents.
+
+## Migrating to the newest Office formats
+
+The **Newest Office format** choice of *Default output format* picks a format per file, by its
+extension:
+
+| Files | Become |
+| --- | --- |
+| DOC, DOT, RTF, ODT, OTT, FODT, SXW, STW, HWP | DOCX |
+| XLS, XLT, ODS, OTS, FODS, SXC, STC, Lotus (WK1, WKS, 123), Quattro Pro (WB2), SYLK, DIF, UOS | XLSX |
+| PPT, PPS, POT, ODP, OTP, FODP, SXI, STI | PPTX |
+| Already current: DOCX, DOCM, DOTX, DOTM, XLSX, XLSM, XLTX, XLTM, XLSB, PPTX, PPTM, PPSX, PPSM, POTX, POTM | left as they are |
+| Plain text and data: TXT, Markdown, HTML, XML, CSV, TSV | left as they are |
+| Drawings and images: ODG, SVG, PNG, JPEG, ... (Office has no format for them) | left as they are |
+
+Files left as they are say why in their row and are not converted, unless a format is picked
+for them there; macro-enabled files stay as they are, since converting them would drop the
+macros. It applies to added files, whole folders and watched folders alike. What is read and
+written is the same as for any other conversion, so the
+[compatibility tables](#compatibility) and [limits](#limits) apply (for example, PowerPoint 95
+files can't be opened).
 
 ## Use it in your own site (npm)
 

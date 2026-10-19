@@ -1,7 +1,8 @@
 import {
-    ACCEPT, FAMILY_LABELS, INPUT_FILTERS, OfficeEngine, TARGETS, TARGET_BY_ID,
+    ACCEPT, FAMILY_LABELS, INPUT_FILTERS, NEWEST_OFFICE, OfficeEngine, TARGETS, TARGET_BY_ID,
     canPickDirectory, ensureWritable, entriesFromDataTransfer, entriesFromInput, extensionOf,
-    guessFamily, listDirectory, outputName, outputPath, recallHandle, relativePath, rememberHandle,
+    guessFamily, listDirectory, newestOfficeTarget, outputName, outputPath, recallHandle, relativePath,
+    rememberHandle,
     targetsForFamily, watchDirectory, writeNewFile,
 } from './office-converter/index.js';
 import { OfficeThumbnail } from './office-thumbnail/office-thumbnail.js';
@@ -158,14 +159,23 @@ const supported = checkSupport();
 const items = [];
 let running = false;
 
-function fillTargetSelect(select, targets, selected) {
-    select.replaceChildren(...targets.map((t) => {
-        const option = new Option(t.label, t.id, false, t.id === selected);
-        return option;
-    }));
+// A row's choice for files that "Newest Office format" leaves as they are.
+const LEAVE = '';
+
+// The default output format: one format for every file, or the newest Office format of each
+// file's kind (for migrating old documents).
+function fillDefaultSelect() {
+    const migrate = document.createElement('optgroup');
+    migrate.label = 'Each file to the newest format of its kind';
+    migrate.append(new Option(NEWEST_OFFICE.label, NEWEST_OFFICE.id));
+    const every = document.createElement('optgroup');
+    every.label = 'Every file to';
+    every.append(...TARGETS.map((t) => new Option(t.label, t.id, false, t.id === 'pdf')));
+    $('all-target').replaceChildren(migrate, every);
+    $('all-target').value = 'pdf';
 }
 
-fillTargetSelect($('all-target'), TARGETS, 'pdf');
+fillDefaultSelect();
 $('file-input').accept = ACCEPT;
 
 function setStatus(item, state, text) {
@@ -174,6 +184,43 @@ function setStatus(item, state, text) {
     el.dataset.state = state;
     el.textContent = text;
     syncRowButton(item);
+}
+
+// The output format the default gives a file: {id}, or {id: LEAVE, reason}.
+function defaultChoice(item) {
+    const id = $('all-target').value;
+    if (id === NEWEST_OFFICE.id) {
+        const { target, reason } = newestOfficeTarget(item.file.name, item.family);
+        return target ? { id: target } : { id: LEAVE, reason };
+    }
+    return { id: targetsForFamily(item.family).some((t) => t.id === id) ? id : 'pdf' };
+}
+
+// Fills a row's format list (with "Leave as it is" when that is the choice) and selects `id`.
+function fillRowSelect(item, id) {
+    const options = targetsForFamily(item.family).map((t) => new Option(t.label, t.id, false, t.id === id));
+    if (id === LEAVE) options.unshift(new Option('Leave as it is', LEAVE, false, true));
+    item.row.querySelector('.file-target').replaceChildren(...options);
+}
+
+// Gives a row the default's choice.  Returns whether it changed.
+function applyDefault(item) {
+    const { id, reason } = defaultChoice(item);
+    const select = item.row.querySelector('.file-target');
+    item.leaveReason = reason || item.leaveReason;
+    if (select.options.length && select.value === id) return false;
+    fillRowSelect(item, id);
+    return true;
+}
+
+// A file that is not being converted: waiting for Convert, or left as it is.
+function queueState(item) {
+    if (item.row.querySelector('.file-target').value === LEAVE) {
+        requested.delete(item);
+        setStatus(item, 'skipped', item.leaveReason || 'Left as it is');
+    } else {
+        setStatus(item, 'queued', requested.has(item) ? 'Waiting…' : '');
+    }
 }
 
 // Files whose conversion has been asked for (by either kind of Convert button).
@@ -205,7 +252,6 @@ function addFiles(list) {
     const entries = [...list].map((x) => (x instanceof Blob ? { file: x, path: x.name } : x));
     const added = [];
     if (!entries.length) return added;
-    const defaultTarget = $('all-target').value;
     for (const { file, handle = null, path = file.name, root = null } of entries) {
         const family = guessFamily(file.name);
         const row = $('file-row').content.firstElementChild.cloneNode(true);
@@ -219,15 +265,12 @@ function addFiles(list) {
         row.querySelector('.file-meta').textContent =
             FAMILY_LABELS[family] + ' · ' + formatBytes(file.size);
         const select = row.querySelector('.file-target');
-        const targets = targetsForFamily(family);
-        const preferred = targets.some((t) => t.id === defaultTarget) ? defaultTarget : 'pdf';
-        fillTargetSelect(select, targets, preferred);
+        applyDefault(item);
         select.addEventListener('change', () => {
-            if (item.status === 'done' || item.status === 'error') {
-                resetResult(item);
-                setStatus(item, 'queued', '');
-                updateQueueVisibility();
-            }
+            if (item.status === 'working') return;
+            if (item.status !== 'queued') resetResult(item);
+            queueState(item);
+            updateQueueVisibility();
         });
         row.querySelector('.file-convert').addEventListener('click', () => runQueue([item]));
         row.querySelector('.file-remove').addEventListener('click', () => {
@@ -241,7 +284,7 @@ function addFiles(list) {
         items.push(item);
         added.push(item);
         $('files').append(row);
-        setStatus(item, 'queued', '');
+        queueState(item);
     }
     updateQueueVisibility();
     // Load the engine early (for the thumbnails and so that it is ready), but convert
@@ -261,6 +304,10 @@ function updateQueueVisibility() {
 
 async function convertItem(item) {
     const target = TARGET_BY_ID.get(item.row.querySelector('.file-target').value);
+    if (!target) { // left as it is
+        queueState(item);
+        return;
+    }
     resetResult(item);
     setStatus(item, 'working', 'Converting…');
     const ext = extensionOf(item.file.name);
@@ -294,8 +341,8 @@ async function convertItem(item) {
         if (e.family && e.family !== item.family && FAMILY_LABELS[e.family]) {
             // Loaded as something else than guessed: offer the right targets.
             item.family = e.family;
-            const select = item.row.querySelector('.file-target');
-            fillTargetSelect(select, targetsForFamily(e.family), 'pdf');
+            fillRowSelect(item, LEAVE); // so that the default's choice is applied anew
+            applyDefault(item);
             item.row.querySelector('.file-meta').textContent =
                 FAMILY_LABELS[e.family] + ' · ' + formatBytes(item.file.size);
         }
@@ -330,15 +377,12 @@ async function runQueue(list = items) {
 $('convert-all').addEventListener('click', () => runQueue());
 
 $('all-target').addEventListener('change', () => {
-    const id = $('all-target').value;
     for (const item of items) {
-        if (item.status === 'working') continue;
-        const select = item.row.querySelector('.file-target');
-        if ([...select.options].some((o) => o.value === id) && select.value !== id) {
-            select.value = id;
-            select.dispatchEvent(new Event('change'));
-        }
+        if (item.status === 'working' || !applyDefault(item)) continue;
+        if (item.status !== 'queued') resetResult(item);
+        queueState(item);
     }
+    updateQueueVisibility();
 });
 
 $('clear').addEventListener('click', () => {
@@ -493,8 +537,10 @@ function explain({ key, title, points, ok, skippable = true }) {
     });
 }
 
+// What the default output format does, for sentences like "converted to …".
 function targetLabel() {
-    return TARGET_BY_ID.get($('all-target').value).label;
+    const id = $('all-target').value;
+    return id === NEWEST_OFFICE.id ? 'the newest Office format of their kind' : TARGET_BY_ID.get(id).label;
 }
 
 // Asks the browser for a folder.  Resolves with null when the user cancels.
@@ -781,7 +827,7 @@ function onWatchedChange(entries) {
         item.row.querySelector('.file-thumb').file = entry.file;
         item.row.querySelector('.file-meta').textContent =
             FAMILY_LABELS[item.family] + ' · ' + formatBytes(entry.file.size);
-        setStatus(item, 'queued', '');
+        queueState(item);
         fresh.push(item);
     }
     fresh.push(...addFiles(added));

@@ -204,6 +204,7 @@ select {
 .file-status[data-state="done"] { color: var(--ok); }
 .file-status[data-state="error"] { color: var(--err); text-align: left; }
 .file-status[data-state="working"] { color: var(--warn); }
+.file-status[data-state="skipped"] { color: var(--muted); text-align: left; max-width: 12rem; }
 .file-actions { display: flex; gap: 6px; justify-content: flex-end; }
 
 @media (max-width: 640px) {

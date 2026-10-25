@@ -348,6 +348,13 @@ The **Deploy to GitHub Pages** workflow publishes `web/` as-is on every push to 
 touches it (it can also be run manually from the Actions tab). A fork deploys the same way once
 *Settings → Pages → Build and deployment → Source* is set to *GitHub Actions*.
 
+## Publishing to npm
+
+`.github/workflows/npm-publish.yml` publishes both packages (with npm provenance) when a GitHub
+release is published, or when run by hand from the Actions tab. It needs an npm token saved as the
+repository secret `NPM_TOKEN`. Bump `version` in the package's `package.json` first: a version
+that is already on npm is skipped.
+
 ## Limits
 
 * Desktop-class browsers: current Chrome, Edge, Firefox and Safari. The engine reserves 1 GB
@@ -361,6 +368,8 @@ touches it (it can also be run manually from the Actions tab). A fork deploys th
   first sheet only.
 
 ## License
+
+The code in this repository is licensed under the [MPL-2.0](LICENSE).
 
 LibreOffice is licensed under the [MPL-2.0](https://www.mozilla.org/MPL/2.0/); the runtime in
 `web/office-converter/lo/` is built from upstream LibreOffice sources (the exact commit is recorded in

@@ -12,7 +12,8 @@
   "files": [
     "index.js",
     "office-thumbnail.js",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": [
     "./office-thumbnail.js",
@@ -30,12 +31,21 @@
     "webassembly",
     "wasm"
   ],
+  "license": "MPL-2.0",
+  "author": "Dominik Maszczyk",
+  "homepage": "https://skitionek.github.io/serverless-office-converter/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Skitionek/serverless-office-converter.git",
     "directory": "web/office-thumbnail"
   },
+  "bugs": {
+    "url": "https://github.com/Skitionek/serverless-office-converter/issues"
+  },
   "peerDependencies": {
     "serverless-office-converter": "^0.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

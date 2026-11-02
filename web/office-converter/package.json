@@ -2,6 +2,7 @@
   "name": "serverless-office-converter",
   "version": "0.1.0",
   "description": "Convert Word, Excel, PowerPoint and OpenDocument files to PDF, DOCX, ODT, PNG, ... in the browser with LibreOffice compiled to WebAssembly, in a Web Worker. No server, nothing uploaded. Includes the engine (~30 MB).",
+  "license": "MPL-2.0",
   "type": "module",
   "main": "index.js",
   "module": "index.js",
@@ -26,7 +27,9 @@
     "service-worker.js",
     "vendor/",
     "lo/",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
   ],
   "sideEffects": false,
   "keywords": [

@@ -114,5 +114,7 @@ patches. Not supported: PDF input, password-protected files, formats whose impor
 left out (Visio, Publisher, Keynote, WordPerfect, ...), HTML export of text documents. Needs a
 current desktop browser and about 1 GB of memory.
 
-`lo/manifest.json` records the LibreOffice version and commit; LibreOffice is MPL-2.0,
+`lo/manifest.json` records the LibreOffice version and commit. This package is MPL-2.0
+(`LICENSE`), as is LibreOffice; the fonts, Emscripten runtime and other bundled code are listed in
+`THIRD-PARTY-NOTICES.md`, with LibreOffice's full licensing listing in `lo/LICENSE.html`.
 `vendor/xz-decompress.min.js` is MIT (see `vendor/README.md`).

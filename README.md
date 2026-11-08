@@ -8,6 +8,10 @@ component: files are converted inside the visitor's browser tab and are never up
 
 **Live:** https://skitionek.github.io/serverless-office-converter/
 
+[![Converting a Word file, then a spreadsheet and a presentation with the network cut](docs/media/office-converter-poster.jpg)](docs/media/office-converter.mp4)
+
+*33-second demo of the live site: a Word file, then a spreadsheet and a presentation converted after the network is cut. The online/offline badge is an overlay that follows the emulated network state. Click the image to play.*
+
 ## Why it's nice
 
 * **Nothing to install.** Open the page and convert: no Word, no LibreOffice, no admin

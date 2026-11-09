@@ -284,6 +284,30 @@ describe('detectFontNeeds: scripts', () => {
         for (const needs of results) assert.deepEqual(needs.scripts, []);
     });
 
+    it('detects text in a UTF-16 file, such as Excel\'s "Unicode Text" export', async () => {
+        // Given a tab-separated file in UTF-16 with a byte order mark
+        const file = Uint8Array.from(Buffer.concat([
+            Buffer.from([0xff, 0xfe]), Buffer.from('名前\t値\r\n', 'utf16le'),
+        ]));
+
+        // When the font needs are detected
+        const needs = await detectFontNeeds(file, { scripts: ALL_SCRIPTS });
+
+        // Then Han is reported
+        assert.deepEqual(needs.scripts, ['Han']);
+    });
+
+    it('skips an XML part that is larger than the limit, instead of reading it all into memory', async () => {
+        // Given a DOCX whose text part is 5,000 bytes of Japanese
+        const docx = deflatedZip([{ name: 'word/document.xml', text: '<w:t>' + '日本語'.repeat(500) + '</w:t>' }]);
+
+        // When the font needs are detected with a limit of 100 bytes per part
+        const needs = await detectFontNeeds(docx, { scripts: ALL_SCRIPTS, maxPartBytes: 100 });
+
+        // Then the part was not read, and nothing is reported
+        assert.deepEqual(needs.scripts, []);
+    });
+
     it('notices when Chinese text is marked as Traditional', async () => {
         // Given Han text in a DOCX that sets the east-Asian language to zh-TW
         const docx = deflatedZip([

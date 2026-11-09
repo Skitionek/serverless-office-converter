@@ -319,7 +319,8 @@ Details:
   engine and keeps it open (`lo-thread.js`). This works with the existing WebAssembly build, which
   does not have to be rebuilt.
 * **Limits.** Legacy binary files (DOC, XLS, PPT) and images are not scanned (their bytes cannot
-  be read as text reliably), so no font is fetched for them. Fonts stay registered until the engine
+  be read as text reliably), so no font is fetched for them. Plain text must be UTF-8, or UTF-16
+  with a byte order mark; text in GBK or Shift-JIS is not detected. Fonts stay registered until the engine
   restarts: after a document in one CJK language, a document in another can show some characters
   in the first one's glyph forms (the Han characters are shared). A Chinese document that also has
   kana or hangul is set in the Japanese or Korean font.

@@ -17,7 +17,7 @@
  *   a package, and in flat ODF, HTML and SVG, only the text between tags is
  *   read; in RTF only the \uN escapes.
  * - Only readable sources are scanned: the XML parts of a package, or a file
- *   that is valid UTF-8 from start to end.  Legacy binary files (DOC, XLS, PPT)
+ *   that is valid UTF-8 (or UTF-16 with a byte order mark) from start to end.  Legacy binary files (DOC, XLS, PPT)
  *   and images are skipped, because raw bytes read as text produce CJK
  *   characters by accident.
  *
@@ -26,8 +26,9 @@
 
 import { readZip } from './zip.js';
 
-// An XML part bigger than this (uncompressed) is not scanned.
-const MAX_PART_BYTES = 256 * 1024 * 1024;
+// An XML part that inflates to more than this is not scanned.  Finding font names and
+// scripts never needs more, and the whole part is held in memory (several times over).
+const MAX_PART_BYTES = 64 * 1024 * 1024;
 
 const OLE_SIGNATURE = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
 
@@ -72,11 +73,16 @@ function startsWithOleSignature(bytes) {
     return OLE_SIGNATURE.every((byte, i) => bytes[i] === byte);
 }
 
-// Decodes UTF-8, or returns null when the bytes are not valid UTF-8 (so not text).
-function decodeStrictUtf8(bytes) {
+// Decodes UTF-16 when the file starts with its byte order mark (Excel's "Unicode Text" does),
+// otherwise UTF-8.  Returns null when the bytes are not valid, so not text.  Other legacy
+// encodings (GBK, Shift-JIS) cannot be told apart from binary data and are not read.
+function decodeText(bytes) {
+    let encoding = 'utf-8';
+    if (bytes[0] === 0xff && bytes[1] === 0xfe) encoding = 'utf-16le';
+    if (bytes[0] === 0xfe && bytes[1] === 0xff) encoding = 'utf-16be';
     try {
-        return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
-    } catch (notUtf8) {
+        return new TextDecoder(encoding, { fatal: true }).decode(bytes);
+    } catch (notText) {
         return null;
     }
 }
@@ -103,35 +109,43 @@ function scriptText(content) {
 
 // The file in pieces: one per XML part of a package, otherwise one.  `markup` is what a
 // family name can be found in, `text` what a script can be found in.
-async function* pieces(bytes) {
+async function* pieces(bytes, maxPartBytes) {
     const entries = await readZip(bytes);
     if (entries) {
         for (const entry of entries) {
-            if (!entry.name.endsWith('.xml') || entry.size > MAX_PART_BYTES) continue;
-            const xml = decodeStrictUtf8(await entry.data());
+            if (!entry.name.endsWith('.xml')) continue;
+            let xmlBytes;
+            try {
+                xmlBytes = await entry.data({ maxBytes: maxPartBytes });
+            } catch (tooLarge) {
+                if (tooLarge instanceof RangeError) continue;
+                throw tooLarge;
+            }
+            const xml = decodeText(xmlBytes);
             if (xml !== null) yield { markup: xml, text: xmlText(xml) };
         }
         return;
     }
     if (startsWithOleSignature(bytes)) return;
-    const content = decodeStrictUtf8(bytes);
+    const content = decodeText(bytes);
     if (content === null) return;
     yield { markup: content, text: scriptText(content) };
 }
 
 /**
  * @param {Uint8Array} bytes The document.
- * @param {{scripts?: string[]}} [options] Unicode script names to look for (e.g. 'Han', 'Thai').
+ * @param {{scripts?: string[], maxPartBytes?: number}} [options] `scripts`: Unicode script names
+ *   to look for (e.g. 'Han', 'Thai'); `maxPartBytes`: XML parts that inflate to more are skipped.
  * @returns {Promise<{families: string[], scripts: string[], traditionalChinese: boolean}>}
  *   scripts keeps the order it was asked for.
  */
-export async function detectFontNeeds(bytes, { scripts = [] } = {}) {
+export async function detectFontNeeds(bytes, { scripts = [], maxPartBytes = MAX_PART_BYTES } = {}) {
     const patterns = scripts.map((name) => [name, new RegExp('\\p{Script=' + name + '}', 'u')]);
     const families = new Set();
     const foundScripts = new Set();
     let traditionalChinese = false;
 
-    for await (const { markup, text } of pieces(bytes)) {
+    for await (const { markup, text } of pieces(bytes, maxPartBytes)) {
         collectFamilies(markup, families);
         for (const [name, pattern] of patterns) {
             if (!foundScripts.has(name) && pattern.test(text)) foundScripts.add(name);

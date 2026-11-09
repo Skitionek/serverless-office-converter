@@ -47,15 +47,35 @@ function findEndOfDirectory(view) {
     return -1;
 }
 
-async function inflateRaw(compressed) {
-    const stream = new Blob([compressed]).stream()
-        .pipeThrough(new DecompressionStream('deflate-raw'));
-    return new Uint8Array(await new Response(stream).arrayBuffer());
+// Inflates, giving up with a RangeError as soon as the output passes maxBytes: the size an
+// entry declares is written by whoever made the file, so it cannot be trusted as a bound.
+async function inflateRaw(compressed, maxBytes) {
+    const reader = new Blob([compressed]).stream()
+        .pipeThrough(new DecompressionStream('deflate-raw')).getReader();
+    const chunks = [];
+    let total = 0;
+    for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > maxBytes) {
+            await reader.cancel();
+            throw new RangeError('The zip entry is larger than ' + maxBytes + ' bytes.');
+        }
+        chunks.push(value);
+    }
+    const out = new Uint8Array(total);
+    let at = 0;
+    for (const chunk of chunks) {
+        out.set(chunk, at);
+        at += chunk.length;
+    }
+    return out;
 }
 
 /**
  * @param {Uint8Array} bytes
- * @returns {Promise<null | {name: string, method: number, size: number, data: () => Promise<Uint8Array>}[]>}
+ * @returns {Promise<null | {name: string, method: number, size: number, data: (options?: {maxBytes?: number}) => Promise<Uint8Array>}[]>}
  *   null when the bytes are not a zip.
  */
 export async function readZip(bytes) {
@@ -84,7 +104,8 @@ export async function readZip(bytes) {
             name,
             method,
             size,
-            async data() {
+            // maxBytes: throws a RangeError instead of returning more than that.
+            async data({ maxBytes = Infinity } = {}) {
                 if (view.getUint32(localOffset, true) !== LOCAL_HEADER) {
                     throw new Error('Damaged zip entry: ' + name);
                 }
@@ -93,8 +114,11 @@ export async function readZip(bytes) {
                     + view.getUint16(localOffset + 26, true)
                     + view.getUint16(localOffset + 28, true);
                 const packed = bytes.subarray(dataStart, dataStart + compressedSize);
-                if (method === METHOD_STORED) return packed;
-                if (method === METHOD_DEFLATE) return inflateRaw(packed);
+                if (method === METHOD_STORED) {
+                    if (packed.length > maxBytes) throw new RangeError('The zip entry is larger than ' + maxBytes + ' bytes.');
+                    return packed;
+                }
+                if (method === METHOD_DEFLATE) return inflateRaw(packed, maxBytes);
                 throw new Error('Unsupported zip compression method ' + method + ': ' + name);
             },
         });

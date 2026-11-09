@@ -83,7 +83,8 @@ the ones that are not bundled, from a CDN, before converting:
 A document that uses only bundled fonts downloads nothing. Every downloaded file must have the
 SHA-256 recorded in the catalog; fonts are cached (Cache Storage), so each is downloaded once and
 works offline afterwards. If a font cannot be had, the document is converted with LibreOffice's
-usual substitute. Legacy binary files (DOC, XLS, PPT) and images are not scanned.
+usual substitute. Legacy binary files (DOC, XLS, PPT) and images are not scanned, and plain text
+must be UTF-8 or UTF-16 with a byte order mark (GBK or Shift-JIS text is not detected).
 
 The `fonts` option:
 

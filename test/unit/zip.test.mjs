@@ -34,6 +34,19 @@ describe('readZip', () => {
         assert.equal(new TextDecoder().decode(document), '<w:t>Hello</w:t>'.repeat(50));
     });
 
+    it('refuses to inflate an entry beyond a size limit, however small it declares itself', async () => {
+        // Given an entry that inflates to 10,000 bytes
+        const bytes = deflatedZip([{ name: 'word/big.xml', text: 'a'.repeat(10000) }]);
+        const [entry] = await readZip(bytes);
+
+        // When it is read with a limit that is enough
+        const enough = await entry.data({ maxBytes: 20000 });
+
+        // Then it comes back whole, while a limit of 100 bytes stops the inflating
+        assert.equal(enough.length, 10000);
+        await assert.rejects(entry.data({ maxBytes: 100 }), RangeError);
+    });
+
     it('returns null for bytes that are not a zip', async () => {
         // Given plain text
         const bytes = utf8('just some text, no zip here');

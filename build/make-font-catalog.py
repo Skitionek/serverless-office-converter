@@ -127,15 +127,16 @@ def build_catalog(seed):
     sources = seed['sources']
     script_families = set(seed['scripts'].values())
 
-    listings = {}  # family -> (source name, [paths])
-    for family in seed['googleFonts']:
-        listings[family] = ('npm', google_fonts_files(family, family in script_families))
-    for family, entry in seed['otherFonts'].items():
-        listings[family] = (entry['source'], entry['files'])
-
-    jobs = [(family, source, path) for family, (source, paths) in listings.items() for path in paths]
-    print('hashing %d files of %d families ...' % (len(jobs), len(listings)), file=sys.stderr)
     with concurrent.futures.ThreadPoolExecutor(PARALLEL_DOWNLOADS) as pool:
+        google_families = seed['googleFonts']
+        google_paths = pool.map(lambda family: google_fonts_files(family, family in script_families),
+                                google_families)
+        listings = {family: ('npm', paths) for family, paths in zip(google_families, google_paths)}
+        for family, entry in seed['otherFonts'].items():
+            listings[family] = (entry['source'], entry['files'])
+
+        jobs = [(family, source, path) for family, (source, paths) in listings.items() for path in paths]
+        print('hashing %d files of %d families ...' % (len(jobs), len(listings)), file=sys.stderr)
         results = list(pool.map(lambda job: fingerprint(sources[job[1]], job[2]), jobs))
 
     families = {}
@@ -160,16 +161,20 @@ def build_catalog(seed):
 
 
 def check_catalog(catalog):
-    problems = 0
-    for family, entry in catalog['families'].items():
-        base = catalog['sources'][entry['source']]
-        for file_entry in entry['files']:
-            data = download(base + url_path(file_entry['path']))
-            digest = hashlib.sha256(data).hexdigest() if data is not None else None
-            if digest != file_entry['sha256']:
-                problems += 1
-                print('MISMATCH %s: %s (%s)' % (family, file_entry['path'], digest or 'missing'))
-    return problems
+    jobs = [(family, catalog['sources'][entry['source']], file_entry)
+            for family, entry in catalog['families'].items() for file_entry in entry['files']]
+
+    def check(job):
+        family, base, file_entry = job
+        data = download(base + url_path(file_entry['path']))
+        digest = hashlib.sha256(data).hexdigest() if data is not None else None
+        if digest == file_entry['sha256']:
+            return 0
+        print('MISMATCH %s: %s (%s)' % (family, file_entry['path'], digest or 'missing'))
+        return 1
+
+    with concurrent.futures.ThreadPoolExecutor(PARALLEL_DOWNLOADS) as pool:
+        return sum(pool.map(check, jobs))
 
 
 def main():

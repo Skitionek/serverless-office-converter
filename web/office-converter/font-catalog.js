@@ -5,12 +5,16 @@
  *
  *   {
  *     "format": 1,
- *     "sources": { "google-fonts": "https://cdn.jsdelivr.net/gh/google/fonts@main/" },
- *     "families": { "Open Sans": { "source": "google-fonts", "files": [
- *         { "path": "ofl/opensans/OpenSans[wdth,wght].ttf", "size": 532636, "sha256": "…" } ] } },
+ *     "sources": { "npm": "https://cdn.jsdelivr.net/npm/" },
+ *     "families": { "Open Sans": { "source": "npm", "files": [
+ *         { "path": "@expo-google-fonts/open-sans@0.4.2/400Regular/OpenSans_400Regular.ttf",
+ *           "size": 130832, "sha256": "…" } ] } },
  *     "aliases": { "Georgia": "Gelasio" },
  *     "scripts": { "Thai": "Noto Sans Thai", "Han": "Noto Sans SC", "Han-Hant": "Noto Sans TC" }
  *   }
+ *
+ * A file's URL is its source's base URL plus its path; the path names an npm package at an exact
+ * version, so the file never changes.  A source can be replaced with a mirror (see FontCatalog).
  *
  * A file is only ever used when the bytes downloaded from the CDN have the
  * recorded sha256 (see font-download.js), so a CDN that changes or is

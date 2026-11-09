@@ -129,6 +129,32 @@ describe('on-demand fonts', () => {
         return { isPdf: raw.startsWith('%PDF-'), text: searchablePdfText(raw), raw };
     }
 
+    // Converts documents to PDF with a brand-new OfficeEngine made with `options`; the page's own
+    // engine is stopped first to make room (each engine reserves a gigabyte).  Resolves to the
+    // searchable PDF texts.
+    async function convertWithNewEngine(options, documents) {
+        await page.evaluate(() => window.officeConverter.engine.stop('make room for a second engine'));
+        const pdfs = await page.evaluate(async ({ options, documents }) => {
+            const { OfficeEngine } = await import(new URL('office-converter/index.js', location.href));
+            const engine = new OfficeEngine(options);
+            const out = [];
+            for (const { name, base64 } of documents) {
+                const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+                const { blob } = await engine.convertFile(new File([bytes], name), 'pdf');
+                const buffer = new Uint8Array(await blob.arrayBuffer());
+                let binary = '';
+                for (let i = 0; i < buffer.length; i += 0x8000) binary += String.fromCharCode.apply(null, buffer.subarray(i, i + 0x8000));
+                out.push(btoa(binary));
+            }
+            engine.stop('done');
+            return out;
+        }, { options, documents: documents.map(({ name, content }) => ({ name, base64: Buffer.from(content).toString('base64') })) });
+        return pdfs.map((base64) => {
+            const raw = Buffer.from(base64, 'base64').toString('latin1');
+            return { isPdf: raw.startsWith('%PDF-'), text: searchablePdfText(raw) };
+        });
+    }
+
     before(async () => {
         server = await startStaticServer();
         browser = await chromium.launch();
@@ -263,38 +289,124 @@ describe('on-demand fonts', () => {
         assert.doesNotMatch(pdf.text, /DemoOnDemandSans/);
     });
 
-    it('requests the catalog once, however many documents are converted', async () => {
-        // Given the conversions above
-        // When the number of catalog requests is read
-        // Then it is one
+    it('requests the catalog once, however many documents an engine converts', async () => {
+        // Given a new engine whose catalog is at the fake CDN
+        catalogRequests = 0;
+        const options = { fonts: { catalogUrl: CDN + 'catalog.json' } };
+        const documents = [
+            { name: 'one.fodt', content: flatOdt('Demo On Demand Sans', 'First') },
+            { name: 'two.fodt', content: flatOdt('Demo On Demand Sans', 'Second') },
+        ];
+
+        // When it converts two documents
+        const pdfs = await convertWithNewEngine(options, documents);
+
+        // Then the catalog was requested a single time, and both documents used the font
         assert.equal(catalogRequests, 1);
+        for (const pdf of pdfs) assert.match(pdf.text, /DemoOnDemandSans/);
     });
 
     it('does not contact the CDN at all when on-demand fonts are turned off', async () => {
         // Given an engine created with fonts: false
-        await page.evaluate(() => window.officeConverter.engine.stop('make room for a second engine'));
         cdnRequests.length = 0;
-        const catalogBefore = catalogRequests;
+        catalogRequests = 0;
+        const documents = [{ name: 'off.fodt', content: flatOdt('Demo On Demand Sans', 'Hello') }];
 
         // When a document in a catalogued font is converted
-        const base64 = Buffer.from(flatOdt('Demo On Demand Sans', 'Hello')).toString('base64');
-        const result = await page.evaluate(async (base64) => {
-            const { OfficeEngine } = await import(new URL('office-converter/index.js', location.href));
-            const engine = new OfficeEngine({ fonts: false });
-            const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-            const { blob } = await engine.convertFile(new File([bytes], 'off.fodt'), 'pdf');
-            const buffer = new Uint8Array(await blob.arrayBuffer());
-            engine.stop('done');
-            let binary = '';
-            for (let i = 0; i < buffer.length; i += 0x8000) binary += String.fromCharCode.apply(null, buffer.subarray(i, i + 0x8000));
-            return btoa(binary);
-        }, base64);
-        const raw = Buffer.from(result, 'base64').toString('latin1');
+        const [pdf] = await convertWithNewEngine({ fonts: false }, documents);
 
         // Then it converts with a substitute and neither the catalog nor the CDN was requested
-        assert.ok(raw.startsWith('%PDF-'));
-        assert.doesNotMatch(searchablePdfText(raw), /DemoOnDemandSans/);
+        assert.ok(pdf.isPdf);
+        assert.doesNotMatch(pdf.text, /DemoOnDemandSans/);
         assert.deepEqual(cdnRequests, []);
-        assert.equal(catalogRequests, catalogBefore);
+        assert.equal(catalogRequests, 0);
+    });
+
+    describe('registering a font with a worker that misbehaves', () => {
+        // A real OfficeEngine whose worker is a stand-in that `reply` controls; LibreOffice is not
+        // involved.  `reply(engine, worker, message)` is called for each message sent to the worker.
+        async function withFakeWorker(options, scenario) {
+            return page.evaluate(async ({ options, scenario }) => {
+                const { OfficeEngine } = await import(new URL('office-converter/index.js', location.href));
+                const engine = new OfficeEngine({ fonts: false, ...options });
+                const sent = [];
+                const worker = {
+                    postMessage(message) {
+                        sent.push(message.type);
+                        if (scenario === 'rejects') {
+                            engine.onMessage(worker, { type: 'fonts', id: message.id, ok: false, error: 'not a font' });
+                        }
+                        // scenario 'hangs': never answers
+                    },
+                    terminate() {},
+                };
+                engine.worker = worker;
+                const font = { id: 'demo', family: 'Demo', carrier: new Uint8Array([1, 2, 3]) };
+                if (scenario === 'gone') engine.worker = null;
+                const outcome = {};
+                try {
+                    await engine.registerFont(font);
+                    outcome.resolved = true;
+                } catch (error) {
+                    outcome.error = { engineFault: error.engineFault, fontFault: error.fontFault, message: error.message };
+                }
+                return { ...outcome, sent, registered: [...engine.registeredFonts], workerLeft: engine.worker !== null };
+            }, { options, scenario });
+        }
+
+        it('skips a font that LibreOffice rejects, and remembers it so it is not sent again', async () => {
+            // Given a worker that answers that the font package is not usable
+            // When the font is registered
+            const result = await withFakeWorker({}, 'rejects');
+
+            // Then it is not an error, but the font counts as handled for this worker
+            assert.equal(result.resolved, true);
+            assert.deepEqual(result.registered, ['demo']);
+            assert.deepEqual(result.sent, ['fonts']);
+        });
+
+        it('treats a worker that hangs while loading a font as an engine fault caused by the font', async () => {
+            // Given a worker that never answers, and a short timeout
+            // When the font is registered
+            const result = await withFakeWorker({ timeoutMs: 50 }, 'hangs');
+
+            // Then the worker is discarded and the error says the job should be retried without fonts
+            assert.deepEqual(result.error, { engineFault: true, fontFault: true, message: 'Loading a font timed out.' });
+            assert.equal(result.workerLeft, false);
+            assert.deepEqual(result.registered, []);
+        });
+
+        it('reports a worker that is already gone as a fault, not as a TypeError', async () => {
+            // Given an engine whose worker was discarded after the fonts were chosen
+            // When a font is registered
+            const result = await withFakeWorker({}, 'gone');
+
+            // Then the error is the retryable kind
+            assert.equal(result.error.engineFault, true);
+            assert.equal(result.error.fontFault, true);
+        });
+
+        it('retries a job without fonts after fonts caused a fault, so the document still converts', async () => {
+            // Given an engine whose first attempt fails because of a font, and whose retry succeeds
+            const attempts = await page.evaluate(async () => {
+                const { OfficeEngine, TARGET_BY_ID } = await import(new URL('office-converter/index.js', location.href));
+                const engine = new OfficeEngine({ fonts: false });
+                const skipped = [];
+                engine.runJob = async (job) => {
+                    skipped.push(Boolean(job.skipFonts));
+                    if (skipped.length === 1) {
+                        throw Object.assign(new Error('Loading a font timed out.'), { engineFault: true, fontFault: true });
+                    }
+                    return { data: new ArrayBuffer(1), family: 'writer', filter: 'x', ms: 1 };
+                };
+
+                // When a document is converted
+                await engine.convert(new ArrayBuffer(1), 'a.txt', TARGET_BY_ID.get('pdf'));
+                return skipped;
+            });
+
+            // Then the second attempt was made with fonts skipped
+            assert.deepEqual(attempts, [false, true]);
+        });
     });
 });

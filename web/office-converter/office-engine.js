@@ -191,6 +191,8 @@ export class OfficeEngine extends EventTarget {
                         console.warn('OfficeEngine: restarting after engine fault:', e.message);
                         this.stop('Engine restarted after a fault.', { fault: true });
                         job.retried = true;
+                        // Fonts are optional: if one is what hung the engine, retry without them.
+                        if (e.fontFault) job.skipFonts = true;
                         this.queue.push(job);
                     } else {
                         if (ENGINE_FAULT.test(e.message)) this.stop(e.message, { fault: true });
@@ -216,14 +218,19 @@ export class OfficeEngine extends EventTarget {
         }
     }
 
-    // Hands one font package to LibreOffice.  A font LibreOffice rejects is skipped, but if the
-    // worker itself is gone (fault or timeout) the error goes on, so the job is retried.
+    // Hands one font package to LibreOffice.  A font LibreOffice rejects is skipped (and not sent
+    // again to this worker).  If the worker itself is gone or hangs, the error goes on flagged as
+    // an engine fault, so the job is retried on a fresh worker, without fonts (see pump()).
     async registerFont(font) {
+        if (!this.worker) {
+            throw Object.assign(new Error('The engine stopped while fonts were being loaded.'),
+                { engineFault: true, fontFault: true });
+        }
         try {
             await new Promise((resolve, reject) => {
                 const id = this.nextId++;
                 const timer = setTimeout(() => {
-                    this.stop('Loading a font timed out.');
+                    this.stop('Loading a font timed out.', { fault: true });
                     this.setState('error', 'The engine was restarted after a timeout.');
                 }, this.timeoutMs);
                 this.pending.set(id, { resolve, reject, timer });
@@ -231,17 +238,18 @@ export class OfficeEngine extends EventTarget {
                     { type: 'fonts', id, family: font.family, data: font.carrier.buffer },
                     [font.carrier.buffer]);
             });
-            this.registeredFonts.add(font.id);
         } catch (error) {
-            if (!this.worker || error.engineFault) throw error;
+            if (!this.worker || error.engineFault) throw Object.assign(error, { engineFault: true, fontFault: true });
             console.warn('OfficeEngine: LibreOffice could not use the font "' + font.family + '":', error.message);
         }
+        // Handled either way: a font LibreOffice rejects would be rejected again.
+        this.registeredFonts.add(font.id);
     }
 
-    async runJob({ data, name, target, input, quiet }) {
+    async runJob({ data, name, target, input, quiet, skipFonts }) {
         // start() must come first: a new worker resets the list of registered fonts that
         // prepareFonts() reads.  Downloading the fonts overlaps with the engine starting.
-        const [, fonts] = await Promise.all([this.start(), this.prepareFonts(data)]);
+        const [, fonts] = await Promise.all([this.start(), skipFonts ? [] : this.prepareFonts(data)]);
         if (!quiet) this.setState('busy', 'Converting…');
         for (const font of fonts) await this.registerFont(font);
         const id = this.nextId++;

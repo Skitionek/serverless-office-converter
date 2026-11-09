@@ -63,6 +63,22 @@ describe('FontDownloader.load', () => {
         assert.deepEqual(network.requested, []);
     });
 
+    it('downloads again when the cached copy no longer matches the catalog hash', async () => {
+        // Given a cache that holds an older or damaged copy, and a CDN with the right file
+        const network = fakeNetwork({ [FONT_URL]: FONT_BYTES });
+        const cache = fakeCache();
+        cache.stored.set(FONT_URL, Uint8Array.from([1, 2, 3]));
+        const downloader = new FontDownloader({ fetchFont: network.fetchFont, openCache: async () => cache });
+
+        // When the font is loaded
+        const bytes = await downloader.load({ url: FONT_URL, sha256: FONT_SHA256 });
+
+        // Then the cached copy is not trusted: the right file is fetched and replaces it
+        assert.deepEqual(bytes, FONT_BYTES);
+        assert.deepEqual(network.requested, [FONT_URL]);
+        assert.deepEqual(cache.stored.get(FONT_URL), FONT_BYTES);
+    });
+
     it('refuses bytes that do not match the catalog hash, and does not cache them', async () => {
         // Given a CDN that serves something other than the catalogued font
         const network = fakeNetwork({ [FONT_URL]: Uint8Array.from([6, 6, 6]) });
@@ -105,5 +121,49 @@ describe('FontDownloader.load', () => {
         assert.deepEqual(first, FONT_BYTES);
         assert.deepEqual(second, FONT_BYTES);
         assert.equal(network.requested.length, 2);
+    });
+});
+
+describe('FontDownloader.loadCatalogJson', () => {
+    const CATALOG_URL = 'https://site.test/font-catalog.json';
+
+    it('fetches the catalog and keeps a copy for when the network is gone', async () => {
+        // Given a working network and an empty cache
+        const network = fakeNetwork({ [CATALOG_URL]: JSON.stringify({ format: 1 }) });
+        const cache = fakeCache();
+        const downloader = new FontDownloader({ fetchFont: network.fetchFont, openCache: async () => cache });
+
+        // When the catalog is loaded
+        const json = await downloader.loadCatalogJson(CATALOG_URL, network.fetchFont);
+
+        // Then it is returned and stored
+        assert.deepEqual(json, { format: 1 });
+        assert.equal(new TextDecoder().decode(cache.stored.get(CATALOG_URL)), '{"format":1}');
+    });
+
+    it('falls back to the stored copy when the network fails, so fonts work offline', async () => {
+        // Given a catalog stored earlier and a network that is down
+        const cache = fakeCache();
+        cache.stored.set(CATALOG_URL, new TextEncoder().encode('{"format":1,"offline":true}'));
+        const offline = async () => { throw new TypeError('Failed to fetch'); };
+        const downloader = new FontDownloader({ fetchFont: offline, openCache: async () => cache });
+
+        // When the catalog is loaded
+        const json = await downloader.loadCatalogJson(CATALOG_URL, offline);
+
+        // Then the stored copy is used
+        assert.deepEqual(json, { format: 1, offline: true });
+    });
+
+    it('fails when the network is down and nothing is stored', async () => {
+        // Given a first visit that is offline
+        const offline = async () => { throw new TypeError('Failed to fetch'); };
+        const downloader = new FontDownloader({ fetchFont: offline, openCache: async () => fakeCache() });
+
+        // When the catalog is loaded
+        const load = downloader.loadCatalogJson(CATALOG_URL, offline);
+
+        // Then the failure is reported
+        await assert.rejects(load, /Failed to fetch/);
     });
 });

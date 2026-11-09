@@ -33,13 +33,20 @@ export class OnDemandFonts {
         this.fetchCatalog = fetchCatalog;
         this.warn = warn;
         this.catalogPromise = null;
+        this.warnedAboutCatalog = false;
     }
 
-    // Loaded on first use, once; null when it cannot be loaded.
+    // Loaded on first use, once; null when it cannot be loaded.  A failure is not remembered:
+    // the next document tries again, but the warning is given only once.
     #catalog() {
         if (!this.catalogPromise) {
             this.catalogPromise = this.#loadCatalog().catch((error) => {
-                this.warn('On-demand fonts are off: the font catalog could not be loaded (' + error.message + ').');
+                this.catalogPromise = null;
+                if (!this.warnedAboutCatalog) {
+                    this.warnedAboutCatalog = true;
+                    this.warn('The font catalog could not be loaded, so documents use the bundled '
+                        + 'fonts for now (' + error.message + ').');
+                }
                 return null;
             });
         }
@@ -47,9 +54,8 @@ export class OnDemandFonts {
     }
 
     async #loadCatalog() {
-        const response = await this.fetchCatalog(this.catalogUrl);
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        return new FontCatalog(await response.json(), { sources: this.sources });
+        const json = await this.downloader.loadCatalogJson(this.catalogUrl, this.fetchCatalog);
+        return new FontCatalog(json, { sources: this.sources });
     }
 
     async #carrierFor(font) {

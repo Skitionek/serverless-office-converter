@@ -21,12 +21,12 @@ function catalogJson() {
     };
 }
 
-// Serves the catalog and records how often it was asked for.
-function fakeCatalogServer(json) {
+// Serves the catalog and records how often it was asked for.  The first `failures` requests fail.
+function fakeCatalogServer(json, { failures = 0 } = {}) {
     const calls = { count: 0 };
     const fetchCatalog = async () => {
         calls.count++;
-        if (!json) throw new Error('offline');
+        if (!json || calls.count <= failures) throw new Error('offline');
         return new Response(JSON.stringify(json));
     };
     return { fetchCatalog, calls };
@@ -37,6 +37,11 @@ function fakeDownloader({ failFor = [] } = {}) {
     const loaded = [];
     return {
         loaded,
+        async loadCatalogJson(url, fetchFn) {
+            const response = await fetchFn(url);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        },
         async load({ url }) {
             loaded.push(url);
             if (failFor.some((part) => url.includes(part))) throw new Error('HTTP 404');
@@ -50,8 +55,8 @@ function docxUsing(...families) {
     return deflatedZip([{ name: 'word/document.xml', text: '<w:p>' + runs + '<w:t>Hi</w:t></w:p>' }]);
 }
 
-function newFonts({ json = catalogJson(), downloader = fakeDownloader(), warnings = [] } = {}) {
-    const server = fakeCatalogServer(json);
+function newFonts({ json = catalogJson(), downloader = fakeDownloader(), warnings = [], failures = 0 } = {}) {
+    const server = fakeCatalogServer(json, { failures });
     const fonts = new OnDemandFonts({
         catalogUrl: CATALOG_URL,
         fetchCatalog: server.fetchCatalog,
@@ -140,6 +145,20 @@ describe('OnDemandFonts.prepare', () => {
         // Then there are no fonts, and the problem is logged once
         assert.deepEqual(first, []);
         assert.deepEqual(second, []);
+        assert.equal(warnings.length, 1);
+    });
+
+    it('tries the catalog again for the next document after a failure, instead of giving up for good', async () => {
+        // Given a catalog request that fails once (a hiccup) and then works
+        const { fonts, warnings } = newFonts({ failures: 1 });
+
+        // When two documents are prepared
+        const first = await fonts.prepare(docxUsing('Open Sans'), new Set());
+        const second = await fonts.prepare(docxUsing('Open Sans'), new Set());
+
+        // Then the first has no fonts, the second does, and the problem was logged once
+        assert.deepEqual(first, []);
+        assert.deepEqual(second.map((font) => font.family), ['Open Sans']);
         assert.equal(warnings.length, 1);
     });
 

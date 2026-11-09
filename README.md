@@ -21,10 +21,14 @@ component: files are converted inside the visitor's browser tab and are never up
   1. Open the page, then open DevTools (F12 or Ctrl/Cmd+Shift+I) → **Network** tab.
   2. Tick *Preserve log* and click the clear button (🚫) once the engine has loaded.
   3. Convert a file. The only things that appear are local ones (the page's own scripts and
-     the engine files, served from the cache). No request carries your document anywhere,
-     and no request goes to any other domain.
+     the engine files, served from the cache). No request carries your document anywhere.
+     The one exception: if the document uses a font that is not built in (Open Sans, say, or
+     Chinese text), that font file is downloaded once from a public CDN
+     (see [Fonts](#fonts)). The request is for the font file alone; its address names the
+     font, and nothing in it comes from your document.
   4. For the ultimate proof, load the page once and then switch the Network tab's throttling
-     to **Offline** (or just turn off your Wi-Fi). Conversions keep working.
+     to **Offline** (or just turn off your Wi-Fi). Conversions keep working; a font that
+     was never downloaded is replaced by a similar built-in one.
 * **Open and auditable.** The page is plain static files from this repository, and the
   converter is unmodified LibreOffice, not a black-box web service.
 * **Fast and private for batches.** Drop many files and convert them one after another
@@ -224,7 +228,8 @@ about 10 seconds; typical conversions take 0.1–2 s.
 
 To keep it small, the build leaves out what file conversion does not need, and some rarely
 used formats (see [Size reductions](#size-reductions)): no PDF import, no Visio/Publisher/
-Keynote/WordPerfect/CorelDRAW/… import, no HTML export of text documents.
+Keynote/WordPerfect/CorelDRAW/… import, no HTML export of text documents. Only a handful of
+core fonts are inside the engine; the rest are [loaded on demand](#fonts).
 
 ## Use it in your own site (npm)
 
@@ -276,21 +281,70 @@ service-worker.js (service worker)
   LibreOffice crashes or a conversion times out, the worker is discarded and a fresh one is
   started for the next file.
 
+## Fonts
+
+Only a handful of core fonts are bundled with the engine (Liberation Sans, Serif, Mono and Sans
+Narrow, DejaVu Sans, Carlito, Caladea and OpenSymbol: about 7 MB uncompressed). **Every other font
+is loaded on demand, only when a conversion needs it.** Before a document is converted, the
+converter looks at what it needs and downloads just those fonts from a CDN:
+
+* **A font family the document names** (DOCX, XLSX, PPTX, ODF, HTML, RTF), if it is in
+  [`font-catalog.json`](web/office-converter/font-catalog.json): about 90 families, among them
+  Roboto, Open Sans, Lato, Montserrat, Noto Sans and Serif, Source Sans, Merriweather, Lora, the
+  IBM Plex and Fira families, and the DejaVu Serif, Mono and Condensed faces that LibreOffice
+  normally ships. Georgia is served by the metric-compatible Gelasio, Comic Sans MS by Comic Neue.
+* **A script font for text the bundled fonts cannot draw**, whatever fonts the document names:
+  Chinese (Simplified, or Traditional when the document says `zh-TW`/`zh-HK`), Japanese, Korean,
+  Thai, Devanagari, Bengali, Tamil, Telugu, Gujarati, Kannada, Malayalam, Gurmukhi, Sinhala,
+  Khmer, Lao, Myanmar and Ethiopic. Without these, such text came out as empty boxes. (Greek, Cyrillic,
+  Arabic, Hebrew, Armenian and Georgian are covered by the bundled DejaVu Sans, so they need no download.)
+* A document that only uses bundled fonts downloads nothing.
+
+Details:
+
+* **Source and integrity.** The files come from the `@expo-google-fonts/*` (Google Fonts) and
+  `dejavu-fonts-ttf` npm packages on [jsDelivr](https://www.jsdelivr.com/), at pinned versions.
+  The catalog records the SHA-256 of every file, and a file with another hash is never given to
+  LibreOffice. Fonts are kept in the browser's Cache Storage: each is downloaded once, and works
+  offline afterwards.
+* **When a font cannot be had** (offline, CDN down, hash mismatch), the conversion still runs,
+  with LibreOffice's usual substitute font, exactly as before this feature.
+* **Privacy.** The requests are for font files. Their addresses say which fonts your documents
+  use, and the CDN sees the visitor's IP address like any web server. A site that must not
+  contact a third party sets `fonts: false` or serves the fonts itself
+  (see [the package README](web/office-converter/README.md#fonts)).
+* **How it works inside LibreOffice.** LibreOffice cannot install a font while it runs, but it
+  makes the fonts embedded in an open document available to every other document. The converter
+  wraps the downloaded font in a minimal empty ODT (`font-carrier.js`), opens it hidden in the
+  engine and keeps it open (`lo-thread.js`). This works with the existing WebAssembly build, which
+  does not have to be rebuilt.
+* **Limits.** Legacy binary files (DOC, XLS, PPT) and images are not scanned (their bytes cannot
+  be read as text reliably), so no font is fetched for them. Plain text must be UTF-8, or UTF-16
+  with a byte order mark; text in GBK or Shift-JIS is not detected. Fonts stay registered until the engine
+  restarts: after a document in one CJK language, a document in another can show some characters
+  in the first one's glyph forms (the Han characters are shared). A Chinese document that also has
+  kana or hangul is set in the Japanese or Korean font.
+* **The catalog.** `python3 build/make-font-catalog.py` rewrites it from
+  [`build/font-catalog-seed.json`](build/font-catalog-seed.json) (add a family name there), and
+  `--check` downloads every file again and compares the hashes.
+
 ## Repository layout
 
 | Path | Purpose |
 | --- | --- |
 | `web/` | The static site (deployed as-is to GitHub Pages) |
-| `web/office-converter/` | npm package `serverless-office-converter`: engine client, worker, service worker, format tables and the packaged LibreOffice runtime (`lo/`, generated by the build) |
+| `web/office-converter/` | npm package `serverless-office-converter`: engine client, worker, service worker, format tables, the on-demand font code (`font-*.js`, `on-demand-fonts.js`, `zip.js`) with its catalog `font-catalog.json`, and the packaged LibreOffice runtime (`lo/`, generated by the build) |
 | `web/office-thumbnail/` | npm package `serverless-office-thumbnail`: the `<office-thumbnail>` web component |
 | `build/build-libreoffice-wasm.sh` | Fetch, configure, build and package LibreOffice for WebAssembly |
 | `build/soffice-pre.js` | Extra `--pre-js` that exposes the Emscripten `FS` to the page |
+| `build/make-font-catalog.py`, `build/font-catalog-seed.json` | Write `web/office-converter/font-catalog.json`, the fonts loaded on demand, with the SHA-256 of each file |
 | `build/package-wasm.py` | xz + split the runtime into `web/office-converter/lo/`, drop the files in `data-exclude.txt` from `soffice.data`, write `manifest.json` |
 | `build/patches/` | Size reductions applied to LibreOffice before building |
 | `build/embind-allowlist.txt` | The only UNO types exposed to JavaScript |
 | `build/Dockerfile` | Build environment (`emscripten/emsdk:4.0.10` + LibreOffice build deps) |
 | `build/social-preview.{html,cjs}` | The link-preview image (`web/social-preview.png`), the PNG icons and the app screenshot shown in the browser's install dialog (`web/screenshot-wide.png`); `node build/social-preview.cjs` re-renders them |
 | `test/e2e.cjs` | End-to-end test: serves `web/` like Pages does and converts fixtures in Chromium |
+| `test/fonts-e2e.cjs`, `test/unit/` | On-demand fonts: an end-to-end test against a fake CDN (with the tiny fonts that `test/make-font-fixtures.py` makes) and unit tests of the font code |
 | `.github/workflows/pages.yml` | Deploys `web/` to GitHub Pages |
 
 ## Building LibreOffice for WebAssembly
@@ -323,7 +377,7 @@ On top of LibreOffice's own `--enable-wasm-strip` (on by default for Emscripten)
 | Embind UNO bindings only for the types in `embind-allowlist.txt` and their dependencies (48 instead of 1728 types) | `patches/0004`, with `patches/0007` keeping the exception RTTI the bridge exports |
 | ICU data without per-locale display names of languages, regions, currencies, units and time zones (33 → 20 MB) | `patches/0005` |
 | No spell checking, hyphenation or thesaurus code (no dictionaries ship anyway) | `patches/0002` |
-| Fonts: only Liberation Sans/Serif/Mono/Sans Narrow and DejaVu Sans (regular + bold; italics are synthesized), Carlito and Caladea (all four styles), OpenSymbol | `data-exclude.txt`, applied by `package-wasm.py` |
+| Fonts: only Liberation Sans/Serif/Mono/Sans Narrow and DejaVu Sans (regular + bold; italics are synthesized), Carlito and Caladea (all four styles), OpenSymbol; all others [on demand from a CDN](#fonts) | `data-exclude.txt`, applied by `package-wasm.py` |
 | xz instead of gzip for the download (35–40% smaller) | `package-wasm.py`, `office-converter/service-worker.js` |
 
 `patches/0001` fixes `--disable-curl` (uui linked curl unconditionally).
@@ -359,6 +413,7 @@ touches it (it can also be run manually from the Actions tab). A fork deploys th
 * The first visit downloads the engine (see the size shown on the page); later visits use the
   cached copy until a new build is deployed.
 * No PDF import, no password-protected documents, no macros (they are never executed).
+* Fonts beyond the bundled ones need the network the first time (see [Fonts](#fonts)).
 * Text documents cannot be exported to HTML (Writer's HTML export needs the forms component,
   which comes with database connectivity and is left out of the WASM build).
 * Image exports (PNG/JPEG, and SVG for slides and drawings) contain the first page/slide only; CSV export contains the

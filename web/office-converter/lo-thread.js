@@ -8,6 +8,9 @@
  * Files are exchanged through the Emscripten in-memory file system, which
  * lives on the main runtime thread; the file I/O LibreOffice does from here is
  * proxied there by Emscripten.
+ *
+ * On-demand fonts (font-carrier.js) are registered by opening the document
+ * that embeds them and never closing it.
  */
 'use strict';
 
@@ -200,8 +203,51 @@ Module.uno_init.then(function () {
         }
     }
 
+    // Documents that embed on-demand fonts.  LibreOffice has no API to install a font, but
+    // it makes the fonts embedded in an open document available to every other document,
+    // for as long as that document stays open.  So these are kept open on purpose.
+    const fontCarriers = [];
+
+    function loadFonts(job) {
+        const garbage = [];
+        try {
+            const load = propertySeq([
+                ['Hidden', true],
+                ['ReadOnly', true],
+                ['UpdateDocMode', 0],
+                ['MacroExecutionMode', 0],
+            ]);
+            garbage.push(load.seq, ...load.owned);
+            let carrier;
+            try {
+                carrier = loader.loadComponentFromURL(job.url, '_blank', 0, load.seq);
+            } catch (e) {
+                throw new Error('Could not open the font package (' + describeError(e) + ')');
+            }
+            if (!carrier) throw new Error('LibreOffice could not open the font package.');
+            fontCarriers.push(carrier);
+        } finally {
+            release(garbage);
+        }
+    }
+
+    function onLoadFonts(msg) {
+        try {
+            loadFonts(msg);
+            port.postMessage({ cmd: 'fontsLoaded', id: msg.id, ok: true });
+        } catch (e) {
+            port.postMessage({
+                cmd: 'fontsLoaded', id: msg.id, ok: false, error: e && e.message ? e.message : String(e),
+            });
+        }
+    }
+
     port.onmessage = function (event) {
         const msg = event.data;
+        if (msg && msg.cmd === 'loadFonts') {
+            onLoadFonts(msg);
+            return;
+        }
         if (!msg || msg.cmd !== 'convert') return;
         const started = performance.now();
         try {

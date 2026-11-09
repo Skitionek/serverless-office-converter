@@ -9,6 +9,7 @@
 
 import { outputName } from './file-system.js';
 import { INPUT_FILTERS, TARGET_BY_ID, extensionOf } from './formats.js';
+import { OnDemandFonts } from './on-demand-fonts.js';
 
 // Errors that mean the WebAssembly runtime itself is corrupted (not that the document is bad):
 // once one has happened, every later job on that worker tends to fail too.
@@ -23,12 +24,25 @@ export class OfficeEngine extends EventTarget {
      *   (default: the directory this module is loaded from).
      * @param {string|URL} [options.workerUrl] URL of engine-worker.js if it is not directly under `base`.
      * @param {number} [options.timeoutMs] Abort and restart the engine when one job takes longer.
+     * @param {false|{catalogUrl?: string, sources?: Record<string, string>}} [options.fonts]
+     *   Fonts beyond the few bundled ones are downloaded from a CDN, only when a document
+     *   needs them (see font-catalog.json).  `false` turns that off: only the bundled fonts
+     *   are used and nothing but the engine's own files is ever requested.
+     *   `catalogUrl`: where font-catalog.json is (default: under `base`).
+     *   `sources`: base URLs that replace the catalog's CDNs, to serve the fonts from a mirror.
      */
-    constructor({ base = new URL('./', import.meta.url), workerUrl, timeoutMs = 5 * 60 * 1000 } = {}) {
+    constructor({
+        base = new URL('./', import.meta.url), workerUrl, timeoutMs = 5 * 60 * 1000, fonts = {},
+    } = {}) {
         super();
         this.base = new URL(base, document.baseURI).href;
         this.workerUrl = new URL(workerUrl || 'engine-worker.js', this.base).href;
         this.timeoutMs = timeoutMs;
+        this.fonts = fonts === false ? null : new OnDemandFonts({
+            catalogUrl: new URL('font-catalog.json', this.base).href,
+            ...fonts,
+        });
+        this.registeredFonts = new Set(); // ids of the on-demand fonts the current worker has
         this.state = 'idle';
         this.worker = null;
         this.ready = null;
@@ -47,6 +61,7 @@ export class OfficeEngine extends EventTarget {
     start() {
         if (this.ready) return this.ready;
         this.startedAt = performance.now();
+        this.registeredFonts = new Set(); // a new worker starts with the bundled fonts only
         this.setState('loading', '');
         this.ready = new Promise((resolve, reject) => {
             this.resolveReady = resolve;
@@ -102,6 +117,15 @@ export class OfficeEngine extends EventTarget {
             clearTimeout(job.timer);
             if (msg.ok) job.resolve(msg);
             else job.reject(Object.assign(new Error(msg.error), { family: msg.family }));
+            break;
+        }
+        case 'fonts': {
+            const request = this.pending.get(msg.id);
+            if (!request) break;
+            this.pending.delete(msg.id);
+            clearTimeout(request.timer);
+            if (msg.ok) request.resolve();
+            else request.reject(new Error(msg.error));
             break;
         }
         case 'fatal':
@@ -167,6 +191,8 @@ export class OfficeEngine extends EventTarget {
                         console.warn('OfficeEngine: restarting after engine fault:', e.message);
                         this.stop('Engine restarted after a fault.', { fault: true });
                         job.retried = true;
+                        // Fonts are optional: if one is what hung the engine, retry without them.
+                        if (e.fontFault) job.skipFonts = true;
                         this.queue.push(job);
                     } else {
                         if (ENGINE_FAULT.test(e.message)) this.stop(e.message, { fault: true });
@@ -180,9 +206,52 @@ export class OfficeEngine extends EventTarget {
         }
     }
 
-    async runJob({ data, name, target, input, quiet }) {
-        await this.start();
+    // Fonts the document needs and the current worker does not have yet.  Never throws: a
+    // document is converted with substitute fonts rather than not at all.
+    async prepareFonts(data) {
+        if (!this.fonts) return [];
+        try {
+            return await this.fonts.prepare(new Uint8Array(data), this.registeredFonts);
+        } catch (error) {
+            console.warn('OfficeEngine: could not prepare fonts, using the bundled ones:', error);
+            return [];
+        }
+    }
+
+    // Hands one font package to LibreOffice.  A font LibreOffice rejects is skipped (and not sent
+    // again to this worker).  If the worker itself is gone or hangs, the error goes on flagged as
+    // an engine fault, so the job is retried on a fresh worker, without fonts (see pump()).
+    async registerFont(font) {
+        if (!this.worker) {
+            throw Object.assign(new Error('The engine stopped while fonts were being loaded.'),
+                { engineFault: true, fontFault: true });
+        }
+        try {
+            await new Promise((resolve, reject) => {
+                const id = this.nextId++;
+                const timer = setTimeout(() => {
+                    this.stop('Loading a font timed out.', { fault: true });
+                    this.setState('error', 'The engine was restarted after a timeout.');
+                }, this.timeoutMs);
+                this.pending.set(id, { resolve, reject, timer });
+                this.worker.postMessage(
+                    { type: 'fonts', id, family: font.family, data: font.carrier.buffer },
+                    [font.carrier.buffer]);
+            });
+        } catch (error) {
+            if (!this.worker || error.engineFault) throw Object.assign(error, { engineFault: true, fontFault: true });
+            console.warn('OfficeEngine: LibreOffice could not use the font "' + font.family + '":', error.message);
+        }
+        // Handled either way: a font LibreOffice rejects would be rejected again.
+        this.registeredFonts.add(font.id);
+    }
+
+    async runJob({ data, name, target, input, quiet, skipFonts }) {
+        // start() must come first: a new worker resets the list of registered fonts that
+        // prepareFonts() reads.  Downloading the fonts overlaps with the engine starting.
+        const [, fonts] = await Promise.all([this.start(), skipFonts ? [] : this.prepareFonts(data)]);
         if (!quiet) this.setState('busy', 'Converting…');
+        for (const font of fonts) await this.registerFont(font);
         const id = this.nextId++;
         return new Promise((resolve, reject) => {
             const timer = setTimeout(() => {

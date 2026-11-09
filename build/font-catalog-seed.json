@@ -1,0 +1,161 @@
+{
+  "sources": {
+    "npm": "https://cdn.jsdelivr.net/npm/"
+  },
+  "otherFonts": {
+    "DejaVu Serif": {
+      "source": "npm",
+      "files": [
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerif.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerif-Bold.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerif-Italic.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerif-BoldItalic.ttf"
+      ]
+    },
+    "DejaVu Sans Mono": {
+      "source": "npm",
+      "files": [
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansMono.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansMono-Bold.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansMono-Oblique.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansMono-BoldOblique.ttf"
+      ]
+    },
+    "DejaVu Sans Condensed": {
+      "source": "npm",
+      "files": [
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansCondensed.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansCondensed-Bold.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansCondensed-Oblique.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansCondensed-BoldOblique.ttf"
+      ]
+    },
+    "DejaVu Serif Condensed": {
+      "source": "npm",
+      "files": [
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerifCondensed.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerifCondensed-Bold.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerifCondensed-Italic.ttf",
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerifCondensed-BoldItalic.ttf"
+      ]
+    },
+    "DejaVu Math TeX Gyre": {
+      "source": "npm",
+      "files": [
+        "dejavu-fonts-ttf@2.37.3/ttf/DejaVuMathTeXGyre.ttf"
+      ]
+    }
+  },
+  "aliases": {
+    "Georgia": "Gelasio",
+    "Comic Sans MS": "Comic Neue"
+  },
+  "scripts": {
+    "Hiragana": "Noto Sans JP",
+    "Katakana": "Noto Sans JP",
+    "Hangul": "Noto Sans KR",
+    "Han": "Noto Sans SC",
+    "Han-Hant": "Noto Sans TC",
+    "Thai": "Noto Sans Thai",
+    "Devanagari": "Noto Sans Devanagari",
+    "Bengali": "Noto Sans Bengali",
+    "Tamil": "Noto Sans Tamil",
+    "Telugu": "Noto Sans Telugu",
+    "Gujarati": "Noto Sans Gujarati",
+    "Kannada": "Noto Sans Kannada",
+    "Malayalam": "Noto Sans Malayalam",
+    "Gurmukhi": "Noto Sans Gurmukhi",
+    "Sinhala": "Noto Sans Sinhala",
+    "Khmer": "Noto Sans Khmer",
+    "Lao": "Noto Sans Lao",
+    "Myanmar": "Noto Sans Myanmar",
+    "Ethiopic": "Noto Sans Ethiopic"
+  },
+  "googleFonts": [
+    "Roboto",
+    "Roboto Condensed",
+    "Roboto Slab",
+    "Roboto Mono",
+    "Open Sans",
+    "Lato",
+    "Montserrat",
+    "Source Sans 3",
+    "Source Serif 4",
+    "Source Code Pro",
+    "Noto Sans",
+    "Noto Serif",
+    "Noto Sans Mono",
+    "PT Sans",
+    "PT Serif",
+    "Raleway",
+    "Oswald",
+    "Poppins",
+    "Inter",
+    "Nunito",
+    "Nunito Sans",
+    "Work Sans",
+    "Fira Sans",
+    "Fira Mono",
+    "IBM Plex Sans",
+    "IBM Plex Serif",
+    "IBM Plex Mono",
+    "Ubuntu",
+    "Ubuntu Mono",
+    "Rubik",
+    "Barlow",
+    "DM Sans",
+    "Josefin Sans",
+    "Libre Franklin",
+    "Quicksand",
+    "Karla",
+    "Mulish",
+    "Cabin",
+    "Arimo",
+    "Tinos",
+    "Cousine",
+    "Inconsolata",
+    "Merriweather",
+    "Playfair Display",
+    "Lora",
+    "Libre Baskerville",
+    "EB Garamond",
+    "Crimson Text",
+    "Cormorant Garamond",
+    "Gelasio",
+    "Courier Prime",
+    "Comic Neue",
+    "Anton",
+    "Bebas Neue",
+    "Lobster",
+    "Pacifico",
+    "Dancing Script",
+    "Caveat",
+    "Alef",
+    "Reem Kufi",
+    "Frank Ruhl Libre",
+    "David Libre",
+    "Miriam Libre",
+    "Amiri",
+    "Scheherazade New",
+    "Noto Sans JP",
+    "Noto Sans KR",
+    "Noto Sans SC",
+    "Noto Sans TC",
+    "Noto Sans Thai",
+    "Noto Sans Devanagari",
+    "Noto Sans Bengali",
+    "Noto Sans Tamil",
+    "Noto Sans Telugu",
+    "Noto Sans Gujarati",
+    "Noto Sans Kannada",
+    "Noto Sans Malayalam",
+    "Noto Sans Gurmukhi",
+    "Noto Sans Sinhala",
+    "Noto Sans Khmer",
+    "Noto Sans Lao",
+    "Noto Sans Myanmar",
+    "Noto Sans Ethiopic",
+    "Noto Naskh Arabic",
+    "Noto Sans Hebrew"
+  ]
+}

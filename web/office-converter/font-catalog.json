@@ -1,0 +1,1778 @@
+{
+ "format": 1,
+ "sources": {
+  "npm": "https://cdn.jsdelivr.net/npm/"
+ },
+ "families": {
+  "Alef": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/alef@0.4.1/400Regular/Alef_400Regular.ttf",
+     "size": 89736,
+     "sha256": "7b28de5cbc057cf646346aebc642346b0bd9a3b032f544cd221c6a67d921621e"
+    },
+    {
+     "path": "@expo-google-fonts/alef@0.4.1/700Bold/Alef_700Bold.ttf",
+     "size": 91084,
+     "sha256": "77e4e477558db06b1ee91e987c941d09a159abb09acba81d2c7091039478dd68"
+    }
+   ]
+  },
+  "Amiri": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/amiri@0.4.1/400Regular/Amiri_400Regular.ttf",
+     "size": 421196,
+     "sha256": "d26cd95609ed51b6419e3c7d4a066cb9fac7b73117868622f5b7f03998c68568"
+    },
+    {
+     "path": "@expo-google-fonts/amiri@0.4.1/400Regular_Italic/Amiri_400Regular_Italic.ttf",
+     "size": 418528,
+     "sha256": "86b6bffb68674818a8ddbaad4ba6607d4ccb5acbbdf2e79b68a47bfb83a2e5c8"
+    },
+    {
+     "path": "@expo-google-fonts/amiri@0.4.1/700Bold/Amiri_700Bold.ttf",
+     "size": 403996,
+     "sha256": "0cf3c9c5b967adb281a46f17293fe03b1fc05e0538ab4db4a4c2252f45098692"
+    },
+    {
+     "path": "@expo-google-fonts/amiri@0.4.1/700Bold_Italic/Amiri_700Bold_Italic.ttf",
+     "size": 400176,
+     "sha256": "85c8bb77099f4236fa9540be2dcb0e61bc881dd1d667075f2b2b9df8f7d85799"
+    }
+   ]
+  },
+  "Anton": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/anton@0.4.2/400Regular/Anton_400Regular.ttf",
+     "size": 161588,
+     "sha256": "97aae409210d255fb3b92f18c8af2ed14941e10a1ee134a35bb91f52086de1d0"
+    }
+   ]
+  },
+  "Arimo": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/arimo@0.4.3/400Regular/Arimo_400Regular.ttf",
+     "size": 318320,
+     "sha256": "88cc899855d30f9c779b73c3319d0e077b098f927187aafce11ca029add707a6"
+    },
+    {
+     "path": "@expo-google-fonts/arimo@0.4.3/400Regular_Italic/Arimo_400Regular_Italic.ttf",
+     "size": 340984,
+     "sha256": "6bd2c6a6fa87f4566cf0a92c5834884597acbd7be9719e550837865ac4167a42"
+    },
+    {
+     "path": "@expo-google-fonts/arimo@0.4.3/700Bold/Arimo_700Bold.ttf",
+     "size": 318844,
+     "sha256": "ec96ac9fdd94766f66f6140c1375bf011577558f88d43f76b3b59307d2a6bca3"
+    },
+    {
+     "path": "@expo-google-fonts/arimo@0.4.3/700Bold_Italic/Arimo_700Bold_Italic.ttf",
+     "size": 342368,
+     "sha256": "b42b19c10bf5d526f00068303a643282c3df55a79c6fa2eea80b4a078a4a705a"
+    }
+   ]
+  },
+  "Barlow": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/barlow@0.4.1/400Regular/Barlow_400Regular.ttf",
+     "size": 98812,
+     "sha256": "77fb1ac54d2ceb980e3ebdfa7a9d0f64e85a66e4fdfb7f914a7b0aa08fb33a5d"
+    },
+    {
+     "path": "@expo-google-fonts/barlow@0.4.1/400Regular_Italic/Barlow_400Regular_Italic.ttf",
+     "size": 104252,
+     "sha256": "b4f6fcb952de98bb75f9754526213f4a8f5bf0878638e60730c8bc947f29ce2a"
+    },
+    {
+     "path": "@expo-google-fonts/barlow@0.4.1/700Bold/Barlow_700Bold.ttf",
+     "size": 102940,
+     "sha256": "984a0f81f4b34352fdf463d201091f9be8e5f6be66277779ddec6d3644d77ecf"
+    },
+    {
+     "path": "@expo-google-fonts/barlow@0.4.1/700Bold_Italic/Barlow_700Bold_Italic.ttf",
+     "size": 106540,
+     "sha256": "924426ca24b4b0606774f19ae152f0ebb3dd0314fa4153a60cc7bcbdadf53979"
+    }
+   ]
+  },
+  "Bebas Neue": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/bebas-neue@0.4.1/400Regular/BebasNeue_400Regular.ttf",
+     "size": 57676,
+     "sha256": "830ea186acffc2316ed1a4e42319246ba3b46b04e33a211079249bf901193f04"
+    }
+   ]
+  },
+  "Cabin": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/cabin@0.4.2/400Regular/Cabin_400Regular.ttf",
+     "size": 76536,
+     "sha256": "e47570f20877067f12cbef70ce70a823c517b095ef461cc63cbc0f6ecaa2177b"
+    },
+    {
+     "path": "@expo-google-fonts/cabin@0.4.2/400Regular_Italic/Cabin_400Regular_Italic.ttf",
+     "size": 66756,
+     "sha256": "abc18097542232e58de917663c42394a195f4af0c6fcdfb6c56b7c5907b5ce5f"
+    },
+    {
+     "path": "@expo-google-fonts/cabin@0.4.2/700Bold/Cabin_700Bold.ttf",
+     "size": 76296,
+     "sha256": "30aa1342d8f8ca7509fd23bc56498e74a6304ab5ca0079dce0bdb11602578799"
+    },
+    {
+     "path": "@expo-google-fonts/cabin@0.4.2/700Bold_Italic/Cabin_700Bold_Italic.ttf",
+     "size": 66592,
+     "sha256": "1f4403058865ea3aceffefebd9c42810f23a1991ed84323fa0cb32a03ad7e80f"
+    }
+   ]
+  },
+  "Caveat": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/caveat@0.4.2/400Regular/Caveat_400Regular.ttf",
+     "size": 256968,
+     "sha256": "271ee7c4a60b1be2ba13a66990e7475c76c982ac6e906c9db25139976282f6b8"
+    },
+    {
+     "path": "@expo-google-fonts/caveat@0.4.2/700Bold/Caveat_700Bold.ttf",
+     "size": 257316,
+     "sha256": "b42cc772f3528d9150c29d6051e2ed3fd472ad4e584c73fe1500ee628d6b1ac0"
+    }
+   ]
+  },
+  "Comic Neue": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/comic-neue@0.4.1/400Regular/ComicNeue_400Regular.ttf",
+     "size": 54844,
+     "sha256": "63690a24f0ded1a87858c22a4abe69f07765661d3b0ac7284f90235c5dbd9539"
+    },
+    {
+     "path": "@expo-google-fonts/comic-neue@0.4.1/400Regular_Italic/ComicNeue_400Regular_Italic.ttf",
+     "size": 51796,
+     "sha256": "f6a1085093bde5de16ff90dcb97914657114a11d8f4bf1a93fef165f168209f9"
+    },
+    {
+     "path": "@expo-google-fonts/comic-neue@0.4.1/700Bold/ComicNeue_700Bold.ttf",
+     "size": 53376,
+     "sha256": "c802d1294419c5584ab09cd1b9a674d16e94aa5ddc8b29705ccbf36ccede714e"
+    },
+    {
+     "path": "@expo-google-fonts/comic-neue@0.4.1/700Bold_Italic/ComicNeue_700Bold_Italic.ttf",
+     "size": 53284,
+     "sha256": "e417e970509955fe256bf38e84da7e773d32495cdc189bf7e37476a9acf8a458"
+    }
+   ]
+  },
+  "Cormorant Garamond": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/cormorant-garamond@0.4.1/400Regular/CormorantGaramond_400Regular.ttf",
+     "size": 666632,
+     "sha256": "7b99138ffa3baab8616d8491dc6d75961c5ae568b206c5031fbc7bb127385428"
+    },
+    {
+     "path": "@expo-google-fonts/cormorant-garamond@0.4.1/400Regular_Italic/CormorantGaramond_400Regular_Italic.ttf",
+     "size": 407488,
+     "sha256": "64af109bd58506885c366991e35904180112c7e3359bd9ad9945202bfeb949d3"
+    },
+    {
+     "path": "@expo-google-fonts/cormorant-garamond@0.4.1/700Bold/CormorantGaramond_700Bold.ttf",
+     "size": 665952,
+     "sha256": "8a41a6f966a0d60daa5065609150ad666347c789432369bb3d7951020a022131"
+    },
+    {
+     "path": "@expo-google-fonts/cormorant-garamond@0.4.1/700Bold_Italic/CormorantGaramond_700Bold_Italic.ttf",
+     "size": 407444,
+     "sha256": "b4497b87acb8571d1d245fa763a8ea15dad3db5d841c5e08b9a3020ed65ca207"
+    }
+   ]
+  },
+  "Courier Prime": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/courier-prime@0.4.1/400Regular/CourierPrime_400Regular.ttf",
+     "size": 68304,
+     "sha256": "b4da920fa50d874bce2cab0517e4732384a6eef8fe7e1e653d2befcb8aac1aa6"
+    },
+    {
+     "path": "@expo-google-fonts/courier-prime@0.4.1/400Regular_Italic/CourierPrime_400Regular_Italic.ttf",
+     "size": 76656,
+     "sha256": "a3d9cde252cabc9102d92e0c54c774563ffc613401b190584012f0d5212daab4"
+    },
+    {
+     "path": "@expo-google-fonts/courier-prime@0.4.1/700Bold/CourierPrime_700Bold.ttf",
+     "size": 69944,
+     "sha256": "1170ca4279b38da20d390544636462ff1c76d744b15fe5db43568424d5690f8f"
+    },
+    {
+     "path": "@expo-google-fonts/courier-prime@0.4.1/700Bold_Italic/CourierPrime_700Bold_Italic.ttf",
+     "size": 77544,
+     "sha256": "88c2d60089ef6a8cd60c816a90d2c5b83dc38adc27aa0b19e02682f01c697a29"
+    }
+   ]
+  },
+  "Cousine": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/cousine@0.4.3/400Regular/Cousine_400Regular.ttf",
+     "size": 289556,
+     "sha256": "ca2264d6750d6c47df703be4486361a37ab943d42de6ea2bf794b7c7af767799"
+    },
+    {
+     "path": "@expo-google-fonts/cousine@0.4.3/400Regular_Italic/Cousine_400Regular_Italic.ttf",
+     "size": 298680,
+     "sha256": "f1626b7287db36af8ba2ff88840c82f121f4cbda8971fe3f717f975e9fd782a8"
+    },
+    {
+     "path": "@expo-google-fonts/cousine@0.4.3/700Bold/Cousine_700Bold.ttf",
+     "size": 290500,
+     "sha256": "f03c46c4bc5c0a3af4a1f4fbe5e3e16954581cced05cea20b3bffe12740d99d3"
+    },
+    {
+     "path": "@expo-google-fonts/cousine@0.4.3/700Bold_Italic/Cousine_700Bold_Italic.ttf",
+     "size": 300160,
+     "sha256": "acb798f3629cda0041fbd6234237cf549a1b932792f2a71b0986eb3e1382ed37"
+    }
+   ]
+  },
+  "Crimson Text": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/crimson-text@0.4.0/400Regular/CrimsonText_400Regular.ttf",
+     "size": 106512,
+     "sha256": "7f8659a752e5daf18d667979b6308415663da22301827dc30ad384a6b03311a1"
+    },
+    {
+     "path": "@expo-google-fonts/crimson-text@0.4.0/400Regular_Italic/CrimsonText_400Regular_Italic.ttf",
+     "size": 109440,
+     "sha256": "39e05588f475a3f754f452c3ab1079902f990dca0c7ab912c93efa986189fbb7"
+    },
+    {
+     "path": "@expo-google-fonts/crimson-text@0.4.0/700Bold/CrimsonText_700Bold.ttf",
+     "size": 112116,
+     "sha256": "b709fbd149aab05a7339ad26c142294a525ee622d0a0a11122e62a03879965c5"
+    },
+    {
+     "path": "@expo-google-fonts/crimson-text@0.4.0/700Bold_Italic/CrimsonText_700Bold_Italic.ttf",
+     "size": 114268,
+     "sha256": "ec16a1584975f309367516323a4ada60d859321a869420269d137c58e80fdb26"
+    }
+   ]
+  },
+  "Dancing Script": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/dancing-script@0.4.2/400Regular/DancingScript_400Regular.ttf",
+     "size": 81140,
+     "sha256": "9ef04a03a7e36872dbb179ed3fbb11fde004bd01e35416c3270023f7a91dd4f4"
+    },
+    {
+     "path": "@expo-google-fonts/dancing-script@0.4.2/700Bold/DancingScript_700Bold.ttf",
+     "size": 81420,
+     "sha256": "2bd1f21937334ffd94c3879b6032c04df6390833432dfc7a79d0020eae80d038"
+    }
+   ]
+  },
+  "David Libre": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/david-libre@0.4.1/400Regular/DavidLibre_400Regular.ttf",
+     "size": 124244,
+     "sha256": "eafd65ea0df2bbd0da4811e876bd84af695e437b6c3c66a729599b8675806052"
+    },
+    {
+     "path": "@expo-google-fonts/david-libre@0.4.1/700Bold/DavidLibre_700Bold.ttf",
+     "size": 129284,
+     "sha256": "5d5c2febc95d18d7fb6d47d284614c32cbc3084c0b47e823c5ac203d5850bf54"
+    }
+   ]
+  },
+  "DejaVu Math TeX Gyre": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuMathTeXGyre.ttf",
+     "size": 577708,
+     "sha256": "40da67c0b6b03076504fbda4bf3e7b4f20b35999c98063019a3392fe9b1294fe"
+    }
+   ]
+  },
+  "DejaVu Sans Condensed": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansCondensed.ttf",
+     "size": 680264,
+     "sha256": "8550cd5ca1acb65a8fc7877c46939cd0b4d909f8e7bc1e24716873d918c5e549"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansCondensed-Bold.ttf",
+     "size": 665028,
+     "sha256": "38098d0b8edd8430a0f53fb2831b5d36037563a998a620d3c87a4d7591766d20"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansCondensed-Oblique.ttf",
+     "size": 599292,
+     "sha256": "dc3526fa25fae4278c4e34b47d4c049b6923421c70921032a0db11bfe9c1b0cf"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansCondensed-BoldOblique.ttf",
+     "size": 611836,
+     "sha256": "43f9fd6b77edf174553cf94857c77c63de7ddb0c6751fd1390e73223518e128f"
+    }
+   ]
+  },
+  "DejaVu Sans Mono": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansMono.ttf",
+     "size": 340712,
+     "sha256": "b4a6c3e4faab8773f4ff761d56451646409f29abedd68f05d38c2df667d3c582"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansMono-Bold.ttf",
+     "size": 331992,
+     "sha256": "bce60f1b4421acd9ea51ba6623d7024ecbe6817a953e3654df62a5e6bdf8f769"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansMono-Oblique.ttf",
+     "size": 251932,
+     "sha256": "742097840c541870e8d6dc5c9b37bb1ceeea6c0dedd1d475faf903ef9df734b0"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSansMono-BoldOblique.ttf",
+     "size": 253580,
+     "sha256": "91713a71d550bba22c2a6b2bb2a9ad8f9a159e12e4e9f0a5b2677998ba21213e"
+    }
+   ]
+  },
+  "DejaVu Serif": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerif.ttf",
+     "size": 380132,
+     "sha256": "42d1edeb7952f31b1f96d767ed7030b08a39e0c372b0071641518864e2bffb51"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerif-Bold.ttf",
+     "size": 356088,
+     "sha256": "c47b5527bcdc8dcf9ea8c77054454c5a884beaca2f44851a2a823ee639cbf07f"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerif-Italic.ttf",
+     "size": 345996,
+     "sha256": "2e39b1d50f90b933b00c7bb54a96afd3f86419b3d717c7cf202e36f2d4973e47"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerif-BoldItalic.ttf",
+     "size": 347460,
+     "sha256": "8d3dd3d31350309042ed226af82b34539bd773518e6107cb352712853ba80308"
+    }
+   ]
+  },
+  "DejaVu Serif Condensed": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerifCondensed.ttf",
+     "size": 346664,
+     "sha256": "685dcdfb8daf32a453d3426a4eb8d881c72146ddd999229354fb757511357995"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerifCondensed-Bold.ttf",
+     "size": 331244,
+     "sha256": "e09aa87c60c3e8de7f4e6c7bfeec8fd9489b6cd975e3033259bca3d6009aed18"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerifCondensed-Italic.ttf",
+     "size": 345324,
+     "sha256": "dfe5bf5336d62ca71de419cccf7fd18ab19a57245dc392891ee76347129807e1"
+    },
+    {
+     "path": "dejavu-fonts-ttf@2.37.3/ttf/DejaVuSerifCondensed-BoldItalic.ttf",
+     "size": 346508,
+     "sha256": "4cfc5a3700c72413f51c4bb54f09617401a0a63eccb9ff577713e20afa047fa5"
+    }
+   ]
+  },
+  "DM Sans": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/dm-sans@0.4.2/400Regular/DMSans_400Regular.ttf",
+     "size": 56344,
+     "sha256": "20ccb90498d8ca511bb0be31a74eccd5f29fbe1161852ef72781b703929e98ec"
+    },
+    {
+     "path": "@expo-google-fonts/dm-sans@0.4.2/400Regular_Italic/DMSans_400Regular_Italic.ttf",
+     "size": 61244,
+     "sha256": "2677138afc090d2b5e401bb107347601bb7eb015853be564c4cbfdf021de690a"
+    },
+    {
+     "path": "@expo-google-fonts/dm-sans@0.4.2/700Bold/DMSans_700Bold.ttf",
+     "size": 56268,
+     "sha256": "3764a2ce62fa95596c3315c1a0ca379e7cf827ed397c97fc036925b9b20b74dc"
+    },
+    {
+     "path": "@expo-google-fonts/dm-sans@0.4.2/700Bold_Italic/DMSans_700Bold_Italic.ttf",
+     "size": 61168,
+     "sha256": "4fc78e9e6c6f77055d07cc5d382f449e764083019aae4246bd29df8a9ad7409d"
+    }
+   ]
+  },
+  "EB Garamond": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/eb-garamond@0.4.3/400Regular/EBGaramond_400Regular.ttf",
+     "size": 489640,
+     "sha256": "d5baed6e48bf4c99a770e6edc86ddaf67942bb1850491ed54f94d5c2c213531e"
+    },
+    {
+     "path": "@expo-google-fonts/eb-garamond@0.4.3/400Regular_Italic/EBGaramond_400Regular_Italic.ttf",
+     "size": 440240,
+     "sha256": "228da33df456ec4e0a149f33cfc2264d5bd500bdfcf55ee36710ca8df923cbd6"
+    },
+    {
+     "path": "@expo-google-fonts/eb-garamond@0.4.3/700Bold/EBGaramond_700Bold.ttf",
+     "size": 492280,
+     "sha256": "8bb7f13020d522de1c441da0a76f05843b74d788c1b16a933af3be4880782d17"
+    },
+    {
+     "path": "@expo-google-fonts/eb-garamond@0.4.3/700Bold_Italic/EBGaramond_700Bold_Italic.ttf",
+     "size": 443560,
+     "sha256": "0030bda44f15b85f5adee17dc25cb5948c547ecf7f6d06e10723b406cd15a472"
+    }
+   ]
+  },
+  "Fira Mono": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/fira-mono@0.4.1/400Regular/FiraMono_400Regular.ttf",
+     "size": 170204,
+     "sha256": "9c1c51abec8b9f7fa24bfb88ebe80b354cc6da9d4036d6bedeaf495d24933e42"
+    },
+    {
+     "path": "@expo-google-fonts/fira-mono@0.4.1/700Bold/FiraMono_700Bold.ttf",
+     "size": 201708,
+     "sha256": "669c459f82d635c170caffb95b91e4b1d4d844b2e39b57009b9f865b06baa56c"
+    }
+   ]
+  },
+  "Fira Sans": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/fira-sans@0.4.1/400Regular/FiraSans_400Regular.ttf",
+     "size": 440984,
+     "sha256": "3dabf3d48bf4599f95cffd92f99ea426a014d5311f52a5eb5ec3af265e97cd97"
+    },
+    {
+     "path": "@expo-google-fonts/fira-sans@0.4.1/400Regular_Italic/FiraSans_400Regular_Italic.ttf",
+     "size": 456436,
+     "sha256": "e48b22ba7f2eab682501ba01b3ddfdbf65dadfafa74d9b2efe1879eb949b5c69"
+    },
+    {
+     "path": "@expo-google-fonts/fira-sans@0.4.1/700Bold/FiraSans_700Bold.ttf",
+     "size": 473876,
+     "sha256": "74b477a3e2b7c745e6dac8c01764c8fd82e53763b47ef1eccd24dce36d2ff71f"
+    },
+    {
+     "path": "@expo-google-fonts/fira-sans@0.4.1/700Bold_Italic/FiraSans_700Bold_Italic.ttf",
+     "size": 491048,
+     "sha256": "8049b15ea03da7982db1152a9927911c47e0a92dc5ed434fa329b143a99b6adb"
+    }
+   ]
+  },
+  "Frank Ruhl Libre": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/frank-ruhl-libre@0.4.1/400Regular/FrankRuhlLibre_400Regular.ttf",
+     "size": 70828,
+     "sha256": "f9022784f98a64ef7a38f01ea18f8e441913a9a9fda2a178bef2bdc448459f2e"
+    },
+    {
+     "path": "@expo-google-fonts/frank-ruhl-libre@0.4.1/700Bold/FrankRuhlLibre_700Bold.ttf",
+     "size": 70904,
+     "sha256": "066a05f9d5a7ff789fa43330dc64e166ebe6265c90837516324a4710c022b4bf"
+    }
+   ]
+  },
+  "Gelasio": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/gelasio@0.4.1/400Regular/Gelasio_400Regular.ttf",
+     "size": 105512,
+     "sha256": "44aae47442ad39e623788930f38f1e702febcf094c284c5058bf49f7da23de9a"
+    },
+    {
+     "path": "@expo-google-fonts/gelasio@0.4.1/400Regular_Italic/Gelasio_400Regular_Italic.ttf",
+     "size": 107376,
+     "sha256": "2b24b3d41c06d030a31db6610454595775e572a2992d73171cab783407d202a8"
+    },
+    {
+     "path": "@expo-google-fonts/gelasio@0.4.1/700Bold/Gelasio_700Bold.ttf",
+     "size": 105776,
+     "sha256": "fade86eca52203e2ccaf9aee494aa4b0335589879738c47e9d92a53630696d10"
+    },
+    {
+     "path": "@expo-google-fonts/gelasio@0.4.1/700Bold_Italic/Gelasio_700Bold_Italic.ttf",
+     "size": 107452,
+     "sha256": "24f1cb5cf5f765acc5d744a54a6c5dfe34723e58842f5b1b696716497e032852"
+    }
+   ]
+  },
+  "IBM Plex Mono": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/ibm-plex-mono@0.4.1/400Regular/IBMPlexMono_400Regular.ttf",
+     "size": 133796,
+     "sha256": "ab08018ccd276b79fb2c636bb95b9c543598f9d50505fe92506fcb4dae7810cd"
+    },
+    {
+     "path": "@expo-google-fonts/ibm-plex-mono@0.4.1/400Regular_Italic/IBMPlexMono_400Regular_Italic.ttf",
+     "size": 142108,
+     "sha256": "359ada4ec72185c9dde7841675a585e9fe6dcb272be526c11ff370aee4198fb8"
+    },
+    {
+     "path": "@expo-google-fonts/ibm-plex-mono@0.4.1/700Bold/IBMPlexMono_700Bold.ttf",
+     "size": 136008,
+     "sha256": "dbd2a2fb024579438d6400a84e57579bfd2dbe67c306c8fd9fde92a61e4f2eea"
+    },
+    {
+     "path": "@expo-google-fonts/ibm-plex-mono@0.4.1/700Bold_Italic/IBMPlexMono_700Bold_Italic.ttf",
+     "size": 142712,
+     "sha256": "c2d9ab9e5a4d39b3c005618334e6b93a09d007fee979e57ab593e40c3def4be7"
+    }
+   ]
+  },
+  "IBM Plex Sans": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/ibm-plex-sans@0.4.1/400Regular/IBMPlexSans_400Regular.ttf",
+     "size": 218236,
+     "sha256": "8685116dfbcfa639621631c4af0ad62e52ddeb9979acbec0007ccef2e4801a27"
+    },
+    {
+     "path": "@expo-google-fonts/ibm-plex-sans@0.4.1/400Regular_Italic/IBMPlexSans_400Regular_Italic.ttf",
+     "size": 233508,
+     "sha256": "e19b5bbc2e981e56a8ddee321146b0a207c3c60a2cb940b4ff7c42c5e6c0718e"
+    },
+    {
+     "path": "@expo-google-fonts/ibm-plex-sans@0.4.1/700Bold/IBMPlexSans_700Bold.ttf",
+     "size": 218212,
+     "sha256": "cf74841e461235ac7205369329b14fd13a126af4c93927f8b287cad9aa6ffaab"
+    },
+    {
+     "path": "@expo-google-fonts/ibm-plex-sans@0.4.1/700Bold_Italic/IBMPlexSans_700Bold_Italic.ttf",
+     "size": 233508,
+     "sha256": "e30e413f41fe37e548f52c320f27c96ec47332da61e6175d59f3b5b2eba1ad6b"
+    }
+   ]
+  },
+  "IBM Plex Serif": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/ibm-plex-serif@0.4.1/400Regular/IBMPlexSerif_400Regular.ttf",
+     "size": 160380,
+     "sha256": "77cd233a2af8dc6b1022faea3bb3b01f3c75af68bcf530cb6aeb15982ff3dbb7"
+    },
+    {
+     "path": "@expo-google-fonts/ibm-plex-serif@0.4.1/400Regular_Italic/IBMPlexSerif_400Regular_Italic.ttf",
+     "size": 170004,
+     "sha256": "b11f1048745e715a55c9d837b3f10226ca3d78867b7db7251ddad8f98dcf0f38"
+    },
+    {
+     "path": "@expo-google-fonts/ibm-plex-serif@0.4.1/700Bold/IBMPlexSerif_700Bold.ttf",
+     "size": 161000,
+     "sha256": "b8d294e9b5c5a0940f167c3ced0f7ef2e3f57082ca3ff096ef30e86e26c1c159"
+    },
+    {
+     "path": "@expo-google-fonts/ibm-plex-serif@0.4.1/700Bold_Italic/IBMPlexSerif_700Bold_Italic.ttf",
+     "size": 169840,
+     "sha256": "da64b75f4284f53e7b5c71fa190a35b8bf3494fe19f1804c81c3a53340bca570"
+    }
+   ]
+  },
+  "Inconsolata": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/inconsolata@0.4.2/400Regular/Inconsolata_400Regular.ttf",
+     "size": 101748,
+     "sha256": "e0267abf9d734e2b9f766f8cb7a496b552c57cdfeacfa0efdc5bfd21940ae145"
+    },
+    {
+     "path": "@expo-google-fonts/inconsolata@0.4.2/700Bold/Inconsolata_700Bold.ttf",
+     "size": 102148,
+     "sha256": "bc133a205c09ca6be9ad2b8d32a4d94bc08deb01a4da62ac27a31843e08daffd"
+    }
+   ]
+  },
+  "Inter": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/inter@0.4.2/400Regular/Inter_400Regular.ttf",
+     "size": 342408,
+     "sha256": "a414b48aa577ef2c62ebb135341ddeef33ee26a4f5dc9f787f93c1aab08ebb50"
+    },
+    {
+     "path": "@expo-google-fonts/inter@0.4.2/400Regular_Italic/Inter_400Regular_Italic.ttf",
+     "size": 345956,
+     "sha256": "c8c09e4bd08de7b901b4561f16ce9bb1ab3ffa420cfaef9f2a40286e14300e75"
+    },
+    {
+     "path": "@expo-google-fonts/inter@0.4.2/700Bold/Inter_700Bold.ttf",
+     "size": 344072,
+     "sha256": "fbe825cbfc749317f57a1433d3905aa9d3f388732fd29b8e8a36f34845e3bc3e"
+    },
+    {
+     "path": "@expo-google-fonts/inter@0.4.2/700Bold_Italic/Inter_700Bold_Italic.ttf",
+     "size": 347824,
+     "sha256": "bcc655acbd25f44eed4894f3c65f836503476db411c540d8dd5b616ef60c1825"
+    }
+   ]
+  },
+  "Josefin Sans": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/josefin-sans@0.4.2/400Regular/JosefinSans_400Regular.ttf",
+     "size": 59876,
+     "sha256": "956c929122a248f2e69bd4faf73ec18714f2146dd8e08c7f972a72b9c81daa7f"
+    },
+    {
+     "path": "@expo-google-fonts/josefin-sans@0.4.2/400Regular_Italic/JosefinSans_400Regular_Italic.ttf",
+     "size": 63708,
+     "sha256": "e040839d64acbed515d89543206cc9b95f8c730875dc4b2640e9630d4e5e8537"
+    },
+    {
+     "path": "@expo-google-fonts/josefin-sans@0.4.2/700Bold/JosefinSans_700Bold.ttf",
+     "size": 59756,
+     "sha256": "da0bfc0a721eeed9caddc619953fa1177d216c548ab9660ebc5a7b1e7bad0c21"
+    },
+    {
+     "path": "@expo-google-fonts/josefin-sans@0.4.2/700Bold_Italic/JosefinSans_700Bold_Italic.ttf",
+     "size": 63604,
+     "sha256": "85ec49bb8a7ed08809b3d3ee5f39875567f983f7d87063c2092d1ffede602965"
+    }
+   ]
+  },
+  "Karla": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/karla@0.4.2/400Regular/Karla_400Regular.ttf",
+     "size": 44040,
+     "sha256": "ca81c0cee5a620bdbe56f15ccb849f69a464dd47ac0bf581157e2ce0fb602b59"
+    },
+    {
+     "path": "@expo-google-fonts/karla@0.4.2/400Regular_Italic/Karla_400Regular_Italic.ttf",
+     "size": 45300,
+     "sha256": "361e5ad8e4c8128ebe524f97462862bb4f57d471a9798b9a69e780fdc0592d3e"
+    },
+    {
+     "path": "@expo-google-fonts/karla@0.4.2/700Bold/Karla_700Bold.ttf",
+     "size": 44112,
+     "sha256": "8522b021086f1010c78b3d6bb6e9350004837e53b56748dbd40b0f7724330e07"
+    },
+    {
+     "path": "@expo-google-fonts/karla@0.4.2/700Bold_Italic/Karla_700Bold_Italic.ttf",
+     "size": 45312,
+     "sha256": "8f083651eb7251ec092936f5871814663a34d51bd1fe9272efc0d9badca5991d"
+    }
+   ]
+  },
+  "Lato": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/lato@0.4.1/400Regular/Lato_400Regular.ttf",
+     "size": 75152,
+     "sha256": "e82542aed8293f49fc83c4aaea566b1f6b4fc7a9ab5da11e6fb9bc0973b5324b"
+    },
+    {
+     "path": "@expo-google-fonts/lato@0.4.1/400Regular_Italic/Lato_400Regular_Italic.ttf",
+     "size": 75792,
+     "sha256": "3be26bf6973f49df6a7dfd130041017354342bfbb023e6b9610b42daeba6de34"
+    },
+    {
+     "path": "@expo-google-fonts/lato@0.4.1/700Bold/Lato_700Bold.ttf",
+     "size": 73332,
+     "sha256": "d7f0b7f2570f2f28b504da1181b4d71b1420b10be2c4fd690927f1c8ee3b19c3"
+    },
+    {
+     "path": "@expo-google-fonts/lato@0.4.1/700Bold_Italic/Lato_700Bold_Italic.ttf",
+     "size": 77732,
+     "sha256": "e38611f4c0ff3251a58fe751991c39784d8f9be420b004891e0b9277228ec32f"
+    }
+   ]
+  },
+  "Libre Baskerville": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/libre-baskerville@0.4.3/400Regular/LibreBaskerville_400Regular.ttf",
+     "size": 112336,
+     "sha256": "b93dfb2ec674ef59fd9a1b47498a8d1db498bb9e64ed22a96f8071082e3d6add"
+    },
+    {
+     "path": "@expo-google-fonts/libre-baskerville@0.4.3/400Regular_Italic/LibreBaskerville_400Regular_Italic.ttf",
+     "size": 121392,
+     "sha256": "78c7f012db8d0cba88f63ee7445bb274f9f2ee99c37da5080ffb971e683b27ea"
+    },
+    {
+     "path": "@expo-google-fonts/libre-baskerville@0.4.3/700Bold/LibreBaskerville_700Bold.ttf",
+     "size": 112372,
+     "sha256": "4971f68cac405d51a27d29e248b58cd5f75019f9195278d86d65c940daa943e9"
+    },
+    {
+     "path": "@expo-google-fonts/libre-baskerville@0.4.3/700Bold_Italic/LibreBaskerville_700Bold_Italic.ttf",
+     "size": 121656,
+     "sha256": "70921378f96773f5db31aa14bc2c8e5e93b24a62ebffb10d9d4a341595456630"
+    }
+   ]
+  },
+  "Libre Franklin": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/libre-franklin@0.4.2/400Regular/LibreFranklin_400Regular.ttf",
+     "size": 108452,
+     "sha256": "e4ce8c3233f0e58c1cf47aa2c36ba7d7eeec8f09cd6f9b727bae846f0ce48e60"
+    },
+    {
+     "path": "@expo-google-fonts/libre-franklin@0.4.2/400Regular_Italic/LibreFranklin_400Regular_Italic.ttf",
+     "size": 118096,
+     "sha256": "3f04686d07c665161f7e3619a9bdca0b58f39b48e3364ec97a6ef3aaf52904e5"
+    },
+    {
+     "path": "@expo-google-fonts/libre-franklin@0.4.2/700Bold/LibreFranklin_700Bold.ttf",
+     "size": 108560,
+     "sha256": "26fc39aa527e13fef8d3deffa28115185e6922f8166da640a10ababd5d516399"
+    },
+    {
+     "path": "@expo-google-fonts/libre-franklin@0.4.2/700Bold_Italic/LibreFranklin_700Bold_Italic.ttf",
+     "size": 118588,
+     "sha256": "513240eda2d9ffb90f96d5da34e286356f51c3d36985ae524179b3e4679d7967"
+    }
+   ]
+  },
+  "Lobster": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/lobster@0.4.1/400Regular/Lobster_400Regular.ttf",
+     "size": 396740,
+     "sha256": "cddd7779fb2e78382a654f91dd5a656218cf133a244e17a2f5d960c06f95d73c"
+    }
+   ]
+  },
+  "Lora": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/lora@0.4.2/400Regular/Lora_400Regular.ttf",
+     "size": 133888,
+     "sha256": "7ed00e7c9cdf16ab7e2fd2361fe45d4f0b61263cd60aae398b27b7ee08108827"
+    },
+    {
+     "path": "@expo-google-fonts/lora@0.4.2/400Regular_Italic/Lora_400Regular_Italic.ttf",
+     "size": 139328,
+     "sha256": "be627e595184e8afe521f08da0607eee613f1997d423bc8dadc5798995581377"
+    },
+    {
+     "path": "@expo-google-fonts/lora@0.4.2/700Bold/Lora_700Bold.ttf",
+     "size": 133828,
+     "sha256": "7d74015e950c2fb66519c7295b8155621d22200ae2ca2a4c6b43ce3c490cac87"
+    },
+    {
+     "path": "@expo-google-fonts/lora@0.4.2/700Bold_Italic/Lora_700Bold_Italic.ttf",
+     "size": 140332,
+     "sha256": "152f87e71f5ddb60d5c57ecd9132807c947e65c42977193c9164e7c5a6690081"
+    }
+   ]
+  },
+  "Merriweather": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/merriweather@0.4.2/400Regular/Merriweather_400Regular.ttf",
+     "size": 1064500,
+     "sha256": "f1541057f1765ffa5ee7eb873f01bec1dd2238c85a8b1602c462fd8eda92b6df"
+    },
+    {
+     "path": "@expo-google-fonts/merriweather@0.4.2/400Regular_Italic/Merriweather_400Regular_Italic.ttf",
+     "size": 1069152,
+     "sha256": "49e68975bce0f7b11c3836f1b63d06e9c3eecfc3d7ebf7b0724c6680a3b2f425"
+    },
+    {
+     "path": "@expo-google-fonts/merriweather@0.4.2/700Bold/Merriweather_700Bold.ttf",
+     "size": 1064804,
+     "sha256": "d9587d1266fb18da859f44a0ada7bdc5e7cb68af29ea87aa7caab2607cd74579"
+    },
+    {
+     "path": "@expo-google-fonts/merriweather@0.4.2/700Bold_Italic/Merriweather_700Bold_Italic.ttf",
+     "size": 1069360,
+     "sha256": "7edc04d596294242b71a01369f7e57da772247a30bbd77f27db215c4da93f231"
+    }
+   ]
+  },
+  "Miriam Libre": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/miriam-libre@0.4.1/400Regular/MiriamLibre_400Regular.ttf",
+     "size": 79872,
+     "sha256": "831ebebb9d102160aebed98a2b9155ceafc2cb8dc16aa6d58997d043a9aab49d"
+    },
+    {
+     "path": "@expo-google-fonts/miriam-libre@0.4.1/700Bold/MiriamLibre_700Bold.ttf",
+     "size": 79512,
+     "sha256": "66c1ba1c783a7832c557fa63b53b489d03d1a84dff86c5dad57bfb599294ccaa"
+    }
+   ]
+  },
+  "Montserrat": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/montserrat@0.4.2/400Regular/Montserrat_400Regular.ttf",
+     "size": 330948,
+     "sha256": "ef9cf99f0175bef530b88934bd904fcf56f773cec6fd4dfb8ccaf7ce2bbd395e"
+    },
+    {
+     "path": "@expo-google-fonts/montserrat@0.4.2/400Regular_Italic/Montserrat_400Regular_Italic.ttf",
+     "size": 337132,
+     "sha256": "7e87c0f96b39fbb919b30aef8991323d0b257649f391e6456bcf03c231448f49"
+    },
+    {
+     "path": "@expo-google-fonts/montserrat@0.4.2/700Bold/Montserrat_700Bold.ttf",
+     "size": 335788,
+     "sha256": "7fa93d7daa5c2f881a6727229c211782de6b76008fbd6346b3d7664e8fc83f43"
+    },
+    {
+     "path": "@expo-google-fonts/montserrat@0.4.2/700Bold_Italic/Montserrat_700Bold_Italic.ttf",
+     "size": 342016,
+     "sha256": "001a59b0f2c541080033b83ca6dfacce03095d99caa3594835f51b7c6d9ce758"
+    }
+   ]
+  },
+  "Mulish": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/mulish@0.4.2/400Regular/Mulish_400Regular.ttf",
+     "size": 106524,
+     "sha256": "1d3c2067fd5abaa56cf27ea560ccb7c162d39a624fef53cb947b85a966b0fdae"
+    },
+    {
+     "path": "@expo-google-fonts/mulish@0.4.2/400Regular_Italic/Mulish_400Regular_Italic.ttf",
+     "size": 110056,
+     "sha256": "fd489faaf2f9113d316b01a3b3e35e41c3bbec9fcc87f103344e8ed734f703ab"
+    },
+    {
+     "path": "@expo-google-fonts/mulish@0.4.2/700Bold/Mulish_700Bold.ttf",
+     "size": 106572,
+     "sha256": "fda6f84f926dfbc405211da63705e79a76c44904b097fda7e23f47fcce536e6e"
+    },
+    {
+     "path": "@expo-google-fonts/mulish@0.4.2/700Bold_Italic/Mulish_700Bold_Italic.ttf",
+     "size": 110256,
+     "sha256": "8c74e286c3204421a77b6e873f0ac6660b62aec1fe99581192ff50ba0577c1ed"
+    }
+   ]
+  },
+  "Noto Naskh Arabic": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-naskh-arabic@0.4.5/400Regular/NotoNaskhArabic_400Regular.ttf",
+     "size": 199512,
+     "sha256": "706b4580c025f6c75ec1c06013e17f00a23ec1780091b77a5a5b339469bda94d"
+    },
+    {
+     "path": "@expo-google-fonts/noto-naskh-arabic@0.4.5/700Bold/NotoNaskhArabic_700Bold.ttf",
+     "size": 199624,
+     "sha256": "35418f91100645a36e4d72d75866b61c5da14dc5ebbade64db434d2c9e76234c"
+    }
+   ]
+  },
+  "Noto Sans": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans@0.4.2/400Regular/NotoSans_400Regular.ttf",
+     "size": 629024,
+     "sha256": "fe8c022f48d8dd29f17b744d16f9346f4357e16f7d4f7be58b000ae7c291b614"
+    },
+    {
+     "path": "@expo-google-fonts/noto-sans@0.4.2/400Regular_Italic/NotoSans_400Regular_Italic.ttf",
+     "size": 642344,
+     "sha256": "feb3e57888ce3acb604f270c278cfb304c674306518771619ddbdefca42a066b"
+    },
+    {
+     "path": "@expo-google-fonts/noto-sans@0.4.2/700Bold/NotoSans_700Bold.ttf",
+     "size": 630968,
+     "sha256": "13a813c49624ae3ba3c5c6e72c5ebffc4b9e1e6ea32f421c04069b037c6ad431"
+    },
+    {
+     "path": "@expo-google-fonts/noto-sans@0.4.2/700Bold_Italic/NotoSans_700Bold_Italic.ttf",
+     "size": 644344,
+     "sha256": "7e34616e092593c340449baf9a259075a054c6419511ccf21ff0d83a1c9dd0d0"
+    }
+   ]
+  },
+  "Noto Sans Bengali": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-bengali@0.4.4/400Regular/NotoSansBengali_400Regular.ttf",
+     "size": 141064,
+     "sha256": "6826d9667972f0f96e48c46f7a24e70afe97205032e6295cfb1f13fbbb8b90a3"
+    }
+   ]
+  },
+  "Noto Sans Devanagari": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-devanagari@0.4.2/400Regular/NotoSansDevanagari_400Regular.ttf",
+     "size": 217048,
+     "sha256": "30f20b135b2b7b8c370ea30dd8c88f5174c1209f0373534ad4c814717f375b9e"
+    }
+   ]
+  },
+  "Noto Sans Ethiopic": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-ethiopic@0.4.2/400Regular/NotoSansEthiopic_400Regular.ttf",
+     "size": 366892,
+     "sha256": "321ff186e0f066a46257c3008e8a22070720350a9d17f8a32d0d3da53f52e7a2"
+    }
+   ]
+  },
+  "Noto Sans Gujarati": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-gujarati@0.4.2/400Regular/NotoSansGujarati_400Regular.ttf",
+     "size": 175148,
+     "sha256": "7cc0f340be8ef8b63f92181fd5576a4b19631059fd6576c6fd5fcd40f1543610"
+    }
+   ]
+  },
+  "Noto Sans Gurmukhi": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-gurmukhi@0.4.1/400Regular/NotoSansGurmukhi_400Regular.ttf",
+     "size": 58724,
+     "sha256": "2b0fbe8d4cc2a18aa08c6f21d3924423c113fb7ec6d786a77c30cf1d3153c4c7"
+    }
+   ]
+  },
+  "Noto Sans Hebrew": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-hebrew@0.4.1/400Regular/NotoSansHebrew_400Regular.ttf",
+     "size": 48036,
+     "sha256": "e0ee753f09733337b9236221018d4bf71fd6d06c87dd76bbc83120514bc55911"
+    },
+    {
+     "path": "@expo-google-fonts/noto-sans-hebrew@0.4.1/700Bold/NotoSansHebrew_700Bold.ttf",
+     "size": 47992,
+     "sha256": "8010b087f33f152e25aef020e68cb5568d6f8deebb6dde8f60d655196e59ebde"
+    }
+   ]
+  },
+  "Noto Sans JP": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-jp@0.4.4/400Regular/NotoSansJP_400Regular.ttf",
+     "size": 5731428,
+     "sha256": "6255ea4692e97ef27330304fb96fd650f9111f868cd585fcf2802d42823930e5"
+    }
+   ]
+  },
+  "Noto Sans Kannada": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-kannada@0.4.3/400Regular/NotoSansKannada_400Regular.ttf",
+     "size": 148988,
+     "sha256": "40e8188c98e3913aae2241d570b179fdc29fd90ecb6b5dc4376298bcbe45c38b"
+    }
+   ]
+  },
+  "Noto Sans Khmer": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-khmer@0.4.3/400Regular/NotoSansKhmer_400Regular.ttf",
+     "size": 105696,
+     "sha256": "fff6f415386616d8d99c4f64b876e54e6e231dc0c007c87a61b254b3795957f9"
+    }
+   ]
+  },
+  "Noto Sans KR": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-kr@0.4.4/400Regular/NotoSansKR_400Regular.ttf",
+     "size": 6191364,
+     "sha256": "b4a747e78805bc25b610dcfc3003cb5fb2e2ec034763774b24216ed15889eef4"
+    }
+   ]
+  },
+  "Noto Sans Lao": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-lao@0.4.2/400Regular/NotoSansLao_400Regular.ttf",
+     "size": 53076,
+     "sha256": "0fb229c3a29c4c6e916b0ea27cb823aa9d899751c6306b6fca428b83feedf37d"
+    }
+   ]
+  },
+  "Noto Sans Malayalam": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-malayalam@0.4.2/400Regular/NotoSansMalayalam_400Regular.ttf",
+     "size": 106808,
+     "sha256": "68cbfeac7177700d87671f2a3bdb3db70fa26016e41cdac24e20877bf3736485"
+    }
+   ]
+  },
+  "Noto Sans Mono": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-mono@0.4.2/400Regular/NotoSansMono_400Regular.ttf",
+     "size": 405892,
+     "sha256": "11b5d661e57865bce89d3f103a654cfa4faf9347abebac252e30742be1e657b2"
+    },
+    {
+     "path": "@expo-google-fonts/noto-sans-mono@0.4.2/700Bold/NotoSansMono_700Bold.ttf",
+     "size": 405596,
+     "sha256": "c13b63c28f97181761213a0ba8fdb5d887c6d3855098937907c76b3b6efc1566"
+    }
+   ]
+  },
+  "Noto Sans Myanmar": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-myanmar@0.4.2/400Regular/NotoSansMyanmar_400Regular.ttf",
+     "size": 183164,
+     "sha256": "52c27fe2643e3e34bae3b3d8865f6a2400e8c955d1adbe311979ea012116eb13"
+    }
+   ]
+  },
+  "Noto Sans SC": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-sc@0.4.4/400Regular/NotoSansSC_400Regular.ttf",
+     "size": 10559284,
+     "sha256": "d45f67f0a7c0ca3f256950777ce6a61cc7ce5f9696d02900cbbaac25f8aa7d16"
+    }
+   ]
+  },
+  "Noto Sans Sinhala": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-sinhala@0.4.2/400Regular/NotoSansSinhala_400Regular.ttf",
+     "size": 243496,
+     "sha256": "33a77b6965e5245f1bab858ead09e4789aaa8daa918f9e26e924b016a3e1d7bd"
+    }
+   ]
+  },
+  "Noto Sans Tamil": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-tamil@0.4.3/400Regular/NotoSansTamil_400Regular.ttf",
+     "size": 78988,
+     "sha256": "f26d8b66bf6f38dd9af6326a52188fa1a8a0b9b2905c4bd7e07c865f65a85d79"
+    }
+   ]
+  },
+  "Noto Sans TC": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-tc@0.4.4/400Regular/NotoSansTC_400Regular.ttf",
+     "size": 7109460,
+     "sha256": "add35d53f70727657b4509531677c4e3712b67df3d54661efdee5d3a0c16d954"
+    }
+   ]
+  },
+  "Noto Sans Telugu": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-telugu@0.4.2/400Regular/NotoSansTelugu_400Regular.ttf",
+     "size": 179900,
+     "sha256": "7fcef235380f945d4a97fdfec030952afab6907004cfa37ed664fed8d4962eac"
+    }
+   ]
+  },
+  "Noto Sans Thai": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-sans-thai@0.4.2/400Regular/NotoSansThai_400Regular.ttf",
+     "size": 47484,
+     "sha256": "9acb585d8662ca4ed1b1cf5889dfa1393f8555103b3986e1ea1e3af4faef70bd"
+    }
+   ]
+  },
+  "Noto Serif": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/noto-serif@0.4.2/400Regular/NotoSerif_400Regular.ttf",
+     "size": 504932,
+     "sha256": "a7e8ea1ab7e7d368b001c892d6148325fffc849a46e030e55e1bdc597bbe939d"
+    },
+    {
+     "path": "@expo-google-fonts/noto-serif@0.4.2/400Regular_Italic/NotoSerif_400Regular_Italic.ttf",
+     "size": 534156,
+     "sha256": "15d5f8050fc1f142545e7a26a50bd07a0434eca535d4d98aad9d5e8f03741e43"
+    },
+    {
+     "path": "@expo-google-fonts/noto-serif@0.4.2/700Bold/NotoSerif_700Bold.ttf",
+     "size": 506864,
+     "sha256": "1b941681106aae26ead3a24c6f15b51f994b1b26adce8742a37ce96648f0fe0a"
+    },
+    {
+     "path": "@expo-google-fonts/noto-serif@0.4.2/700Bold_Italic/NotoSerif_700Bold_Italic.ttf",
+     "size": 534540,
+     "sha256": "2400339667ad2701320aa671e337d1632731e56b397564afe14e981124b899c6"
+    }
+   ]
+  },
+  "Nunito": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/nunito@0.4.2/400Regular/Nunito_400Regular.ttf",
+     "size": 132200,
+     "sha256": "b0885056b60511b29aa9f69198055fe3bad13e76ec8a9b9e37cd61da7b4ee1e5"
+    },
+    {
+     "path": "@expo-google-fonts/nunito@0.4.2/400Regular_Italic/Nunito_400Regular_Italic.ttf",
+     "size": 135528,
+     "sha256": "8df076e52665fc1b0c603bb50ef33308357b0d79e076aea17af85c4a6b80d8d9"
+    },
+    {
+     "path": "@expo-google-fonts/nunito@0.4.2/700Bold/Nunito_700Bold.ttf",
+     "size": 132148,
+     "sha256": "ad443e47990c5fc4b263693b3018b7807868263b8c42ccb1115e030158931960"
+    },
+    {
+     "path": "@expo-google-fonts/nunito@0.4.2/700Bold_Italic/Nunito_700Bold_Italic.ttf",
+     "size": 135392,
+     "sha256": "d11741a144b015d237aacbf3079b459b768c70f9c241c5825255b30c1ff8a31e"
+    }
+   ]
+  },
+  "Nunito Sans": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/nunito-sans@0.4.2/400Regular/NunitoSans_400Regular.ttf",
+     "size": 113232,
+     "sha256": "5539bb068f72fd4575342e6b914b9cb037019c4583835f794283399ba1b94efc"
+    },
+    {
+     "path": "@expo-google-fonts/nunito-sans@0.4.2/400Regular_Italic/NunitoSans_400Regular_Italic.ttf",
+     "size": 116396,
+     "sha256": "ab79401011083a0adc1edae00022194e42e9ecca750f05bd7fef3f2bf93b6015"
+    },
+    {
+     "path": "@expo-google-fonts/nunito-sans@0.4.2/700Bold/NunitoSans_700Bold.ttf",
+     "size": 113328,
+     "sha256": "484d8229d8aed92ff490771790563645426eac9a10de9904e3b0a5262421fa8a"
+    },
+    {
+     "path": "@expo-google-fonts/nunito-sans@0.4.2/700Bold_Italic/NunitoSans_700Bold_Italic.ttf",
+     "size": 116396,
+     "sha256": "b8b81d35ae3c92abe0d9ef2448c68ac275d2c380c2ecac16968a4cd72c35628a"
+    }
+   ]
+  },
+  "Open Sans": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/open-sans@0.4.2/400Regular/OpenSans_400Regular.ttf",
+     "size": 130832,
+     "sha256": "33e93bec67d91c396876db50694213802a39e43a911bb5c22322f0dbdf4d5e43"
+    },
+    {
+     "path": "@expo-google-fonts/open-sans@0.4.2/400Regular_Italic/OpenSans_400Regular_Italic.ttf",
+     "size": 136604,
+     "sha256": "dd74eb2d271b57ef5c382a97403818715bfb6b1d53d7fa6da9c88336763651fb"
+    },
+    {
+     "path": "@expo-google-fonts/open-sans@0.4.2/700Bold/OpenSans_700Bold.ttf",
+     "size": 130860,
+     "sha256": "5f4c6f0c6beae94863a099a7a538059c480f91587f1abffc06552e9fa3a44f40"
+    },
+    {
+     "path": "@expo-google-fonts/open-sans@0.4.2/700Bold_Italic/OpenSans_700Bold_Italic.ttf",
+     "size": 136360,
+     "sha256": "c7e0a936ff0f08b6726cf205126a5e6dd6ae1340111325f7e86cbba1408e82d7"
+    }
+   ]
+  },
+  "Oswald": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/oswald@0.4.2/400Regular/Oswald_400Regular.ttf",
+     "size": 87248,
+     "sha256": "147373bfe10a9b1e0eb649bcf6408566d0cb7334271845f24d4c224cca1c4412"
+    },
+    {
+     "path": "@expo-google-fonts/oswald@0.4.2/700Bold/Oswald_700Bold.ttf",
+     "size": 87600,
+     "sha256": "21843a0ccca2e97030da1330961646510ed6e9b8bb39620974c1195b9803034a"
+    }
+   ]
+  },
+  "Pacifico": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/pacifico@0.4.1/400Regular/Pacifico_400Regular.ttf",
+     "size": 315408,
+     "sha256": "4dac9db3fa9ca072f7861fd916bf04bdceac6069d0f3a886f5e523d922e918f1"
+    }
+   ]
+  },
+  "Playfair Display": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/playfair-display@0.4.2/400Regular/PlayfairDisplay_400Regular.ttf",
+     "size": 193380,
+     "sha256": "861f838d481d28cbbd4793e45dc02f01d04c81e06ed98ab2779ca152ace9f27b"
+    },
+    {
+     "path": "@expo-google-fonts/playfair-display@0.4.2/400Regular_Italic/PlayfairDisplay_400Regular_Italic.ttf",
+     "size": 177972,
+     "sha256": "40a6afa92220254c2c426ccef129d3615dd19e4c591fbfa997e5f28ebba8302c"
+    },
+    {
+     "path": "@expo-google-fonts/playfair-display@0.4.2/700Bold/PlayfairDisplay_700Bold.ttf",
+     "size": 193720,
+     "sha256": "4f3b87b5aa297eed5e5a48dbd9941356ca0313d4725b02c29a298cb042b7b31b"
+    },
+    {
+     "path": "@expo-google-fonts/playfair-display@0.4.2/700Bold_Italic/PlayfairDisplay_700Bold_Italic.ttf",
+     "size": 178436,
+     "sha256": "db5737059ff617317aca97e9e35730f8933a2e187c75bbe2deaf45c4d72f5b1d"
+    }
+   ]
+  },
+  "Poppins": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/poppins@0.4.1/400Regular/Poppins_400Regular.ttf",
+     "size": 158240,
+     "sha256": "707fdc5c8bab57a90061c6a8ed7b70d5ffb82fc810e994e79f90bace890c255a"
+    },
+    {
+     "path": "@expo-google-fonts/poppins@0.4.1/400Regular_Italic/Poppins_400Regular_Italic.ttf",
+     "size": 182012,
+     "sha256": "3225cec6a018310497ea9ee116aa43b2a833464fed6156dceb9a3a4424bb8613"
+    },
+    {
+     "path": "@expo-google-fonts/poppins@0.4.1/700Bold/Poppins_700Bold.ttf",
+     "size": 153944,
+     "sha256": "7219547ee25334cbac0fe4b3acf0bf631e48ebb622c71af038edaaa652c60875"
+    },
+    {
+     "path": "@expo-google-fonts/poppins@0.4.1/700Bold_Italic/Poppins_700Bold_Italic.ttf",
+     "size": 176588,
+     "sha256": "9d4d9f3c2c289eaec403660ec215bdc45e62b49f978807714bfc31ca7916c8fe"
+    }
+   ]
+  },
+  "PT Sans": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/pt-sans@0.4.1/400Regular/PTSans_400Regular.ttf",
+     "size": 278612,
+     "sha256": "23b91352992c21de231c39dd77441f7c5c3f3e684f4a06e31b65c63d33427560"
+    },
+    {
+     "path": "@expo-google-fonts/pt-sans@0.4.1/400Regular_Italic/PTSans_400Regular_Italic.ttf",
+     "size": 270920,
+     "sha256": "72a98ad8f3c30a29c37aeddfa25baad0983ed9f39137a164262453944d8f05bb"
+    },
+    {
+     "path": "@expo-google-fonts/pt-sans@0.4.1/700Bold/PTSans_700Bold.ttf",
+     "size": 288340,
+     "sha256": "6233f84e139f226690649b3105c077b0f87ec24a23ca4a18ada298c962a06f4f"
+    },
+    {
+     "path": "@expo-google-fonts/pt-sans@0.4.1/700Bold_Italic/PTSans_700Bold_Italic.ttf",
+     "size": 210224,
+     "sha256": "18c002cfa215bac056c4de4399bc9bae6bd009ae1b240738c45ffa39e3dbeb71"
+    }
+   ]
+  },
+  "PT Serif": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/pt-serif@0.4.1/400Regular/PTSerif_400Regular.ttf",
+     "size": 215516,
+     "sha256": "13d9f82f41fcd7d2813dc0a44a9639dec0c1e9a922ab96c7de8dec467c3dec55"
+    },
+    {
+     "path": "@expo-google-fonts/pt-serif@0.4.1/400Regular_Italic/PTSerif_400Regular_Italic.ttf",
+     "size": 232264,
+     "sha256": "b75d426f372d18a53a4f7206b1cb90816432f699ba106ed8d1a79aef79622666"
+    },
+    {
+     "path": "@expo-google-fonts/pt-serif@0.4.1/700Bold/PTSerif_700Bold.ttf",
+     "size": 196092,
+     "sha256": "e868267095de0f61d908dfc18de98c5fc7b9185c8505a814f0fbb8eac627ecc5"
+    },
+    {
+     "path": "@expo-google-fonts/pt-serif@0.4.1/700Bold_Italic/PTSerif_700Bold_Italic.ttf",
+     "size": 193752,
+     "sha256": "8c97cd67f86c470eec73f5795affc6303c0fadf682df48f0b0d837a3900cfbce"
+    }
+   ]
+  },
+  "Quicksand": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/quicksand@0.4.1/400Regular/Quicksand_400Regular.ttf",
+     "size": 78932,
+     "sha256": "7953184f6fcb2191e643b2f5e206b985914b420efa7f46e63a6093e6810c82b1"
+    },
+    {
+     "path": "@expo-google-fonts/quicksand@0.4.1/700Bold/Quicksand_700Bold.ttf",
+     "size": 78592,
+     "sha256": "65561a329de20024699162ef86bec0e79a0415c90b30a60ebc301fc00d67f87b"
+    }
+   ]
+  },
+  "Raleway": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/raleway@0.4.2/400Regular/Raleway_400Regular.ttf",
+     "size": 163840,
+     "sha256": "bf386500b0655a15f11a20c06a459aec2002fa2d1f44e0bc2549a08bb69a8f76"
+    },
+    {
+     "path": "@expo-google-fonts/raleway@0.4.2/400Regular_Italic/Raleway_400Regular_Italic.ttf",
+     "size": 162040,
+     "sha256": "4f9680ef2fed5c4302d94f874a6199b350332e4719f3967bfae8035a0bf50f9b"
+    },
+    {
+     "path": "@expo-google-fonts/raleway@0.4.2/700Bold/Raleway_700Bold.ttf",
+     "size": 163768,
+     "sha256": "dc26a12a68cb78a83d13dcea38848af687b6d0260fa2df7ace13381508516ae1"
+    },
+    {
+     "path": "@expo-google-fonts/raleway@0.4.2/700Bold_Italic/Raleway_700Bold_Italic.ttf",
+     "size": 162252,
+     "sha256": "d16bfd8ffd7b56314a1b3ec80502ae0ae066031b10a596cac30d77ab4326112c"
+    }
+   ]
+  },
+  "Reem Kufi": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/reem-kufi@0.4.2/400Regular/ReemKufi_400Regular.ttf",
+     "size": 89644,
+     "sha256": "4c56bd87f087e7440212396585b40b7bfb721a5c4057aa30c7c58dd0b890a1c0"
+    },
+    {
+     "path": "@expo-google-fonts/reem-kufi@0.4.2/700Bold/ReemKufi_700Bold.ttf",
+     "size": 89636,
+     "sha256": "d7c78fc3631492aa5d048a3ed194d1820d77bfa9830c7f71dba70585a266dfdf"
+    }
+   ]
+  },
+  "Roboto": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/roboto@0.4.3/400Regular/Roboto_400Regular.ttf",
+     "size": 159108,
+     "sha256": "15256405ecb0d880678833a582760efad538ab2932318b52c8105b267d159459"
+    },
+    {
+     "path": "@expo-google-fonts/roboto@0.4.3/400Regular_Italic/Roboto_400Regular_Italic.ttf",
+     "size": 165268,
+     "sha256": "6a372c348dc20c246b92d60b9bda3c0a9ffedc129790ed3f31faf89daa99d793"
+    },
+    {
+     "path": "@expo-google-fonts/roboto@0.4.3/700Bold/Roboto_700Bold.ttf",
+     "size": 159900,
+     "sha256": "4aaf8c5b661a386998c2e70cf2b87e2440f5404e0b8fd81164f0413fb3435ec6"
+    },
+    {
+     "path": "@expo-google-fonts/roboto@0.4.3/700Bold_Italic/Roboto_700Bold_Italic.ttf",
+     "size": 166256,
+     "sha256": "c6a5e7c224d3bf6698e5d3c124f0f0220cad20d5d413920447a96f033a0292ee"
+    }
+   ]
+  },
+  "Roboto Condensed": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/roboto-condensed@0.4.2/400Regular/RobotoCondensed_400Regular.ttf",
+     "size": 144848,
+     "sha256": "3d77ebb1e496ddf072704e61b6c9f82768a4c60a0f063936eb1964f93237d2b5"
+    },
+    {
+     "path": "@expo-google-fonts/roboto-condensed@0.4.2/400Regular_Italic/RobotoCondensed_400Regular_Italic.ttf",
+     "size": 150892,
+     "sha256": "f43920e09679a6881f03d8b3bd8185cb394773e89f6bfd13950aa18c4a709bf5"
+    },
+    {
+     "path": "@expo-google-fonts/roboto-condensed@0.4.2/700Bold/RobotoCondensed_700Bold.ttf",
+     "size": 145528,
+     "sha256": "b5144f9355fa2a666404583399b7ccffda4c9491a201e9740cd5b00656281611"
+    },
+    {
+     "path": "@expo-google-fonts/roboto-condensed@0.4.2/700Bold_Italic/RobotoCondensed_700Bold_Italic.ttf",
+     "size": 151612,
+     "sha256": "78e0a46011374e148729f4e59caef6808c789734145d64d9fdcfa4854da51ebf"
+    }
+   ]
+  },
+  "Roboto Mono": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/roboto-mono@0.4.2/400Regular/RobotoMono_400Regular.ttf",
+     "size": 87540,
+     "sha256": "e4bf45837847d4abfa5a502b807a83393aa138727bdb9ea9c93fb17d53208d95"
+    },
+    {
+     "path": "@expo-google-fonts/roboto-mono@0.4.2/400Regular_Italic/RobotoMono_400Regular_Italic.ttf",
+     "size": 94836,
+     "sha256": "82629b0b8a721ce1a79942f68b39438512b406dad2a4a7476c94b72e7794b2f4"
+    },
+    {
+     "path": "@expo-google-fonts/roboto-mono@0.4.2/700Bold/RobotoMono_700Bold.ttf",
+     "size": 87696,
+     "sha256": "92649d819cc4c20480b23a47aaa111769924eb31c66b6ecdcf6f573662558c83"
+    },
+    {
+     "path": "@expo-google-fonts/roboto-mono@0.4.2/700Bold_Italic/RobotoMono_700Bold_Italic.ttf",
+     "size": 95100,
+     "sha256": "5bc2918abfd7399aff52e0a7ee22c97d544601f7ae8ff3b49ad176497acff1ed"
+    }
+   ]
+  },
+  "Roboto Slab": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/roboto-slab@0.4.2/400Regular/RobotoSlab_400Regular.ttf",
+     "size": 126188,
+     "sha256": "1617414d9f759050b2339b58ca53d1a2d005561d8896ab0a6fb77a50f41954a7"
+    },
+    {
+     "path": "@expo-google-fonts/roboto-slab@0.4.2/700Bold/RobotoSlab_700Bold.ttf",
+     "size": 126948,
+     "sha256": "c689cb02115dae51f9a2836a58533425941dbe632ec868cac0ba48269a0cc496"
+    }
+   ]
+  },
+  "Rubik": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/rubik@0.4.2/400Regular/Rubik_400Regular.ttf",
+     "size": 207628,
+     "sha256": "6b94e23adedab4522e1b65d21158e83c75f377fc99f916c58f8ec40ecc7dd035"
+    },
+    {
+     "path": "@expo-google-fonts/rubik@0.4.2/400Regular_Italic/Rubik_400Regular_Italic.ttf",
+     "size": 206340,
+     "sha256": "7285aaf13fc4af595d1175ecd6e6cb475725e3152589d921fdea21df3efba6de"
+    },
+    {
+     "path": "@expo-google-fonts/rubik@0.4.2/700Bold/Rubik_700Bold.ttf",
+     "size": 208316,
+     "sha256": "2fb105e3a66c3540e2308321e7c5bd786ce98a232930cd31c62e20d47747ad20"
+    },
+    {
+     "path": "@expo-google-fonts/rubik@0.4.2/700Bold_Italic/Rubik_700Bold_Italic.ttf",
+     "size": 207200,
+     "sha256": "98422936ea4ebb427eacefa7f463c62832d5ec86f345538d02c00b4508f45bea"
+    }
+   ]
+  },
+  "Scheherazade New": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/scheherazade-new@0.4.3/400Regular/ScheherazadeNew_400Regular.ttf",
+     "size": 327004,
+     "sha256": "5fbf17076f847b70bd44e9537777f6a32de7ba22a0769421cb541af39a02f3f7"
+    },
+    {
+     "path": "@expo-google-fonts/scheherazade-new@0.4.3/700Bold/ScheherazadeNew_700Bold.ttf",
+     "size": 589240,
+     "sha256": "0326331e80610c20fdec1370cdc071e17dd17f8cda74f6d82a4caa1d0508aa97"
+    }
+   ]
+  },
+  "Source Code Pro": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/source-code-pro@0.4.2/400Regular/SourceCodePro_400Regular.ttf",
+     "size": 133596,
+     "sha256": "1bd0bb61d974f62f9cc208a162fd3a7a13f95ba0b56b88b870730bf3ae1ba358"
+    },
+    {
+     "path": "@expo-google-fonts/source-code-pro@0.4.2/400Regular_Italic/SourceCodePro_400Regular_Italic.ttf",
+     "size": 111996,
+     "sha256": "460c7a588f80a654778b847f142a3c3fe34feb85c974a9c1570d73d535c6b54d"
+    },
+    {
+     "path": "@expo-google-fonts/source-code-pro@0.4.2/700Bold/SourceCodePro_700Bold.ttf",
+     "size": 133464,
+     "sha256": "402e3a7661938b6606272ff8e126d761b25f2df5881833c59fa620adf1a82350"
+    },
+    {
+     "path": "@expo-google-fonts/source-code-pro@0.4.2/700Bold_Italic/SourceCodePro_700Bold_Italic.ttf",
+     "size": 111928,
+     "sha256": "8b27649a05949f24360d7c840041e854c8d5ad050d77cedae4675998efe5b458"
+    }
+   ]
+  },
+  "Source Sans 3": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/source-sans-3@0.4.2/400Regular/SourceSans3_400Regular.ttf",
+     "size": 381020,
+     "sha256": "7ca2b9c4677ce81daf8a7feafb1680f5d228065698b500c5a24e22831e2ae849"
+    },
+    {
+     "path": "@expo-google-fonts/source-sans-3@0.4.2/400Regular_Italic/SourceSans3_400Regular_Italic.ttf",
+     "size": 237228,
+     "sha256": "f17facaa9ed293bb38526db3638e240510b7393c37ffa70e5c48f39575de44ab"
+    },
+    {
+     "path": "@expo-google-fonts/source-sans-3@0.4.2/700Bold/SourceSans3_700Bold.ttf",
+     "size": 380864,
+     "sha256": "87b3daebd990ba83ee0d7b2a9076c3edd09aacd5cbb6029797c569a4f740c16f"
+    },
+    {
+     "path": "@expo-google-fonts/source-sans-3@0.4.2/700Bold_Italic/SourceSans3_700Bold_Italic.ttf",
+     "size": 237200,
+     "sha256": "b66029c11e09452eaa321abe93883970bc0f3eacc347a1c9d5828db9d379cbb0"
+    }
+   ]
+  },
+  "Source Serif 4": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/source-serif-4@0.4.2/400Regular/SourceSerif4_400Regular.ttf",
+     "size": 329948,
+     "sha256": "c8f9ad25c4ccb22953933af7cd50eb0cdaa7d09982f6c999a3727cb27592a6d0"
+    },
+    {
+     "path": "@expo-google-fonts/source-serif-4@0.4.2/400Regular_Italic/SourceSerif4_400Regular_Italic.ttf",
+     "size": 208212,
+     "sha256": "5e00adb9a4cea134611ff94191400b049a8f76a6665bfe1038e98e1c48cb10cf"
+    },
+    {
+     "path": "@expo-google-fonts/source-serif-4@0.4.2/700Bold/SourceSerif4_700Bold.ttf",
+     "size": 330208,
+     "sha256": "d135bf6f4d3846b070c63d81aa243172401fc5eb9bffafa7441a2475302dfe34"
+    },
+    {
+     "path": "@expo-google-fonts/source-serif-4@0.4.2/700Bold_Italic/SourceSerif4_700Bold_Italic.ttf",
+     "size": 208300,
+     "sha256": "c1eeb2e2aa61568d99429d2b509d19f78735adaf69c400a964cb8b8b56eb5731"
+    }
+   ]
+  },
+  "Tinos": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/tinos@0.4.2/400Regular/Tinos_400Regular.ttf",
+     "size": 508752,
+     "sha256": "924ef269e73da94c1803ff68877f5d998dd16605c5ffad82ee181034f8a1fffe"
+    },
+    {
+     "path": "@expo-google-fonts/tinos@0.4.2/400Regular_Italic/Tinos_400Regular_Italic.ttf",
+     "size": 549824,
+     "sha256": "4a52de5bcf70e37bd71949f8a85302b75795a1943aedffbbee4f2db7744e1c81"
+    },
+    {
+     "path": "@expo-google-fonts/tinos@0.4.2/700Bold/Tinos_700Bold.ttf",
+     "size": 583484,
+     "sha256": "576a19b5dc026cafe6ae8fde4c849588dae6475cf5d912cebdf2827388c43ad9"
+    },
+    {
+     "path": "@expo-google-fonts/tinos@0.4.2/700Bold_Italic/Tinos_700Bold_Italic.ttf",
+     "size": 563688,
+     "sha256": "10c90ef7896d758923c06a1485d7824cdb457466da0bf7d42f81c5228931281b"
+    }
+   ]
+  },
+  "Ubuntu": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/ubuntu@0.4.1/400Regular/Ubuntu_400Regular.ttf",
+     "size": 299684,
+     "sha256": "540f19be11a368130641d00ec1c354b535c0803560f598d7d062486c9278387a"
+    },
+    {
+     "path": "@expo-google-fonts/ubuntu@0.4.1/400Regular_Italic/Ubuntu_400Regular_Italic.ttf",
+     "size": 326932,
+     "sha256": "fac23c3966f8714a75646cca73d643da6bd86e9cd8d00f020d3c2349685af08b"
+    },
+    {
+     "path": "@expo-google-fonts/ubuntu@0.4.1/700Bold/Ubuntu_700Bold.ttf",
+     "size": 270164,
+     "sha256": "6dbcce3fdd846f3aebc7e1890b5ccca234806cbd84763785f7ced043a99e8268"
+    },
+    {
+     "path": "@expo-google-fonts/ubuntu@0.4.1/700Bold_Italic/Ubuntu_700Bold_Italic.ttf",
+     "size": 283444,
+     "sha256": "ba949bb981880e6b78002f9d026474e87138b3015266867383399c319d9a8ab6"
+    }
+   ]
+  },
+  "Ubuntu Mono": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/ubuntu-mono@0.4.1/400Regular/UbuntuMono_400Regular.ttf",
+     "size": 189892,
+     "sha256": "3b83b9ca3a1186b4bf8fbcbc8078b360bdb78a77a859f8eeabc9b14fb165da9a"
+    },
+    {
+     "path": "@expo-google-fonts/ubuntu-mono@0.4.1/400Regular_Italic/UbuntuMono_400Regular_Italic.ttf",
+     "size": 193936,
+     "sha256": "7644342e94bb717c5cb88e811a9f79ac5a909f1ab8128a0b4e14631b0c0caa26"
+    },
+    {
+     "path": "@expo-google-fonts/ubuntu-mono@0.4.1/700Bold/UbuntuMono_700Bold.ttf",
+     "size": 174860,
+     "sha256": "1130b30719d415917d0d49e5de18750e37d6fbbbe8b7433fd1d84e4423356dd2"
+    },
+    {
+     "path": "@expo-google-fonts/ubuntu-mono@0.4.1/700Bold_Italic/UbuntuMono_700Bold_Italic.ttf",
+     "size": 199044,
+     "sha256": "2a1cb3546412e5c797332c9044020bb1c2991a27d1a86698f5cf3bd4ab915047"
+    }
+   ]
+  },
+  "Work Sans": {
+   "source": "npm",
+   "files": [
+    {
+     "path": "@expo-google-fonts/work-sans@0.4.2/400Regular/WorkSans_400Regular.ttf",
+     "size": 188916,
+     "sha256": "e67985a843df0d3cdee51a3d0f329eb1774a344ad9ff0c9ab923751f1577e2a4"
+    },
+    {
+     "path": "@expo-google-fonts/work-sans@0.4.2/400Regular_Italic/WorkSans_400Regular_Italic.ttf",
+     "size": 174280,
+     "sha256": "6b7f7002e0b0c8b261fe878658ef5551e3e59d9f6b609b04efb90dde1e2c1ada"
+    },
+    {
+     "path": "@expo-google-fonts/work-sans@0.4.2/700Bold/WorkSans_700Bold.ttf",
+     "size": 191304,
+     "sha256": "240d125fc9f8561363dc1ea3f513501253bd70942f41468f48f0b0cafb0c82e2"
+    },
+    {
+     "path": "@expo-google-fonts/work-sans@0.4.2/700Bold_Italic/WorkSans_700Bold_Italic.ttf",
+     "size": 175772,
+     "sha256": "a5b2cad813df0aaa7d16621f2e93b5117c25e9bc788bc9a3ad218e9d6348ce34"
+    }
+   ]
+  }
+ },
+ "aliases": {
+  "Georgia": "Gelasio",
+  "Comic Sans MS": "Comic Neue"
+ },
+ "scripts": {
+  "Hiragana": "Noto Sans JP",
+  "Katakana": "Noto Sans JP",
+  "Hangul": "Noto Sans KR",
+  "Han": "Noto Sans SC",
+  "Han-Hant": "Noto Sans TC",
+  "Thai": "Noto Sans Thai",
+  "Devanagari": "Noto Sans Devanagari",
+  "Bengali": "Noto Sans Bengali",
+  "Tamil": "Noto Sans Tamil",
+  "Telugu": "Noto Sans Telugu",
+  "Gujarati": "Noto Sans Gujarati",
+  "Kannada": "Noto Sans Kannada",
+  "Malayalam": "Noto Sans Malayalam",
+  "Gurmukhi": "Noto Sans Gurmukhi",
+  "Sinhala": "Noto Sans Sinhala",
+  "Khmer": "Noto Sans Khmer",
+  "Lao": "Noto Sans Lao",
+  "Myanmar": "Noto Sans Myanmar",
+  "Ethiopic": "Noto Sans Ethiopic"
+ }
+}

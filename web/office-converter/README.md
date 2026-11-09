@@ -3,7 +3,8 @@
 Convert Word, Excel, PowerPoint and OpenDocument files to PDF, DOCX, ODT, XLSX, PNG, ... **in the
 browser**. It is LibreOffice compiled to WebAssembly, running in a **Web Worker**: your page stays
 responsive and no file is ever uploaded. The package includes the engine (about 30 MB, downloaded
-once by your visitors and then cached).
+once by your visitors and then cached). A handful of core fonts come with it; any other font a
+document needs is [downloaded on demand](#fonts).
 
 ```sh
 npm install serverless-office-converter
@@ -22,9 +23,9 @@ Preview thumbnails for your file lists: [`serverless-office-thumbnail`](../offic
 ## Setup
 
 1. **Serve the package directory** (or copy it) from your own origin, so that `engine-worker.js`,
-   `lo-thread.js`, `vendor/` and `lo/` are reachable under `base`. With a bundler, copy
-   `node_modules/serverless-office-converter/{engine-worker.js,lo-thread.js,vendor,lo}` to your
-   public/static folder; they are plain files the worker loads at run time. `OfficeEngine`'s
+   `lo-thread.js`, `font-catalog.json`, `vendor/` and `lo/` are reachable under `base`. With a bundler, copy
+   `node_modules/serverless-office-converter/{engine-worker.js,lo-thread.js,font-catalog.json,vendor,lo}` to your
+   public/static folder; they are plain files loaded at run time. `OfficeEngine`'s
    `base` defaults to the directory it is loaded from, which is right when you serve the package as is.
 2. **Make the page cross-origin isolated.** LibreOffice uses threads, so it needs
    `SharedArrayBuffer`, which browsers only give to pages sent with
@@ -46,7 +47,7 @@ Preview thumbnails for your file lists: [`serverless-office-thumbnail`](../offic
 
 ## API
 
-### `new OfficeEngine({ base?, workerUrl?, timeoutMs? })`
+### `new OfficeEngine({ base?, workerUrl?, timeoutMs?, fonts? })`
 
 Starts lazily on the first conversion (or `engine.start()`): a dedicated worker that loads
 LibreOffice (about 7-10 s the first time; the download is cached afterwards).
@@ -67,6 +68,41 @@ LibreOffice (about 7-10 s the first time; the download is cached afterwards).
   goes to `error`; the next call starts a fresh worker.
 * Download progress: the service worker posts `{file, loaded, total, version}` on a
   `BroadcastChannel('lo-assets')`.
+
+### Fonts
+
+Only a handful of core fonts are bundled (Liberation, DejaVu Sans, Carlito, Caladea,
+OpenSymbol). When a document is converted, the engine looks at which fonts it needs and downloads
+the ones that are not bundled, from a CDN, before converting:
+
+* font families the document names, if they are in `font-catalog.json` (about 90: Roboto, Open Sans,
+  Lato, Noto Sans and Serif, Merriweather, ...), and
+* a script font for text the bundled fonts cannot draw (Chinese, Japanese, Korean, Thai, Indic
+  scripts, Khmer, Lao, Myanmar, Ethiopic; Arabic and Hebrew are covered by the bundled DejaVu Sans).
+
+A document that uses only bundled fonts downloads nothing. Every downloaded file must have the
+SHA-256 recorded in the catalog; fonts are cached (Cache Storage), so each is downloaded once and
+works offline afterwards. If a font cannot be had, the document is converted with LibreOffice's
+usual substitute. Legacy binary files (DOC, XLS, PPT) and images are not scanned.
+
+The `fonts` option:
+
+```js
+new OfficeEngine({ fonts: false });   // never contact a CDN: bundled fonts only
+new OfficeEngine({ fonts: {
+  catalogUrl: '/assets/font-catalog.json',   // default: font-catalog.json under `base`
+  sources: { npm: 'https://unpkg.com/' },    // another CDN, or your own mirror
+} });
+```
+
+`sources` replaces the base URL of a source named in the catalog (`npm` is jsDelivr's npm
+endpoint; unpkg lays files out the same way). A mirror must answer cross-origin requests with
+`Access-Control-Allow-Origin` and hold the same files, or the hashes will not match. The catalog
+is written by `build/make-font-catalog.py` in the [repository](https://github.com/Skitionek/serverless-office-converter),
+from `build/font-catalog-seed.json`.
+
+Requests go to the CDN for font files only (the address names the font; nothing comes from the
+document), and the CDN sees the visitor's IP address.
 
 ### Files and folders (`file-system.js`)
 
@@ -115,4 +151,7 @@ left out (Visio, Publisher, Keynote, WordPerfect, ...), HTML export of text docu
 current desktop browser and about 1 GB of memory.
 
 `lo/manifest.json` records the LibreOffice version and commit; LibreOffice is MPL-2.0,
-`vendor/xz-decompress.min.js` is MIT (see `vendor/README.md`).
+`vendor/xz-decompress.min.js` is MIT (see `vendor/README.md`). The fonts that are downloaded on
+demand keep their own licenses (mostly the SIL Open Font License; the DejaVu fonts use the
+Bitstream Vera license): they come unmodified from the `@expo-google-fonts/*` and
+`dejavu-fonts-ttf` npm packages.

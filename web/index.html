@@ -149,8 +149,12 @@
             <summary>Check for yourself that nothing is uploaded</summary>
             <ol>
                 <li>Open your browser's developer tools (F12) and go to the <strong>Network</strong> tab.</li>
-                <li>Convert a file. Only this page's own files appear, and none carries your document.</li>
-                <li>Switch the Network tab to <strong>Offline</strong> (or disconnect from the internet): conversions keep working.</li>
+                <li>Convert a file. Only this page's own files appear, and none carries your document.
+                    The exception: if the document uses a font that is not built in (Open Sans, or
+                    Chinese text, say), that font file is downloaded once from a public CDN
+                    (jsDelivr). The request is for the font file only; it contains nothing from your document.</li>
+                <li>Switch the Network tab to <strong>Offline</strong> (or disconnect from the internet): conversions keep working.
+                    A font that was never downloaded is replaced by a similar built-in one.</li>
             </ol>
         </details>
         <details>
@@ -165,7 +169,9 @@
             <summary>How does it work?</summary>
             <p>The page runs LibreOffice, the open-source office suite, compiled to WebAssembly,
                 so the same engine that powers desktop LibreOffice converts your files inside this
-                tab. The first visit downloads it once (about 30 MB) and your browser keeps it.</p>
+                tab. The first visit downloads it once (about 30 MB) and your browser keeps it.
+                Only a few core fonts come with it; any other font a document needs
+                (Roboto, Noto Sans CJK, …) is downloaded the first time and then kept as well.</p>
             <p>Not supported: PDF as input, password-protected files, and some rare formats that
                 were left out to keep the download small. It needs a recent desktop browser and
                 about 1 GB of memory.</p>

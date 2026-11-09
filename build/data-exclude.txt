@@ -9,6 +9,11 @@
 # coverage incl. Greek, Cyrillic, Arabic, Hebrew, Armenian, Georgian, symbols)
 # and OpenSymbol (bullets, math).  Missing italic/oblique styles are
 # synthesized by slanting the upright face (size over fidelity).
+#
+# Everything else is not lost: a font a document needs is downloaded from a CDN
+# at conversion time, see web/office-converter/font-catalog.json and
+# build/make-font-catalog.py.  DejaVu Serif, Mono and Condensed are in that
+# catalog as they were here.  Changing this list does not change the catalog.
 */share/fonts/truetype/LinLibertine_*
 */share/fonts/truetype/LinBiolinum_*
 */share/fonts/truetype/DejaVuMathTeXGyre.ttf

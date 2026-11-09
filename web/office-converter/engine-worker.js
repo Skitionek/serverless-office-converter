@@ -132,10 +132,29 @@
         });
     }
 
+    // On-demand fonts arrive as a small ODF package (see font-carrier.js).  The file stays
+    // in the file system: LibreOffice keeps the package open to keep the fonts available.
+    function startFonts(message) {
+        const FS = fs();
+        const path = '/tmp/fonts/' + message.id + '.odt';
+        try {
+            FS.mkdirTree('/tmp/fonts');
+            FS.writeFile(path, new Uint8Array(message.data));
+        } catch (e) {
+            post({ type: 'fonts', id: message.id, ok: false, error: 'Could not stage the font: ' + e });
+            return;
+        }
+        threadPort.postMessage({ cmd: 'loadFonts', id: message.id, url: fileUrl(path) });
+    }
+
     function onThreadMessage(event) {
         const message = event.data;
         if (message.cmd === 'ready') {
             post({ type: 'ready' });
+            return;
+        }
+        if (message.cmd === 'fontsLoaded') {
+            post({ type: 'fonts', id: message.id, ok: message.ok, error: message.error });
             return;
         }
         if (message.cmd !== 'converted') return;
@@ -168,12 +187,19 @@
 
     self.addEventListener('message', (event) => {
         const message = event.data;
-        if (message && message.type === 'convert') {
+        if (!message) return;
+        if (message.type === 'convert') {
             if (!threadPort) {
                 post({ type: 'result', id: message.id, ok: false, error: 'Engine is not ready yet.' });
                 return;
             }
             startJob(message);
+        } else if (message.type === 'fonts') {
+            if (!threadPort) {
+                post({ type: 'fonts', id: message.id, ok: false, error: 'Engine is not ready yet.' });
+                return;
+            }
+            startFonts(message);
         }
     });
 

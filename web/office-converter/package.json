@@ -26,7 +26,8 @@
     "service-worker.js",
     "vendor/",
     "lo/",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "sideEffects": false,
   "keywords": [
@@ -42,9 +43,18 @@
     "web-worker",
     "privacy"
   ],
+  "license": "MPL-2.0",
+  "author": "Dominik Maszczyk",
+  "homepage": "https://skitionek.github.io/serverless-office-converter/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Skitionek/serverless-office-converter.git",
     "directory": "web/office-converter"
+  },
+  "bugs": {
+    "url": "https://github.com/Skitionek/serverless-office-converter/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

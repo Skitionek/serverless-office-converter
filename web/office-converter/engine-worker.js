@@ -5,12 +5,23 @@
  * (lo-thread.js, itself a nested worker) to convert it, and sends the result
  * back.  Nothing here runs on the page's main thread.
  *
- * Files next to this script: lo-thread.js and the lo/ runtime directory.
+ * Files next to this script: lo-thread.js, lo-pthread.js, lockdown.js and the lo/ runtime
+ * directory.
+ *
+ * The documents are untrusted: this worker never needs the origin's storage, and once the
+ * runtime is loaded, no network either.  lockdown.js removes those APIs (the service worker
+ * also gives this worker a Content Security Policy).  Only when loaded as
+ * engine-worker.js?network (OfficeEngine's isolateNetwork: false) does it keep the network.
  */
 'use strict';
 
 (function () {
     const LO_BASE = new URL('lo/', self.location.href).href;
+    const NETWORK = new URL(self.location.href).searchParams.has('network');
+    const LOCKDOWN = new URL('lockdown.js', self.location.href).href;
+
+    importScripts(LOCKDOWN);
+    self.lockDownEngineWorker({ network: false }); // the runtime still has to be downloaded
 
     function post(message, transfer) {
         self.postMessage(message, transfer || []);
@@ -31,9 +42,15 @@
     self.Module = {
         uno_scripts: [new URL('lo-thread.js', self.location.href).href],
         // LibreOffice starts its own threads as workers running soffice.js; without this
-        // they would load this script instead of the one that is importScripts()ed below.
-        mainScriptUrlOrBlob: new Blob(["importScripts('" + new URL('soffice.js', LO_BASE) + "');"],
-                                      { type: 'text/javascript' }),
+        // they would load this script instead.  Normally a script file, so that each thread
+        // gets the Content Security Policy too; with the network allowed, a Blob, which shares
+        // this worker's (absent) policy.  (The policy allows neither Blob workers nor this one.)
+        mainScriptUrlOrBlob: NETWORK
+            ? new Blob([`self.engineNetwork = true; importScripts('${LOCKDOWN}');
+                         self.lockDownEngineWorker({ network: false });
+                         importScripts('${new URL('soffice.js', LO_BASE)}');`],
+                       { type: 'text/javascript' })
+            : new URL('lo-pthread.js', self.location.href).href,
         // soffice command line: no UI, no start center, no restore/lock files.
         arguments: ['--headless', '--norestore', '--nologo', '--nodefault'],
         locateFile: (path) => LO_BASE + path,
@@ -184,6 +201,9 @@
         return;
     }
     Module.uno_main.then((port) => {
+        // Everything is loaded: no documents have been opened yet, and from now on the
+        // engine has no way to reach the network (unless it is allowed to).
+        self.lockDownEngineWorker({ network: !NETWORK, scripts: !NETWORK });
         threadPort = port;
         threadPort.onmessage = onThreadMessage;
     });

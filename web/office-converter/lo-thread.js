@@ -11,6 +11,12 @@
  */
 'use strict';
 
+// This was the last script the thread loads; from here on it needs none, nor the network,
+// unless the engine was started with the network allowed (see lockdown.js).
+if (self.lockDownEngineWorker) {
+    self.lockDownEngineWorker({ network: !self.engineNetwork, scripts: !self.engineNetwork });
+}
+
 Module.uno_init.then(function () {
     const uno = Module.uno;
     const css = uno.com.sun.star;

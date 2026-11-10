@@ -1,9 +1,9 @@
 {
   "name": "serverless-office-converter-tests",
   "private": true,
-  "description": "End-to-end test of the converter in headless Chromium",
+  "description": "End-to-end and security tests of the converter in headless Chromium",
   "scripts": {
-    "test": "node e2e.cjs"
+    "test": "node e2e.cjs && node security.cjs"
   },
   "devDependencies": {
     "playwright": "^1.56.1"

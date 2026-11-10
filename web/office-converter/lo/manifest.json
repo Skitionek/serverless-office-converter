@@ -8,6 +8,7 @@
     "soffice.data": {
       "type": "application/octet-stream",
       "size": 51010084,
+      "sha256": "1659dd7069ebfabaabc571f492a8ba12999fd2e767b0dc05cf01da5baf618a43",
       "encoding": "xz",
       "compressedSize": 6099632,
       "parts": [
@@ -17,6 +18,7 @@
     "soffice.data.js.metadata": {
       "type": "application/json",
       "size": 202482,
+      "sha256": "b0cf8c4e213b330330aba0811880b5adba89c622841f418dfe37f66785e72e8f",
       "encoding": "xz",
       "compressedSize": 18860,
       "parts": [
@@ -26,6 +28,7 @@
     "soffice.js": {
       "type": "text/javascript",
       "size": 271138,
+      "sha256": "92f8e947e8a00e7246282218ca6a320003d18ad24a27482567a272ff22721dd1",
       "encoding": "xz",
       "compressedSize": 57708,
       "parts": [
@@ -35,6 +38,7 @@
     "soffice.wasm": {
       "type": "application/wasm",
       "size": 94511770,
+      "sha256": "14690d566013f81243809254ec7eeadad1747411201d39cb9d9163f0f30831c1",
       "encoding": "xz",
       "compressedSize": 23527408,
       "parts": [

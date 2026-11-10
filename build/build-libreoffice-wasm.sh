@@ -95,3 +95,7 @@ python3 -I "$HERE/package-wasm.py" \
     "$LO_SRC/workdir/installation/LibreOffice/emscripten" "$SITE_LO_DIR" \
     --lo-version "$LO_VERSION" --emscripten "$EM_VERSION" \
     --data-exclude "$HERE/data-exclude.txt"
+
+# LibreOffice's licensing listing for the bundled third-party code and fonts,
+# from the same checkout (package-wasm.py recreates $SITE_LO_DIR, so copy after).
+cp "$LO_SRC/readlicense_oo/license/license.xml" "$SITE_LO_DIR/LICENSE.html"
